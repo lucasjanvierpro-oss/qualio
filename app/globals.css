@@ -1,26 +1,370 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text-primary);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-text-primary);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-text-primary);
+  --color-primary: var(--color-accent);
+  --color-primary-foreground: var(--color-accent-text);
+  --color-secondary: var(--color-surface-2);
+  --color-secondary-foreground: var(--color-text-primary);
+  --color-muted: var(--color-surface-2);
+  --color-muted-foreground: var(--color-text-secondary);
+  --color-accent: var(--color-accent);
+  --color-accent-foreground: var(--color-accent-text);
+  --color-destructive: var(--color-error);
+  --color-border: var(--color-border-base);
+  --color-input: var(--color-border-base);
+  --color-ring: var(--color-accent);
+
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono-base);
+  --font-heading: var(--font-display);
+
+  /* Tighter radius — more editorial, less "generic SaaS card" */
+  --radius-sm:   2px;
+  --radius-md:   4px;
+  --radius-lg:   6px;
+  --radius-xl:   8px;
+  --radius-2xl:  10px;
+  --radius-full: 9999px;
+
+  --color-sidebar: var(--color-surface);
+  --color-sidebar-foreground: var(--color-text-primary);
+  --color-sidebar-primary: var(--color-accent);
+  --color-sidebar-primary-foreground: var(--color-accent-text);
+  --color-sidebar-accent: var(--color-accent-light);
+  --color-sidebar-accent-foreground: var(--color-accent);
+  --color-sidebar-border: var(--color-border-base);
+  --color-sidebar-ring: var(--color-accent);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* Base — warm, slightly aged white. Not pure, not grey */
+  --color-bg:            #F8F7F4;
+  --color-surface:       #FFFFFF;
+  --color-surface-2:     #F2F1EE;
+  --color-border-base:   #E3E1DB;
+  --color-border-strong: #C5C2BB;
+
+  /* Text — warm near-black, not pure #000 */
+  --color-text-primary:   #18160F;
+  --color-text-secondary: #6A6760;
+  --color-text-tertiary:  #A09D97;
+
+  /* Accent — deep forest green. The one signature color. */
+  --color-accent:       #1B3D2A;
+  --color-accent-hover: #122B1D;
+  --color-accent-light: #E5EDE8;
+  --color-accent-text:  #FFFFFF;
+
+  /* States — slightly desaturated, editorial */
+  --color-success:       #1B6B40;
+  --color-success-light: #E8F4EE;
+  --color-warning:       #8B5E00;
+  --color-warning-light: #FBF0D6;
+  --color-error:         #A81C1C;
+  --color-error-light:   #FDEBEB;
+  --color-info:          #1A46C0;
+  --color-info-light:    #DAE5FB;
+
+  /* Status colors — for labels, not fills */
+  --color-status-draft:     #A09D97;
+  --color-status-active:    #1B6B40;
+  --color-status-matching:  #8B5E00;
+  --color-status-progress:  #1A46C0;
+  --color-status-completed: #18160F;
+
+  /* Layout */
+  --sidebar-width: 200px;
+  --content-max:   1080px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
+
+  body {
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--color-text-primary);
+    background: var(--color-bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Syne has wider letterforms — tighter tracking balances it */
+    letter-spacing: -0.01em;
+  }
+
+  /* Display headings use Cormorant — elegant, editorial */
+  h1, h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  /* Sub-headings use body font, uppercase tracking */
+  h3, h4 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  /* Mono for all numbers/codes */
+  .mono, [data-mono] {
+    font-family: var(--font-mono-base);
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: #fff;
+  }
+
+  /* Remove default focus ring on non-keyboard interactions */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Input base */
+  input, textarea, select {
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+
+  /* Scrollbar — subtle */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-text-tertiary); }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─── Animations ─────────────────────────────────────────── */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(var(--float-rotate, 0deg)); }
+  50%       { transform: translateY(-10px) rotate(var(--float-rotate, 0deg)); }
+}
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(var(--float-rotate, 0deg)); }
+  50%       { transform: translateY(-6px) rotate(var(--float-rotate, 0deg)); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* Utility animation classes */
+.anim-up {
+  opacity: 0;
+  animation: fadeInUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.anim-fade {
+  opacity: 0;
+  animation: fadeIn 0.6s ease forwards;
+}
+.anim-d1 { animation-delay: 0.05s; }
+.anim-d2 { animation-delay: 0.18s; }
+.anim-d3 { animation-delay: 0.32s; }
+.anim-d4 { animation-delay: 0.48s; }
+.anim-d5 { animation-delay: 0.65s; }
+.anim-d6 { animation-delay: 0.82s; }
+
+.anim-float {
+  animation: float 5s ease-in-out infinite;
+}
+.anim-float-slow {
+  animation: floatSlow 7s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+/* Hover lift — add to cards */
+.hover-lift {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.15s;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.10);
+  border-color: var(--color-border-strong);
+}
+
+/* Hover lift dark variant */
+.hover-lift-dark {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.15s;
+}
+.hover-lift-dark:hover {
+  transform: translateY(-3px);
+  border-color: #3B6B50;
+}
+
+/* ─── Qualio utility classes ──────────────────────────────── */
+
+/* Labels — the "overline" style above sections */
+.q-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--color-text-tertiary);
+}
+
+/* Status tag — sharp rectangle, not pill */
+.q-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  letter-spacing: 0.02em;
+  border: 1px solid currentColor;
+  line-height: 1.4;
+}
+
+/* Card — less shadow, more border. Editorial feel. */
+.q-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-base);
+  border-radius: 4px;
+  padding: 24px;
+}
+
+/* Divider — hairline */
+.q-divider {
+  border: none;
+  border-top: 1px solid var(--color-border-base);
+  margin: 0;
+}
+
+/* Button base */
+.q-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 3px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  border: 1px solid transparent;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.q-btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+.q-btn-primary:hover { background: var(--color-accent-hover); border-color: var(--color-accent-hover); }
+
+.q-btn-outline {
+  background: transparent;
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+}
+.q-btn-outline:hover { border-color: var(--color-text-secondary); }
+
+.q-btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: transparent;
+}
+.q-btn-ghost:hover { color: var(--color-text-primary); background: var(--color-surface-2); }
+
+/* Input */
+.q-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border-base);
+  border-radius: 3px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  transition: border-color 0.15s;
+}
+.q-input:focus { border-color: var(--color-accent); outline: none; }
+.q-input::placeholder { color: var(--color-text-tertiary); }
+
+/* ─── Nav sidebar link ────────────────────────────────────── */
+.q-nav-link {
+  display: flex;
+  align-items: center;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  border-radius: 0;
+  border-left: 2px solid transparent;
+  transition: color 0.12s, border-color 0.12s;
+  letter-spacing: 0.005em;
+  margin-bottom: 1px;
+}
+.q-nav-link:hover {
+  color: var(--color-text-primary);
+  border-left-color: var(--color-border-strong);
+}
+
+/* ─── Page header pattern ─────────────────────────────────── */
+.q-page-header {
+  padding: 36px 36px 28px;
+  border-bottom: 1px solid var(--color-border-base);
+  margin-bottom: 32px;
+}
+
+/* ─── Empty state ─────────────────────────────────────────── */
+.q-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+.q-empty-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+.q-empty-sub {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  max-width: 320px;
 }

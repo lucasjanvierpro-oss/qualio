@@ -1,0 +1,458 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMS ───────────────────────────────────────────────
+
+enum UserRole {
+  BRAND
+  PARTICIPANT
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum StudyType {
+  ONE_ON_ONE
+  FOCUS_GROUP
+}
+
+enum StudyStatus {
+  DRAFT
+  ACTIVE
+  MATCHING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  SHORTLISTED
+  INVITED
+  CONFIRMED
+  REJECTED
+  COMPLETED
+  NO_SHOW
+}
+
+enum RewardType {
+  CASH
+  VOUCHER
+}
+
+enum RewardStatus {
+  PENDING
+  PROCESSING
+  PAID
+  REVEALED
+  FAILED
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  CONSUME
+  REFUND
+}
+
+enum MessageSenderType {
+  BRAND
+  ADMIN
+  PARTICIPANT
+}
+
+// ─── CORE TABLES ─────────────────────────────────────────
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  role       UserRole
+  supabaseId String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  brandProfile       BrandProfile?
+  participantProfile ParticipantProfile?
+
+  @@map("users")
+}
+
+model BrandProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  companyName      String
+  industry         String?
+  website          String?
+  logoUrl          String?
+  contactFirstName String?
+  contactLastName  String?
+  contactTitle     String?
+  isVerified       Boolean @default(false)
+  isActivated      Boolean @default(false)
+
+  stripeCustomerId String?
+  credits          Int     @default(0)
+
+  creditTransactions CreditTransaction[]
+  studies            Study[]
+  messages           Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("brand_profiles")
+}
+
+model ParticipantProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Identité
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime?
+  city        String?
+  country     String    @default("FR")
+  photoUrl    String?
+
+  // Carrière & expertise
+  profession          String?
+  yearsOfExperience   Int?
+  professionalBio     String?   @db.Text
+
+  // Bio générale
+  bio String? @db.Text
+
+  // Social
+  linkedinUrl  String?
+  instagramUrl String?
+  tiktokUrl    String?
+
+  // Influence
+  followerRange        String?   // "0", "1k-5k", "5k-20k", "20k-100k", "100k+"
+  isInfluencerDeclared Boolean?
+  influenceNiche       String?
+
+  // Shopping & style
+  shoppingBudgetRange String?   // "0-100€", "100-300€", "300-600€", "600€+"
+  shoppingChannels    String[]  // ["retail", "luxury", "resale", "online", ...]
+  shoppingFrequency   String?
+  isEarlyAdopter      Boolean?
+
+  // Préférences
+  rewardPreference String?   // "CASH" | "VOUCHER"
+  languages        String[]  @default(["fr"])
+  availability     Json?
+
+  // Réponses du tunnel d'onboarding (stockées en JSON)
+  screenerAnswers Json?
+
+  // Intérêts & affinités
+  interests       String[]
+  brandAffinities String[]
+
+  // Vérification
+  idVerificationStatus VerificationStatus @default(PENDING)
+  idDocumentUrl        String?
+  idVerifiedAt         DateTime?
+  idVerifiedByAdminId  String?
+
+  // Qualité
+  participationCount Int     @default(0)
+  averageRating      Float?
+  isBlacklisted      Boolean @default(false)
+  blacklistReason    String?
+
+  // Stripe Connect
+  stripeConnectId     String?
+  stripeConnectStatus String?
+
+  applications Application[]
+  rewards      Reward[]
+  adminNotes   AdminNote[]
+  messages     Message[]
+  ghostFile    ParticipantGhostFile?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("participant_profiles")
+}
+
+// ─── GHOST FILE (IA) ─────────────────────────────────────
+
+model ParticipantGhostFile {
+  id                   String             @id @default(cuid())
+  participantProfileId String             @unique
+  participantProfile   ParticipantProfile @relation(fields: [participantProfileId], references: [id], onDelete: Cascade)
+
+  // Scores IA (1-10)
+  expertiseScore      Int?
+  vocabularyScore     Int?
+  consistencyScore    Int?
+  earlyAdopterScore   Int?
+  influenceScore      Int?
+  authenticityScore   Int?
+  overallQualityScore Int?
+
+  // Classification
+  profileType         String?  // "expert", "insider", "influencer", "creative", "enthusiast"
+  primaryExpertise    String?  // "mode", "luxe", "streetwear", "beauté", "retail", etc.
+  secondaryExpertises String[]
+  generationTag       String?  // "Gen Z", "Millennial", "Gen X"
+  influenceTier       String?  // "nano", "micro", "macro", "none"
+
+  // Insights qualitatifs
+  redFlags             String[]
+  aiProfileSummary     String   @db.Text
+  aiStrengths          String[]
+  aiWeaknesses         String[]
+  aiBestStudyTypes     String[]
+  aiRecommendedBrands  String[]
+
+  // Meta
+  generatedAt     DateTime @default(now())
+  lastUpdatedAt   DateTime @updatedAt
+  aiModelUsed     String   @default("claude-sonnet-4-6")
+  processingStatus String  @default("pending") // "pending" | "processing" | "done" | "error"
+
+  @@map("participant_ghost_files")
+}
+
+// ─── CREDITS ─────────────────────────────────────────────
+
+model CreditTransaction {
+  id             String       @id @default(cuid())
+  brandProfileId String
+  brandProfile   BrandProfile @relation(fields: [brandProfileId], references: [id])
+
+  type                  CreditTransactionType
+  amount                Int
+  balanceAfter          Int
+  description           String?
+  stripePaymentIntentId String?
+  studyId               String?
+  study                 Study? @relation(fields: [studyId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("credit_transactions")
+}
+
+// ─── STUDIES ─────────────────────────────────────────────
+
+model Study {
+  id             String       @id @default(cuid())
+  brandProfileId String
+  brandProfile   BrandProfile @relation(fields: [brandProfileId], references: [id])
+
+  title     String
+  objective String      @db.Text
+  studyType StudyType   @default(ONE_ON_ONE)
+  status    StudyStatus @default(DRAFT)
+
+  targetParticipantCount Int
+  confirmedCount         Int @default(0)
+
+  deadlineAt        DateTime?
+  interviewDuration Int      @default(30)
+  preferredLanguage String   @default("fr")
+
+  rewardAmount Int
+  rewardType   RewardType @default(CASH)
+  voucherBrand String?
+
+  targetCriteria    Json
+  exclusionCriteria Json?
+
+  focusGroupSize     Int?
+  focusGroupSessions Int?
+
+  adminNotes      String? @db.Text
+  creditsConsumed Int     @default(0)
+
+  timeSlots          StudyTimeSlot[]
+  applications       Application[]
+  messages           Message[]
+  creditTransactions CreditTransaction[]
+  report             StudyReport?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("studies")
+}
+
+model StudyTimeSlot {
+  id      String @id @default(cuid())
+  studyId String
+  study   Study  @relation(fields: [studyId], references: [id])
+
+  startTime   DateTime
+  endTime     DateTime
+  capacity    Int     @default(1)
+  bookedCount Int     @default(0)
+  isAvailable Boolean @default(true)
+
+  interviews Interview[]
+
+  createdAt DateTime @default(now())
+
+  @@map("study_time_slots")
+}
+
+// ─── RAPPORT IA ──────────────────────────────────────────
+
+model StudyReport {
+  id      String @id @default(cuid())
+  studyId String @unique
+  study   Study  @relation(fields: [studyId], references: [id], onDelete: Cascade)
+
+  markdownContent    String   @db.Text
+  generatedAt        DateTime @default(now())
+  generatedByAdminId String?
+  aiModelUsed        String   @default("claude-sonnet-4-6")
+  pdfUrl             String?
+
+  @@map("study_reports")
+}
+
+// ─── APPLICATIONS & INTERVIEWS ───────────────────────────
+
+model Application {
+  id                   String             @id @default(cuid())
+  studyId              String
+  study                Study              @relation(fields: [studyId], references: [id])
+  participantProfileId String
+  participantProfile   ParticipantProfile @relation(fields: [participantProfileId], references: [id])
+
+  status ApplicationStatus @default(PENDING)
+
+  adminScore      Int?
+  adminMatchNote  String?
+  applicationNote String? @db.Text
+
+  brandAccepted Boolean?
+  brandNote     String?
+
+  // Créneaux proposés par l'admin (JSON: [{ startTime: ISO, note?: string }])
+  proposedSlots Json?
+
+  interview Interview?
+  reward    Reward?
+
+  appliedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studyId, participantProfileId])
+  @@map("applications")
+}
+
+model Interview {
+  id            String         @id @default(cuid())
+  studyId       String
+  applicationId String         @unique
+  application   Application    @relation(fields: [applicationId], references: [id])
+  timeSlotId    String?
+  timeSlot      StudyTimeSlot? @relation(fields: [timeSlotId], references: [id])
+
+  scheduledAt     DateTime
+  durationMinutes Int     @default(30)
+  videoLink       String?
+  status          String  @default("scheduled")
+
+  completedAt   DateTime?
+  brandRating   Int?
+  brandFeedback String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("interviews")
+}
+
+// ─── REWARDS ─────────────────────────────────────────────
+
+model Reward {
+  id                   String             @id @default(cuid())
+  applicationId        String             @unique
+  application          Application        @relation(fields: [applicationId], references: [id])
+  participantProfileId String
+  participantProfile   ParticipantProfile @relation(fields: [participantProfileId], references: [id])
+
+  type   RewardType
+  status RewardStatus @default(PENDING)
+
+  amountCents      Int
+  stripeTransferId String?
+  paidAt           DateTime?
+
+  voucherCode       String?
+  voucherBrand      String?
+  voucherRevealedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("rewards")
+}
+
+// ─── MESSAGING ────────────────────────────────────────────
+
+model Message {
+  id      String @id @default(cuid())
+  studyId String
+  study   Study  @relation(fields: [studyId], references: [id])
+
+  senderType           MessageSenderType
+  brandProfileId       String?
+  brandProfile         BrandProfile?       @relation(fields: [brandProfileId], references: [id])
+  participantProfileId String?
+  participantProfile   ParticipantProfile? @relation(fields: [participantProfileId], references: [id])
+
+  content String  @db.Text
+  isRead  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@map("messages")
+}
+
+// ─── ADMIN ────────────────────────────────────────────────
+
+model AdminNote {
+  id                   String             @id @default(cuid())
+  participantProfileId String
+  participantProfile   ParticipantProfile @relation(fields: [participantProfileId], references: [id])
+
+  note      String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@map("admin_notes")
+}
+
+// ─── INVITE CODES ─────────────────────────────────────────
+
+model InviteCode {
+  id                   String    @id @default(cuid())
+  code                 String    @unique
+  label                String?
+  usedAt               DateTime?
+  usedByBrandProfileId String?
+  expiresAt            DateTime?
+  createdAt            DateTime  @default(now())
+
+  @@map("invite_codes")
+}
