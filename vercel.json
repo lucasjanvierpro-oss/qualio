@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/interview-reminders",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
