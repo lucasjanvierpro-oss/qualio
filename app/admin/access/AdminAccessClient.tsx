@@ -82,7 +82,7 @@ return (
 <button
             onClick={handleGenerate}
             disabled={generating}
-            style={{ padding: "10px 24px", background: "#1B3D2A", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer", opacity: generating ? 0.7 : 1, whiteSpace: "nowrap" }}
+            style={{ padding: "10px 24px", background: "#573E69", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer", opacity: generating ? 0.7 : 1, whiteSpace: "nowrap" }}
           >
             {generating ? "Génération…" : "Générer le code"}
           </button>
@@ -90,7 +90,7 @@ return (
 
         {/* Generated code display */}
         {generatedCode && (
-          <div style={{ marginTop: "20px", padding: "16px 20px", background: "#111110", border: "1px solid #1B3D2A", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ marginTop: "20px", padding: "16px 20px", background: "#111110", border: "1px solid #573E69", borderRadius: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div style={{ fontSize: "11px", color: "#6B6760", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>Code généré ✓</div>
               <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "22px", fontWeight: 700, color: "#E6EDE9", letterSpacing: "0.08em" }}>{generatedCode}</div>
@@ -98,7 +98,7 @@ return (
             <div style={{ display: "flex", gap: "8px" }}>
               <button
                 onClick={() => copyCode(generatedCode)}
-                style={{ padding: "9px 18px", background: copied ? "#1A7A4A" : "#1B3D2A", color: "#fff", border: "none", borderRadius: "8px", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}
+                style={{ padding: "9px 18px", background: copied ? "#1A7A4A" : "#573E69", color: "#fff", border: "none", borderRadius: "8px", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}
               >
                 {copied ? "Copié ✓" : "Copier"}
               </button>
@@ -139,7 +139,7 @@ return (
                 <button
                   onClick={() => handleActivate(b.id)}
                   disabled={activating === b.id}
-                  style={{ padding: "7px 16px", background: "#1B3D2A", color: "#fff", border: "none", borderRadius: "7px", fontSize: "13px", fontWeight: 600, cursor: "pointer", opacity: activating === b.id ? 0.7 : 1 }}
+                  style={{ padding: "7px 16px", background: "#573E69", color: "#fff", border: "none", borderRadius: "7px", fontSize: "13px", fontWeight: 600, cursor: "pointer", opacity: activating === b.id ? 0.7 : 1 }}
                 >
                   {activating === b.id ? "…" : "Activer manuellement"}
                 </button>

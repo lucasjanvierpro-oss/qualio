@@ -24,7 +24,7 @@ function fmtDate(iso: string) {
 // --- Confetti burst (pure CSS/JS, no library) ---
 function ConfettiBurst({ active }: { active: boolean }) {
   const pieces = Array.from({ length: 18 });
-  const colors = ["#1B3D2A", "#E6EDE9", "#9A6700", "#1D4ED8", "#B91C1C", "#FFF"];
+  const colors = ["#573E69", "#E6EDE9", "#9A6700", "#1D4ED8", "#B91C1C", "#FFF"];
   return (
     <div style={{ position: "absolute", top: "50%", left: "50%", pointerEvents: "none", zIndex: 10 }}>
       {active && pieces.map((_, i) => {

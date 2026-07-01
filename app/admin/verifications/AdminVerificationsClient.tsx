@@ -79,7 +79,7 @@ function DocumentViewer({ path }: { path: string }) {
         href={signedUrl}
         target="_blank"
         rel="noopener noreferrer"
-        style={{ fontSize: "13px", fontWeight: 700, color: "#5A9A6A", textDecoration: "none", border: "1px solid #2B5E3A", padding: "8px 16px", borderRadius: "2px" }}
+        style={{ fontSize: "13px", fontWeight: 700, color: "#8765D7", textDecoration: "none", border: "1px solid #6B4FA8", padding: "8px 16px", borderRadius: "2px" }}
       >
         Ouvrir le PDF →
       </a>
@@ -182,8 +182,8 @@ export default function AdminVerificationsClient({
                   style={{
                     display: "flex", flexDirection: "column", alignItems: "flex-start",
                     padding: "10px 12px",
-                    background: active?.id === item.id ? "#1B3D2A" : "#1A1917",
-                    border: `1px solid ${active?.id === item.id ? "#2B5E3A" : "#252320"}`,
+                    background: active?.id === item.id ? "#573E69" : "#1A1917",
+                    border: `1px solid ${active?.id === item.id ? "#6B4FA8" : "#252320"}`,
                     borderRadius: "2px",
                     cursor: "pointer", textAlign: "left", width: "100%",
                   }}
@@ -235,7 +235,7 @@ export default function AdminVerificationsClient({
                   </div>
                   <Link
                     href={`/admin/participants/${active.id}`}
-                    style={{ fontSize: "12px", fontWeight: 600, color: "#5A9A6A", textDecoration: "none", whiteSpace: "nowrap" }}
+                    style={{ fontSize: "12px", fontWeight: 600, color: "#8765D7", textDecoration: "none", whiteSpace: "nowrap" }}
                   >
                     Profil complet →
                   </Link>
@@ -253,7 +253,7 @@ export default function AdminVerificationsClient({
                       <span key={i} style={{
                         fontSize: "10px", fontWeight: 700,
                         padding: "2px 8px", borderRadius: "2px",
-                        border: "1px solid #2B5E3A", color: "#5A9A6A",
+                        border: "1px solid #6B4FA8", color: "#8765D7",
                         textTransform: "uppercase", letterSpacing: "0.04em",
                       }}>
                         {i}
@@ -270,8 +270,8 @@ export default function AdminVerificationsClient({
                       disabled={isPending}
                       style={{
                         flex: 1, padding: "11px",
-                        background: "#1B3D2A", color: "#fff",
-                        border: "1px solid #2B5E3A", borderRadius: "2px",
+                        background: "#573E69", color: "#fff",
+                        border: "1px solid #6B4FA8", borderRadius: "2px",
                         fontSize: "13px", fontWeight: 700, cursor: isPending ? "not-allowed" : "pointer",
                         opacity: isPending ? 0.6 : 1,
                       }}
@@ -364,8 +364,8 @@ export default function AdminVerificationsClient({
                 <span style={{
                   fontSize: "10px", fontWeight: 700,
                   padding: "3px 8px", borderRadius: "2px",
-                  border: `1px solid ${p.status === "VERIFIED" ? "#2B5E3A" : "#5E4A1A"}`,
-                  color: p.status === "VERIFIED" ? "#5A9A6A" : "#D97706",
+                  border: `1px solid ${p.status === "VERIFIED" ? "#6B4FA8" : "#5E4A1A"}`,
+                  color: p.status === "VERIFIED" ? "#8765D7" : "#D97706",
                   textTransform: "uppercase", letterSpacing: "0.04em",
                 }}>
                   {p.status === "VERIFIED" ? "Validé" : "Refusé"}

@@ -166,8 +166,8 @@ export default function MatchingClient({
               onClick={() => switchStudy(s.id)}
               style={{
                 padding: "14px 18px", borderRadius: "10px", border: "1px solid",
-                borderColor: activeStudyId === s.id ? "#1B3D2A" : "#2A2926",
-                background: activeStudyId === s.id ? "#1B3D2A20" : "#1A1917",
+                borderColor: activeStudyId === s.id ? "#573E69" : "#2A2926",
+                background: activeStudyId === s.id ? "#573E6920" : "#1A1917",
                 textAlign: "left", cursor: "pointer", minWidth: "220px",
               }}
             >
@@ -194,7 +194,7 @@ export default function MatchingClient({
             style={{
               display: "flex", alignItems: "center", gap: "8px",
               padding: "8px 18px", borderRadius: "8px", border: "none",
-              background: aiRanked ? "#1B3D2A" : "linear-gradient(135deg, #1B3D2A, #2A5C40)",
+              background: aiRanked ? "#573E69" : "linear-gradient(135deg, #573E69, #2A5C40)",
               color: "#fff", fontSize: "13px", fontWeight: 600, cursor: aiLoading ? "not-allowed" : "pointer",
               opacity: aiLoading ? 0.8 : 1, whiteSpace: "nowrap",
             }}
@@ -232,7 +232,7 @@ export default function MatchingClient({
 
       {/* AI ranking notice */}
       {aiRanked && (
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: "#1B3D2A20", border: "1px solid #1B3D2A", borderRadius: "8px", marginBottom: "20px", fontSize: "13px", color: "#4ADE80" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: "#573E6920", border: "1px solid #573E69", borderRadius: "8px", marginBottom: "20px", fontSize: "13px", color: "#4ADE80" }}>
           <span style={{ fontSize: "18px" }}>✨</span>
           <span>
             <strong>{matched.length} profil{matched.length > 1 ? "s" : ""}</strong> correspondants trouvés par Claude IA
@@ -294,8 +294,8 @@ export default function MatchingClient({
                     style={{
                       display: "grid", gridTemplateColumns: "auto 1fr auto auto",
                       gap: "14px", padding: "14px 16px",
-                      background: isSelected ? "#1B3D2A20" : "#1A1917",
-                      border: `1px solid ${isSelected ? "#1B3D2A" : "#2A2926"}`,
+                      background: isSelected ? "#573E6920" : "#1A1917",
+                      border: `1px solid ${isSelected ? "#573E69" : "#2A2926"}`,
                       borderRadius: "8px", cursor: "pointer", textAlign: "left", alignItems: "center",
                     }}
                   >
@@ -313,7 +313,7 @@ export default function MatchingClient({
                       {!ai && (
                         <div style={{ display: "flex", gap: "4px", marginTop: "4px", flexWrap: "wrap" }}>
                           {p.interests.slice(0, 4).map((interest) => (
-                            <span key={interest} style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "999px", background: activeStudy.criteria.interests?.some((i) => interest.toLowerCase().includes(i.toLowerCase())) ? "#1B3D2A" : "#2A2926", color: activeStudy.criteria.interests?.some((i) => interest.toLowerCase().includes(i.toLowerCase())) ? "#E6EDE9" : "#9E9B95" }}>{interest}</span>
+                            <span key={interest} style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "999px", background: activeStudy.criteria.interests?.some((i) => interest.toLowerCase().includes(i.toLowerCase())) ? "#573E69" : "#2A2926", color: activeStudy.criteria.interests?.some((i) => interest.toLowerCase().includes(i.toLowerCase())) ? "#E6EDE9" : "#9E9B95" }}>{interest}</span>
                           ))}
                         </div>
                       )}
@@ -330,7 +330,7 @@ export default function MatchingClient({
                     <button
                       onClick={(e) => { e.stopPropagation(); doShortlist(p); }}
                       disabled={isPending}
-                      style={{ padding: "7px 14px", background: "#1B3D2A", color: "#fff", border: "none", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", opacity: isPending ? 0.7 : 1 }}
+                      style={{ padding: "7px 14px", background: "#573E69", color: "#fff", border: "none", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", opacity: isPending ? 0.7 : 1 }}
                     >
                       + Shortlist
                     </button>
@@ -411,7 +411,7 @@ export default function MatchingClient({
                 <div style={{ fontSize: "11px", fontWeight: 700, color: "#6B6760", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>Intérêts</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "14px" }}>
                   {selected.interests.map((i) => (
-                    <span key={i} style={{ fontSize: "12px", padding: "3px 9px", borderRadius: "999px", background: activeStudy.criteria.interests?.some((ci) => i.toLowerCase().includes(ci.toLowerCase())) ? "#1B3D2A" : "#2A2926", color: activeStudy.criteria.interests?.some((ci) => i.toLowerCase().includes(ci.toLowerCase())) ? "#E6EDE9" : "#9E9B95" }}>{i}</span>
+                    <span key={i} style={{ fontSize: "12px", padding: "3px 9px", borderRadius: "999px", background: activeStudy.criteria.interests?.some((ci) => i.toLowerCase().includes(ci.toLowerCase())) ? "#573E69" : "#2A2926", color: activeStudy.criteria.interests?.some((ci) => i.toLowerCase().includes(ci.toLowerCase())) ? "#E6EDE9" : "#9E9B95" }}>{i}</span>
                   ))}
                 </div>
               </>
@@ -421,7 +421,7 @@ export default function MatchingClient({
                 <div style={{ fontSize: "11px", fontWeight: 700, color: "#6B6760", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>Affinités marques</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "14px" }}>
                   {selected.brandAffinities.map((b) => (
-                    <span key={b} style={{ fontSize: "12px", padding: "3px 9px", borderRadius: "999px", background: activeStudy.criteria.brandAffinities?.some((cb) => b.toLowerCase().includes(cb.toLowerCase())) ? "#1B3D2A" : "#2A2926", color: activeStudy.criteria.brandAffinities?.some((cb) => b.toLowerCase().includes(cb.toLowerCase())) ? "#E6EDE9" : "#9E9B95", fontWeight: activeStudy.criteria.brandAffinities?.some((cb) => b.toLowerCase().includes(cb.toLowerCase())) ? 600 : 400 }}>{b}</span>
+                    <span key={b} style={{ fontSize: "12px", padding: "3px 9px", borderRadius: "999px", background: activeStudy.criteria.brandAffinities?.some((cb) => b.toLowerCase().includes(cb.toLowerCase())) ? "#573E69" : "#2A2926", color: activeStudy.criteria.brandAffinities?.some((cb) => b.toLowerCase().includes(cb.toLowerCase())) ? "#E6EDE9" : "#9E9B95", fontWeight: activeStudy.criteria.brandAffinities?.some((cb) => b.toLowerCase().includes(cb.toLowerCase())) ? 600 : 400 }}>{b}</span>
                   ))}
                 </div>
               </>
@@ -441,7 +441,7 @@ export default function MatchingClient({
             <button
               onClick={() => doShortlist(selected)}
               disabled={isPending}
-              style={{ display: "block", width: "100%", padding: "12px", background: "#1B3D2A", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer", opacity: isPending ? 0.7 : 1 }}
+              style={{ display: "block", width: "100%", padding: "12px", background: "#573E69", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer", opacity: isPending ? 0.7 : 1 }}
             >
               Shortlister pour cette étude →
             </button>

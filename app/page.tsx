@@ -1,587 +1,371 @@
 import Link from "next/link";
 import Logo from "@/components/shared/Logo";
 
-// Tags du marquee — vitrine du système de matching
-const MARQUEE_TAGS = [
-  "styliste", "gen-z", "quiet-luxury", "sneakers", "early-adopter", "buyer",
-  "vintage", "seconde-main", "streetwear", "haute-couture", "menswear",
-  "createur-contenu", "paris", "beaute", "drops", "collectionneur",
-  "journaliste-mode", "resale", "tennis-core", "avant-garde", "micro-influence",
+// ─── Avatar tiles (placeholders) ────────────────────────────
+// Grille de visages du hero. Ce sont des tuiles dégradées avec initiales —
+// à remplacer plus tard par de vraies photos de participants vérifiés.
+const HERO_AVATARS_LEFT = [
+  { i: "A", on: true }, { i: "M", on: false }, { i: "L", on: false },
+  { i: "S", on: false }, { i: "C", on: true }, { i: "N", on: false },
+  { i: "T", on: false }, { i: "É", on: false }, { i: "R", on: true },
+];
+const HERO_AVATARS_RIGHT = [
+  { i: "J", on: false }, { i: "K", on: true }, { i: "P", on: false },
+  { i: "D", on: false }, { i: "F", on: false }, { i: "B", on: true },
+  { i: "O", on: false }, { i: "V", on: false }, { i: "G", on: false },
 ];
 
-// Carte participant flottante (hero)
-function PastilleCard({
-  name, role, city, tags, score, style,
-}: {
-  name: string; role: string; city: string; tags: string[]; score: number; style?: React.CSSProperties;
-}) {
+const GRADIENTS = [
+  "linear-gradient(140deg, #C7B4EC, #8765D7)",
+  "linear-gradient(140deg, #E9DEFA, #AA90E1)",
+  "linear-gradient(140deg, #B9C0FF, #999BFF)",
+  "linear-gradient(140deg, #EBCBF7, #C98BC5)",
+];
+
+function AvatarTile({ initial, active, idx }: { initial: string; active: boolean; idx: number }) {
   return (
     <div style={{
-      background: "rgba(255,255,255,0.055)",
-      backdropFilter: "blur(14px)",
-      border: "1px solid rgba(255,255,255,0.10)",
+      width: "52px", height: "52px",
       borderRadius: "14px",
-      padding: "16px 18px",
-      width: "205px",
-      ...style,
+      background: active ? GRADIENTS[idx % GRADIENTS.length] : "#EDE6F5",
+      border: "1px solid rgba(135,101,215,0.10)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "16px",
+      color: active ? "#fff" : "#C4B4D6",
+      opacity: active ? 1 : 0.55,
+      boxShadow: active ? "0 6px 18px var(--color-glow)" : "none",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-        <div style={{
-          width: "34px", height: "34px", borderRadius: "50%",
-          background: "linear-gradient(135deg, #1B3D2A 0%, #C8F169 160%)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: "var(--font-display)", fontStyle: "italic",
-          fontSize: "16px", color: "#fff", flexShrink: 0,
-        }}>
-          {name[0]}
-        </div>
-        <div>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "#F0EDE8" }}>{name}</div>
-          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.45)" }}>{role}</div>
-        </div>
-      </div>
-      <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", marginBottom: "8px" }}>{city}</div>
-      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "10px" }}>
-        {tags.map((t) => (
-          <span key={t} style={{
-            fontSize: "9px", fontWeight: 700,
-            padding: "2px 7px",
-            border: "1px solid rgba(200,241,105,0.35)",
-            borderRadius: "999px",
-            color: "var(--color-lime)",
-            letterSpacing: "0.03em",
-          }}>
-            {t}
-          </span>
-        ))}
-      </div>
-      <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
-        {[1,2,3,4,5].map((n) => (
-          <div key={n} style={{
-            width: "5px", height: "5px", borderRadius: "50%",
-            background: n <= score ? "var(--color-lime)" : "rgba(255,255,255,0.12)",
-            boxShadow: n <= score ? "0 0 5px var(--color-lime-glow)" : "none",
-          }} />
-        ))}
-        <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.35)", marginLeft: "6px", fontFamily: "var(--font-mono-base)" }}>
-          {score}.0 — vérifié
-        </span>
-      </div>
+      {initial}
     </div>
   );
+}
+
+function AvatarGrid({ data }: { data: { i: string; on: boolean }[] }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 52px)", gap: "12px" }}>
+      {data.map((a, i) => <AvatarTile key={i} initial={a.i} active={a.on} idx={i} />)}
+    </div>
+  );
+}
+
+// Icône ligne dans une tuile arrondie
+function IconTile({ children }: { children: React.ReactNode }) {
+  return <div className="icon-tile" style={{ marginBottom: "20px" }}>{children}</div>;
 }
 
 export default function LandingPage() {
   return (
     <div style={{ background: "var(--color-bg)", minHeight: "100vh" }}>
 
-      {/* ════════════════════════════════════════════
-          HERO — dark, lime glow, centered
-      ════════════════════════════════════════════ */}
-      <section style={{
-        minHeight: "100vh",
-        background: "#0E0E0A",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        overflow: "hidden",
+      {/* ── Barre d'annonce ── */}
+      <div style={{
+        background: "linear-gradient(90deg, #EFE6F9, #F3E9FA)",
+        borderBottom: "1px solid var(--color-border-base)",
+        padding: "9px 40px",
+        textAlign: "center",
+        fontSize: "13px",
       }}>
-        {/* Dot grid */}
+        <span style={{ fontWeight: 700, color: "var(--color-accent)" }}>Nouveau</span>
+        <span style={{ color: "var(--color-text-secondary)", marginLeft: "8px" }}>
+          Recrutez vos premiers participants qualifiés en 72h — 5 crédits offerts
+        </span>
+      </div>
+
+      {/* ── Nav ── */}
+      <nav style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: "rgba(247,240,250,0.82)",
+        backdropFilter: "blur(14px)",
+        borderBottom: "1px solid var(--color-border-base)",
+        padding: "0 40px",
+        height: "68px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <Logo variant="light" size="md" />
+        <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
+          <Link href="#how" className="link-sweep" style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>Comment ça marche</Link>
+          <Link href="#quality" className="link-sweep" style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>Nos profils</Link>
+          <Link href="/pricing" className="link-sweep" style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>Tarifs</Link>
+          <Link href="/login" className="link-sweep" style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>Connexion</Link>
+          <Link href="/signup/brand" className="q-btn q-btn-primary" style={{ fontSize: "13px" }}>
+            Démarrer →
+          </Link>
+        </div>
+      </nav>
+
+      {/* ════════════════════════════════════════════
+          HERO
+      ════════════════════════════════════════════ */}
+      <section style={{ position: "relative", overflow: "hidden", padding: "80px 40px 64px" }}>
+        {/* Halo mauve diffus */}
         <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)",
-          backgroundSize: "26px 26px",
+          position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)",
+          width: "1100px", height: "700px",
+          background: "radial-gradient(ellipse at center, rgba(170,144,225,0.20) 0%, rgba(153,155,255,0.10) 38%, transparent 68%)",
           pointerEvents: "none",
         }} />
-        {/* Lime radial glow */}
-        <div style={{
-          position: "absolute",
-          top: "-15%", left: "50%", transform: "translateX(-50%)",
-          width: "1000px", height: "650px",
-          background: "radial-gradient(ellipse at center, rgba(200,241,105,0.13) 0%, rgba(27,61,42,0.25) 40%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
 
-        {/* Nav */}
-        <nav style={{
-          position: "relative", zIndex: 10,
-          padding: "0 40px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          height: "68px",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-        }}>
-          <Logo variant="dark" size="md" />
+        <div style={{ position: "relative", maxWidth: "1200px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: "24px" }}>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <Link href="#how" className="link-sweep" style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>
-              Comment ça marche
-            </Link>
-            <Link href="/signup/participant" className="link-sweep" style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>
-              Rejoindre la communauté
-            </Link>
-            <Link href="/login" className="link-sweep" style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>
-              Connexion
-            </Link>
-            <Link href="/signup/brand" style={{
-              fontSize: "13px", fontWeight: 700,
-              padding: "8px 18px",
-              background: "var(--color-lime)",
-              color: "var(--color-lime-ink)",
-              borderRadius: "999px",
-              textDecoration: "none",
-              transition: "transform 0.15s, box-shadow 0.2s",
-              boxShadow: "0 0 20px var(--color-lime-glow)",
+          {/* Visages gauche */}
+          <div className="hero-faces anim-up anim-d1"><AvatarGrid data={HERO_AVATARS_LEFT} /></div>
+
+          {/* Bloc central */}
+          <div style={{ textAlign: "center", flex: 1, maxWidth: "620px" }}>
+            <div className="anim-pop anim-d1" style={{
+              display: "inline-flex", alignItems: "center", gap: "8px",
+              padding: "6px 14px", borderRadius: "999px",
+              background: "#fff", border: "1px solid var(--color-border-base)",
+              marginBottom: "28px", boxShadow: "0 2px 10px var(--color-glow-soft)",
             }}>
-              Démarrer →
-            </Link>
-          </div>
-        </nav>
-
-        {/* Hero content */}
-        <div style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-          padding: "48px 40px 24px",
-          position: "relative",
-          zIndex: 2,
-        }}>
-
-          {/* Badge */}
-          <div className="anim-pop anim-d1" style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            padding: "6px 16px",
-            border: "1px solid rgba(200,241,105,0.3)",
-            borderRadius: "999px",
-            background: "rgba(200,241,105,0.07)",
-            marginBottom: "36px",
-          }}>
-            <span style={{
-              width: "6px", height: "6px", borderRadius: "50%",
-              background: "var(--color-lime)",
-              boxShadow: "0 0 8px var(--color-lime-glow)",
-              animation: "pulse-dot 2s ease-in-out infinite",
-              display: "inline-block",
-            }} />
-            <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--color-lime)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              Déjà utilisé par Lacoste
-            </span>
-          </div>
-
-          {/* H1 */}
-          <h1 className="anim-up anim-d2" style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(48px, 7vw, 82px)",
-            fontWeight: 400,
-            fontStyle: "italic",
-            letterSpacing: "-0.035em",
-            color: "#F8F7F4",
-            margin: "0 0 8px",
-            lineHeight: 1.0,
-            maxWidth: "780px",
-          }}>
-            Recrutez les bons profils.
-          </h1>
-          <h1 className="anim-up anim-d3 text-gradient-lime" style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(48px, 7vw, 82px)",
-            fontWeight: 400,
-            fontStyle: "italic",
-            letterSpacing: "-0.035em",
-            margin: "0 0 30px",
-            lineHeight: 1.05,
-          }}>
-            En 72h.
-          </h1>
-
-          <p className="anim-up anim-d4" style={{
-            fontSize: "17px",
-            color: "rgba(255,255,255,0.5)",
-            lineHeight: 1.65,
-            maxWidth: "480px",
-            margin: "0 0 44px",
-          }}>
-            Des entretiens qualitatifs avec des participants vraiment ciblés, sélectionnés à la main et vérifiés. Pour les équipes insights qui veulent aller vite.
-          </p>
-
-          {/* CTAs */}
-          <div className="anim-up anim-d5" style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
-            <Link href="/signup/brand" className="anim-glow" style={{
-              padding: "14px 30px",
-              background: "var(--color-lime)",
-              color: "var(--color-lime-ink)",
-              borderRadius: "999px",
-              fontSize: "14px",
-              fontWeight: 700,
-              textDecoration: "none",
-            }}>
-              Créer un compte marque
-            </Link>
-            <Link href="/signup/participant" style={{
-              padding: "14px 30px",
-              background: "rgba(255,255,255,0.06)",
-              color: "rgba(255,255,255,0.75)",
-              borderRadius: "999px",
-              border: "1px solid rgba(255,255,255,0.14)",
-              fontSize: "14px",
-              fontWeight: 500,
-              textDecoration: "none",
-              backdropFilter: "blur(8px)",
-            }}>
-              Je suis un participant
-            </Link>
-          </div>
-
-          {/* Stats */}
-          <div className="anim-up anim-d6" style={{
-            marginTop: "64px",
-            display: "flex",
-            gap: "52px",
-            justifyContent: "center",
-            flexWrap: "wrap",
-          }}>
-            {[
-              { n: "72h",  l: "Délai de recrutement" },
-              { n: "100%", l: "Profils vérifiés à la main" },
-              { n: "5–8",  l: "Participants par étude" },
-            ].map((s) => (
-              <div key={s.n} style={{ textAlign: "center" }}>
-                <div style={{
-                  fontFamily: "var(--font-mono-base)",
-                  fontSize: "30px",
-                  fontWeight: 700,
-                  color: "#F8F7F4",
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1,
-                  marginBottom: "6px",
-                }}>
-                  {s.n}
-                </div>
-                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.02em" }}>
-                  {s.l}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Floating pastille cards */}
-        <div className="anim-float" style={{
-          position: "absolute", left: "calc(50% - 540px)", top: "48%",
-          transform: "translateY(-50%)",
-          "--float-rotate": "-3deg",
-        } as React.CSSProperties}>
-          <PastilleCard
-            name="Amina D." role="Styliste" city="Paris · 28 ans"
-            tags={["quiet-luxury", "styling", "gen-z"]} score={5}
-          />
-        </div>
-        <div className="anim-float-slow" style={{
-          position: "absolute", right: "calc(50% - 540px)", top: "52%",
-          transform: "translateY(-50%)",
-          "--float-rotate": "2.5deg",
-        } as React.CSSProperties}>
-          <PastilleCard
-            name="Thomas R." role="Buyer" city="Lyon · 32 ans"
-            tags={["sneakers", "drops", "resale"]} score={4}
-          />
-        </div>
-
-        {/* ── Marquee tag strip — vitrine du matching ── */}
-        <div style={{
-          position: "relative", zIndex: 3,
-          borderTop: "1px solid rgba(255,255,255,0.07)",
-          padding: "18px 0",
-          overflow: "hidden",
-          maskImage: "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
-          WebkitMaskImage: "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
-        }}>
-          <div className="anim-marquee">
-            {[...MARQUEE_TAGS, ...MARQUEE_TAGS].map((tag, i) => (
-              <span key={i} style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                marginRight: "28px",
-                whiteSpace: "nowrap",
-              }}>
-                <span style={{
-                  fontSize: "11px",
-                  fontFamily: "var(--font-mono-base)",
-                  color: "rgba(255,255,255,0.4)",
-                  letterSpacing: "0.02em",
-                }}>
-                  {tag}
-                </span>
-                <span style={{ width: "3px", height: "3px", borderRadius: "50%", background: "rgba(200,241,105,0.5)", display: "inline-block" }} />
+              <span style={{ fontSize: "11px" }}>✦</span>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--color-accent)", letterSpacing: "0.04em" }}>
+                Panel d'experts mode, luxe & lifestyle
               </span>
-            ))}
+            </div>
+
+            <h1 style={{ margin: "0 0 24px", lineHeight: 1.02 }}>
+              <span className="anim-up anim-d2 text-gradient-plum" style={{
+                display: "block",
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(42px, 6vw, 74px)",
+                fontStyle: "italic", fontWeight: 400,
+                letterSpacing: "-0.035em",
+              }}>
+                Recrutez les bons profils.
+              </span>
+              <span className="anim-up anim-d3" style={{
+                display: "block",
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(42px, 6vw, 74px)",
+                fontStyle: "italic", fontWeight: 400,
+                letterSpacing: "-0.035em",
+                color: "var(--color-plum-deep)",
+              }}>
+                En 72 heures.
+              </span>
+            </h1>
+
+            <p className="anim-up anim-d4" style={{
+              fontSize: "17px", color: "var(--color-text-secondary)",
+              lineHeight: 1.6, maxWidth: "440px", margin: "0 auto 36px",
+            }}>
+              Des entretiens qualitatifs avec des participants vraiment ciblés — sélectionnés à la main, vérifiés, et prêts à parler de votre marque.
+            </p>
+
+            <div className="anim-up anim-d5" style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+              <Link href="/signup/brand" className="q-btn q-btn-primary anim-glow" style={{ fontSize: "14px", padding: "13px 28px" }}>
+                Créer un compte marque
+              </Link>
+              <Link href="/signup/participant" className="q-btn" style={{
+                fontSize: "14px", padding: "13px 28px",
+                background: "#fff", color: "var(--color-plum)",
+                border: "1px solid var(--color-border-strong)",
+              }}>
+                Je suis un participant
+              </Link>
+            </div>
+
+            <div className="anim-up anim-d6" style={{ display: "flex", gap: "20px", justifyContent: "center", marginTop: "24px", flexWrap: "wrap" }}>
+              {["Profils vérifiés", "Sélection humaine", "Rapport IA inclus"].map((t) => (
+                <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--color-text-tertiary)" }}>
+                  <span style={{ color: "var(--color-accent)" }}>✓</span> {t}
+                </span>
+              ))}
+            </div>
           </div>
+
+          {/* Visages droite */}
+          <div className="hero-faces anim-up anim-d1"><AvatarGrid data={HERO_AVATARS_RIGHT} /></div>
+        </div>
+
+        {/* Stats */}
+        <div className="anim-up anim-d7" style={{ display: "flex", gap: "56px", justifyContent: "center", flexWrap: "wrap", marginTop: "64px" }}>
+          {[
+            { n: "72h", l: "Délai de recrutement" },
+            { n: "100%", l: "Profils vérifiés à la main" },
+            { n: "5–8", l: "Participants par étude" },
+          ].map((s) => (
+            <div key={s.n} style={{ textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "30px", fontWeight: 700, color: "var(--color-plum)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "6px" }}>{s.n}</div>
+              <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)" }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Strip secteurs (neutre, pas de faux clients) ── */}
+      <section style={{ padding: "12px 40px 56px" }}>
+        <p style={{ textAlign: "center", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.10em", color: "var(--color-text-tertiary)", marginBottom: "24px" }}>
+          Conçu pour les équipes insights des maisons de mode, luxe & lifestyle
+        </p>
+        <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+          {["Mode", "Luxe", "Beauté", "Lifestyle", "Sport", "Streetwear", "Retail"].map((c) => (
+            <span key={c} style={{
+              padding: "8px 18px", borderRadius: "999px",
+              background: "#fff", border: "1px solid var(--color-border-base)",
+              fontSize: "13px", fontWeight: 600, color: "var(--color-plum)",
+              boxShadow: "0 2px 8px var(--color-glow-soft)",
+            }}>
+              {c}
+            </span>
+          ))}
         </div>
       </section>
 
       {/* ════════════════════════════════════════════
-          HOW IT WORKS
+          BÉNÉFICES
       ════════════════════════════════════════════ */}
-      <section id="how" style={{ maxWidth: "1080px", margin: "0 auto", padding: "96px 40px" }}>
-        <div style={{ marginBottom: "56px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
-          <div>
-            <p className="q-label" style={{ marginBottom: "12px" }}>Comment ça marche</p>
-            <h2 style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(28px, 3.5vw, 44px)",
-              fontWeight: 400, fontStyle: "italic",
-              letterSpacing: "-0.025em",
-              color: "var(--color-text-primary)",
-              margin: 0, lineHeight: 1.05,
-            }}>
-              Du brief à l'entretien<br />en moins de 72h
-            </h2>
-          </div>
-          <Link href="/signup/brand" className="link-sweep" style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-accent)" }}>
-            Déposer un brief →
-          </Link>
+      <section style={{ maxWidth: "1120px", margin: "0 auto", padding: "48px 40px 80px" }}>
+        <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <h2 style={{ margin: 0, lineHeight: 1.1 }}>
+            <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.6vw, 44px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.025em" }}>Zéro logistique, </span>
+            <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.6vw, 44px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.025em", color: "var(--color-plum-deep)" }}>zéro friction</span>
+          </h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
           {[
-            {
-              n: "01", title: "Déposez votre brief",
-              desc: "Décrivez votre étude, vos critères de ciblage, le format et la récompense. En moins de 10 minutes.",
-              detail: "Entretiens 1:1 ou focus groups",
-            },
-            {
-              n: "02", title: "Recevez des profils matchés",
-              desc: "Notre moteur croise vos critères avec des centaines de signaux par profil. Puis l'équipe valide chaque match à la main.",
-              detail: "IA + sélection humaine",
-            },
-            {
-              n: "03", title: "Conduisez vos entretiens",
-              desc: "Confirmez les profils, la planification et la visio sont automatiques. Rapport de synthèse IA à la fin.",
-              detail: "Zéro logistique à gérer",
-            },
-          ].map((s) => (
-            <div key={s.n} className="hover-glow" style={{
-              background: "var(--color-surface)",
-              border: "1px solid var(--color-border-base)",
-              borderRadius: "14px",
-              padding: "34px 30px",
-              cursor: "default",
-            }}>
-              <div style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "34px", height: "34px",
-                borderRadius: "999px",
-                background: "var(--color-lime-soft)",
-                border: "1px solid var(--color-lime)",
-                fontFamily: "var(--font-mono-base)",
-                fontSize: "11px", fontWeight: 700,
-                color: "var(--color-lime-ink)",
-                marginBottom: "22px",
-              }}>
-                {s.n}
-              </div>
-              <h3 style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "21px", fontWeight: 400, fontStyle: "italic",
-                color: "var(--color-text-primary)",
-                margin: "0 0 12px", letterSpacing: "-0.01em",
-              }}>
-                {s.title}
-              </h3>
-              <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.65, margin: "0 0 20px" }}>
-                {s.desc}
-              </p>
-              <div style={{
-                fontSize: "11px", fontWeight: 700,
-                color: "var(--color-lime-ink)",
-                display: "inline-flex", alignItems: "center", gap: "6px",
-                padding: "4px 10px",
-                background: "var(--color-lime-soft)",
-                borderRadius: "999px",
-              }}>
-                <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "currentColor", display: "inline-block" }} />
-                {s.detail}
-              </div>
+            { icon: "⏱", title: "Vos profils en 72h", desc: "N'attendez plus 3 semaines pour valider une intuition avec votre cible." },
+            { icon: "✓✓", title: "Vérifiés à la main", desc: "Chaque profil passe un screener qualitatif et une vérification d'identité." },
+            { icon: "€", title: "Tout est géré", desc: "Planification, visio, récompenses : Qualio orchestre toute la logistique." },
+            { icon: "✦", title: "Rapport IA inclus", desc: "Une synthèse analytique de vos entretiens, générée après chaque étude." },
+          ].map((b) => (
+            <div key={b.title} className="q-card hover-glow" style={{ padding: "26px 24px" }}>
+              <IconTile><span style={{ fontSize: "16px" }}>{b.icon}</span></IconTile>
+              <h3 style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-plum)", margin: "0 0 8px" }}>{b.title}</h3>
+              <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.6, margin: 0 }}>{b.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ════════════════════════════════════════════
-          INSIGHTS — dark band
+          COMMENT ÇA MARCHE
       ════════════════════════════════════════════ */}
-      <section style={{ background: "#0E0E0A", position: "relative", overflow: "hidden" }}>
-        <div style={{
-          position: "absolute",
-          bottom: "-30%", right: "-10%",
-          width: "600px", height: "500px",
-          background: "radial-gradient(ellipse at center, rgba(200,241,105,0.10) 0%, transparent 65%)",
-          pointerEvents: "none",
-        }} />
-        <div style={{ maxWidth: "1080px", margin: "0 auto", padding: "88px 40px", position: "relative" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px", alignItems: "center" }}>
+      <section id="how" style={{ background: "var(--color-surface-2)", borderTop: "1px solid var(--color-border-base)", borderBottom: "1px solid var(--color-border-base)" }}>
+        <div style={{ maxWidth: "1120px", margin: "0 auto", padding: "80px 40px" }}>
+          <div style={{ textAlign: "center", marginBottom: "56px" }}>
+            <p className="q-label" style={{ marginBottom: "14px" }}>Comment ça marche</p>
+            <h2 style={{ margin: 0, lineHeight: 1.08 }}>
+              <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.8vw, 46px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.025em" }}>3 étapes simples, </span>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.8vw, 46px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.025em", color: "var(--color-plum-deep)" }}>des profils immédiats</span>
+            </h2>
+          </div>
 
-            <div>
-              <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.10em", color: "var(--color-lime)", marginBottom: "16px" }}>
-                Qualité des profils
-              </p>
-              <h2 style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(26px, 3vw, 40px)",
-                fontWeight: 400, fontStyle: "italic",
-                color: "#fff",
-                margin: "0 0 20px", lineHeight: 1.1,
-                letterSpacing: "-0.02em",
-              }}>
-                Pas un panel générique.<br />Des vrais insiders.
-              </h2>
-              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.55)", lineHeight: 1.7, margin: "0 0 36px" }}>
-                Stylistes, buyers, créatifs, early adopters documentés. Chaque profil passe un screener qualitatif, une vérification d'identité, et notre moteur d'analyse lui attribue des centaines de signaux invisibles utilisés pour le matching.
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                {[
-                  "Identité vérifiée par l'équipe Qualio",
-                  "Screener qualitatif anti-gaming obligatoire",
-                  "Scoring IA sur 7 dimensions par profil",
-                ].map((item) => (
-                  <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: "12px", fontSize: "13px", color: "rgba(255,255,255,0.75)" }}>
-                    <span style={{
-                      width: "18px", height: "18px", borderRadius: "50%",
-                      background: "rgba(200,241,105,0.12)",
-                      border: "1px solid rgba(200,241,105,0.4)",
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "10px", color: "var(--color-lime)", fontWeight: 700,
-                      flexShrink: 0,
-                    }}>✓</span>
-                    {item}
-                  </div>
-                ))}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+            {[
+              { n: "1", title: "Déposez votre brief", desc: "Décrivez votre étude, vos critères de ciblage, le format et la récompense. En moins de 10 minutes." },
+              { n: "2", title: "Recevez des profils matchés", desc: "Notre moteur croise vos critères avec des centaines de signaux par profil, puis l'équipe valide chaque match." },
+              { n: "3", title: "Conduisez vos entretiens", desc: "Confirmez les profils : la planification, la visio et les récompenses sont automatiques. Rapport IA à la fin." },
+            ].map((s) => (
+              <div key={s.n} className="q-card hover-glow">
+                <div style={{
+                  width: "40px", height: "40px", borderRadius: "12px",
+                  background: "linear-gradient(140deg, #E9DEFA, #C7B4EC)",
+                  border: "1px solid rgba(135,101,215,0.18)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "var(--font-mono-base)", fontSize: "15px", fontWeight: 700,
+                  color: "var(--color-accent)", marginBottom: "20px",
+                }}>{s.n}</div>
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontStyle: "italic", fontWeight: 400, color: "var(--color-plum)", margin: "0 0 10px" }}>{s.title}</h3>
+                <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.65, margin: 0 }}>{s.desc}</p>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Profile cards */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {[
-                { name: "Amina D.", role: "Styliste · Paris", tags: ["quiet-luxury", "styling"], score: 5 },
-                { name: "Sofia L.", role: "DA · Bordeaux", tags: ["haute-couture", "beaute"], score: 5 },
-                { name: "Thomas R.", role: "Buyer · Lyon", tags: ["sneakers", "drops"], score: 4 },
-              ].map((p) => (
-                <div key={p.name} className="hover-lift-dark" style={{
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  borderRadius: "12px",
-                  padding: "14px 16px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div style={{
-                      width: "36px", height: "36px", borderRadius: "50%",
-                      background: "linear-gradient(135deg, #1B3D2A 0%, #C8F169 180%)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontFamily: "var(--font-display)", fontStyle: "italic",
-                      fontSize: "16px", color: "#fff",
-                    }}>
-                      {p.name[0]}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: "13px", fontWeight: 600, color: "#F0EDE8", marginBottom: "3px" }}>{p.name}</div>
-                      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>{p.role}</div>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div style={{ display: "flex", gap: "4px" }}>
-                      {p.tags.map((t) => (
-                        <span key={t} style={{
-                          fontSize: "9px", fontWeight: 700,
-                          padding: "3px 8px",
-                          border: "1px solid rgba(200,241,105,0.3)",
-                          borderRadius: "999px",
-                          color: "var(--color-lime)",
-                        }}>{t}</span>
-                      ))}
-                    </div>
-                    <div style={{ display: "flex", gap: "2px" }}>
-                      {[1,2,3,4,5].map((n) => (
-                        <div key={n} style={{
-                          width: "5px", height: "5px", borderRadius: "50%",
-                          background: n <= p.score ? "var(--color-lime)" : "rgba(255,255,255,0.12)",
-                        }} />
-                      ))}
-                    </div>
-                  </div>
+      {/* ════════════════════════════════════════════
+          QUALITÉ DES PROFILS
+      ════════════════════════════════════════════ */}
+      <section id="quality" style={{ maxWidth: "1120px", margin: "0 auto", padding: "88px 40px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "72px", alignItems: "center" }}>
+          <div>
+            <p className="q-label" style={{ color: "var(--color-accent)", marginBottom: "16px" }}>✦ Panel vérifié</p>
+            <h2 style={{ margin: "0 0 20px", lineHeight: 1.12 }}>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3vw, 40px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em", color: "var(--color-plum-deep)" }}>
+                Pas un panel générique.<br /></span>
+              <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3vw, 40px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em" }}>
+                De vrais insiders.</span>
+            </h2>
+            <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", lineHeight: 1.7, margin: "0 0 32px" }}>
+              Stylistes, buyers, créatifs, early adopters documentés. Chaque profil passe un screener qualitatif, une vérification d'identité, et notre moteur d'analyse lui attribue des centaines de signaux invisibles utilisés pour le matching.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {["Identité vérifiée par l'équipe Qualio", "Screener qualitatif anti-gaming obligatoire", "Scoring IA sur 7 dimensions par profil"].map((t) => (
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "13px", color: "var(--color-text-primary)" }}>
+                  <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "var(--color-accent-light)", border: "1px solid var(--color-lavender)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "var(--color-accent)", fontWeight: 700, flexShrink: 0 }}>✓</span>
+                  {t}
                 </div>
               ))}
-              <div style={{ textAlign: "center", padding: "12px", fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>
-                +47 profils vérifiés dans la base — <span style={{ color: "var(--color-lime)" }}>et ça grandit chaque semaine</span>
+            </div>
+          </div>
+
+          {/* Cartes profils */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {[
+              { name: "Amina D.", role: "Styliste · Paris", tags: ["quiet-luxury", "styling"], score: 5, g: 0 },
+              { name: "Sofia L.", role: "DA · Bordeaux", tags: ["haute-couture", "beauté"], score: 5, g: 3 },
+              { name: "Thomas R.", role: "Buyer · Lyon", tags: ["sneakers", "drops"], score: 4, g: 2 },
+            ].map((p) => (
+              <div key={p.name} className="q-card hover-glow" style={{ padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: GRADIENTS[p.g], display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "15px", color: "#fff" }}>{p.name[0]}</div>
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-plum)", marginBottom: "3px" }}>{p.name}</div>
+                    <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)" }}>{p.role}</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    {p.tags.map((t) => (
+                      <span key={t} style={{ fontSize: "9px", fontWeight: 700, padding: "3px 8px", borderRadius: "999px", background: "var(--color-accent-light)", color: "var(--color-accent)" }}>{t}</span>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: "2px" }}>
+                    {[1,2,3,4,5].map((n) => (
+                      <div key={n} style={{ width: "5px", height: "5px", borderRadius: "50%", background: n <= p.score ? "var(--color-accent)" : "var(--color-border-strong)" }} />
+                    ))}
+                  </div>
+                </div>
               </div>
+            ))}
+            <div style={{ textAlign: "center", padding: "10px", fontSize: "12px", color: "var(--color-text-tertiary)" }}>
+              +47 profils vérifiés — <span style={{ color: "var(--color-accent)", fontWeight: 600 }}>et ça grandit chaque semaine</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* ════════════════════════════════════════════
-          COMPARISON
+          COMPARAISON
       ════════════════════════════════════════════ */}
-      <section style={{ maxWidth: "1080px", margin: "0 auto", padding: "88px 40px" }}>
-        <div style={{ marginBottom: "48px" }}>
-          <p className="q-label" style={{ marginBottom: "12px" }}>Pourquoi Qualio</p>
-          <h2 style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(26px, 3.5vw, 40px)",
-            fontWeight: 400, fontStyle: "italic",
-            letterSpacing: "-0.02em",
-            color: "var(--color-text-primary)",
-            margin: 0, lineHeight: 1.05,
-          }}>
-            Ce que vous ne trouverez pas<br />dans une agence ou un panel classique
-          </h2>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-          <div className="q-card" style={{ opacity: 0.55, borderRadius: "14px" }}>
-            <p className="q-label" style={{ marginBottom: "16px", color: "var(--color-error)" }}>Sans Qualio</p>
-            {[
-              "2–3 semaines pour recevoir des profils",
-              "Profils auto-déclarés, non vérifiés",
-              "Panel générique, pas de niche mode/lifestyle",
-              "Aucun rapport de synthèse",
-              "Logistique de planification entièrement manuelle",
-            ].map((item) => (
-              <div key={item} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "10px", fontSize: "13px", color: "var(--color-text-secondary)" }}>
-                <span style={{ color: "var(--color-error)", flexShrink: 0, marginTop: "1px" }}>✗</span>
-                {item}
-              </div>
-            ))}
+      <section style={{ background: "var(--color-surface-2)", borderTop: "1px solid var(--color-border-base)", borderBottom: "1px solid var(--color-border-base)" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "80px 40px" }}>
+          <div style={{ textAlign: "center", marginBottom: "48px" }}>
+            <p className="q-label" style={{ marginBottom: "14px" }}>Pourquoi Qualio</p>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 40px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em", color: "var(--color-plum-deep)", margin: 0, lineHeight: 1.1 }}>
+              Ce qu'une agence ou un panel<br />classique ne vous donnera pas
+            </h2>
           </div>
-
-          <div className="hover-glow" style={{
-            background: "var(--color-surface)",
-            border: "1px solid var(--color-lime)",
-            borderRadius: "14px",
-            padding: "24px",
-            boxShadow: "0 0 32px rgba(200,241,105,0.12)",
-          }}>
-            <p className="q-label" style={{ marginBottom: "16px", color: "var(--color-lime-ink)" }}>Avec Qualio</p>
-            {[
-              "Profils confirmés en 72h",
-              "Identité vérifiée + screener qualitatif",
-              "Spécialiste mode, luxe, lifestyle, Gen Z",
-              "Rapport de synthèse IA après chaque étude",
-              "Planification, visio et récompenses automatisées",
-            ].map((item) => (
-              <div key={item} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "10px", fontSize: "13px", color: "var(--color-text-primary)" }}>
-                <span style={{ color: "var(--color-lime-ink)", flexShrink: 0, marginTop: "1px", fontWeight: 700 }}>✓</span>
-                {item}
-              </div>
-            ))}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div className="q-card" style={{ opacity: 0.6, boxShadow: "none" }}>
+              <p className="q-label" style={{ marginBottom: "18px", color: "var(--color-error)" }}>Sans Qualio</p>
+              {["2–3 semaines pour recevoir des profils", "Profils auto-déclarés, non vérifiés", "Panel générique, pas de niche mode/lifestyle", "Aucun rapport de synthèse", "Logistique de planification manuelle"].map((t) => (
+                <div key={t} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "12px", fontSize: "13px", color: "var(--color-text-secondary)" }}>
+                  <span style={{ color: "var(--color-error)", flexShrink: 0 }}>✗</span>{t}
+                </div>
+              ))}
+            </div>
+            <div className="q-card" style={{ border: "1px solid var(--color-lavender)", boxShadow: "0 8px 32px var(--color-glow)" }}>
+              <p className="q-label" style={{ marginBottom: "18px", color: "var(--color-accent)" }}>Avec Qualio</p>
+              {["Profils confirmés en 72h", "Identité vérifiée + screener qualitatif", "Spécialiste mode, luxe, lifestyle, Gen Z", "Rapport de synthèse IA après chaque étude", "Planification, visio et récompenses automatisées"].map((t) => (
+                <div key={t} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "12px", fontSize: "13px", color: "var(--color-text-primary)", fontWeight: 500 }}>
+                  <span style={{ color: "var(--color-accent)", flexShrink: 0, fontWeight: 700 }}>✓</span>{t}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -589,131 +373,66 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════
           PRICING
       ════════════════════════════════════════════ */}
-      <section style={{
-        background: "var(--color-surface)",
-        borderTop: "1px solid var(--color-border-base)",
-        borderBottom: "1px solid var(--color-border-base)",
-      }}>
-        <div style={{ maxWidth: "1080px", margin: "0 auto", padding: "88px 40px" }}>
-          <div style={{ marginBottom: "48px" }}>
-            <p className="q-label" style={{ marginBottom: "12px" }}>Tarifs</p>
-            <h2 style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(26px, 3.5vw, 40px)",
-              fontWeight: 400, fontStyle: "italic",
-              letterSpacing: "-0.025em",
-              color: "var(--color-text-primary)",
-              margin: "0 0 8px",
+      <section style={{ maxWidth: "1000px", margin: "0 auto", padding: "88px 40px" }}>
+        <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <p className="q-label" style={{ marginBottom: "14px" }}>Tarifs</p>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 40px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.025em", color: "var(--color-plum-deep)", margin: "0 0 8px" }}>
+            Simple et transparent
+          </h2>
+          <p style={{ fontSize: "13px", color: "var(--color-text-tertiary)" }}>1 crédit = 1 participant confirmé · Crédits sans expiration</p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+          {[
+            { name: "Essai gratuit", price: "0€", credits: "5 crédits offerts", feature: "1 étude, sans carte bancaire", highlight: false },
+            { name: "Pack M", price: "780€", credits: "12 crédits", feature: "Sans expiration · 65€/participant", highlight: true },
+            { name: "Pack L", price: "1 375€", credits: "25 crédits", feature: "Sans expiration · 55€/participant", highlight: false },
+          ].map((plan) => (
+            <div key={plan.name} className={plan.highlight ? "q-card anim-glow" : "q-card hover-glow"} style={{
+              padding: "32px 28px", position: "relative",
+              border: plan.highlight ? "1px solid var(--color-lavender)" : undefined,
+              background: plan.highlight ? "linear-gradient(160deg, #ffffff, #F6EFFC)" : undefined,
             }}>
-              Simple et transparent
-            </h2>
-            <p style={{ fontSize: "13px", color: "var(--color-text-tertiary)" }}>
-              1 crédit = 1 participant confirmé · Crédits sans expiration
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
-            {[
-              { name: "Essai gratuit", price: "0€", credits: "5 crédits offerts", feature: "1 étude, sans carte bancaire", cta: "Commencer", highlight: false },
-              { name: "Pack M", price: "780€", credits: "12 crédits", feature: "Sans expiration · 65€/participant", cta: "Choisir Pack M", highlight: true },
-              { name: "Pack L", price: "1 375€", credits: "25 crédits", feature: "Sans expiration · 55€/participant", cta: "Choisir Pack L", highlight: false },
-            ].map((plan) => (
-              <div key={plan.name} className={plan.highlight ? "anim-glow" : "hover-glow"} style={{
-                background: plan.highlight ? "#0E0E0A" : "var(--color-bg)",
-                border: `1px solid ${plan.highlight ? "var(--color-lime)" : "var(--color-border-base)"}`,
-                borderRadius: "16px",
-                padding: "32px 28px",
-                position: "relative",
-              }}>
-                {plan.highlight && (
-                  <span style={{
-                    position: "absolute", top: "-11px", left: "24px",
-                    padding: "3px 12px",
-                    background: "var(--color-lime)",
-                    color: "var(--color-lime-ink)",
-                    borderRadius: "999px",
-                    fontSize: "10px", fontWeight: 800,
-                    letterSpacing: "0.05em", textTransform: "uppercase",
-                  }}>
-                    Populaire
-                  </span>
-                )}
-                <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.10em", color: plan.highlight ? "var(--color-lime)" : "var(--color-text-tertiary)", margin: "0 0 16px" }}>
-                  {plan.name}
-                </p>
-                <div style={{ marginBottom: "24px" }}>
-                  <span style={{
-                    fontFamily: "var(--font-mono-base)",
-                    fontSize: "36px", fontWeight: 700,
-                    color: plan.highlight ? "#fff" : "var(--color-text-primary)",
-                    letterSpacing: "-0.03em", lineHeight: 1,
-                  }}>
-                    {plan.price}
-                  </span>
-                </div>
-                <div style={{ borderTop: `1px solid ${plan.highlight ? "rgba(255,255,255,0.12)" : "var(--color-border-base)"}`, paddingTop: "20px", marginBottom: "24px" }}>
-                  <div style={{ fontSize: "13px", color: plan.highlight ? "rgba(255,255,255,0.85)" : "var(--color-text-primary)", fontWeight: 600, marginBottom: "6px" }}>
-                    {plan.credits}
-                  </div>
-                  <div style={{ fontSize: "12px", color: plan.highlight ? "rgba(255,255,255,0.45)" : "var(--color-text-tertiary)" }}>
-                    {plan.feature}
-                  </div>
-                </div>
-                <Link href="/signup/brand" style={{
-                  display: "block", textAlign: "center",
-                  padding: "11px 18px", borderRadius: "999px",
-                  fontSize: "13px", fontWeight: 700,
-                  textDecoration: "none",
-                  background: plan.highlight ? "var(--color-lime)" : "var(--color-accent)",
-                  color: plan.highlight ? "var(--color-lime-ink)" : "#fff",
-                }}>
-                  {plan.cta}
-                </Link>
+              {plan.highlight && (
+                <span style={{ position: "absolute", top: "-11px", left: "24px", padding: "3px 12px", background: "var(--color-accent)", color: "#fff", borderRadius: "999px", fontSize: "10px", fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase" }}>Populaire</span>
+              )}
+              <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.10em", color: plan.highlight ? "var(--color-accent)" : "var(--color-text-tertiary)", margin: "0 0 16px" }}>{plan.name}</p>
+              <div style={{ marginBottom: "24px" }}>
+                <span style={{ fontFamily: "var(--font-mono-base)", fontSize: "36px", fontWeight: 700, color: "var(--color-plum)", letterSpacing: "-0.03em" }}>{plan.price}</span>
               </div>
-            ))}
-          </div>
+              <div style={{ borderTop: "1px solid var(--color-border-base)", paddingTop: "20px", marginBottom: "24px" }}>
+                <div style={{ fontSize: "13px", color: "var(--color-plum)", fontWeight: 600, marginBottom: "6px" }}>{plan.credits}</div>
+                <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>{plan.feature}</div>
+              </div>
+              <Link href="/signup/brand" className="q-btn q-btn-primary" style={{ width: "100%", fontSize: "13px" }}>
+                Commencer
+              </Link>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ════════════════════════════════════════════
-          FINAL CTA
+          CTA FINAL
       ════════════════════════════════════════════ */}
-      <section style={{ maxWidth: "1080px", margin: "0 auto", padding: "104px 40px", textAlign: "center" }}>
-        <h2 style={{
-          fontFamily: "var(--font-display)",
-          fontSize: "clamp(32px, 4.5vw, 58px)",
-          fontWeight: 400, fontStyle: "italic",
-          letterSpacing: "-0.03em",
-          color: "var(--color-text-primary)",
-          margin: "0 0 20px", lineHeight: 1.0,
-        }}>
-          Prêt à recruter autrement ?
-        </h2>
-        <p style={{ fontSize: "15px", color: "var(--color-text-secondary)", margin: "0 auto 40px", maxWidth: "420px", lineHeight: 1.65 }}>
-          Déposez votre premier brief aujourd'hui. Premiers profils sous 48h.
-        </p>
-        <Link href="/signup/brand" className="anim-glow" style={{
-          display: "inline-block",
-          padding: "15px 36px",
-          background: "var(--color-lime)",
-          color: "var(--color-lime-ink)",
-          borderRadius: "999px",
-          fontSize: "14px",
-          fontWeight: 700,
-          textDecoration: "none",
-        }}>
-          Commencer gratuitement →
-        </Link>
-        <p style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginTop: "14px" }}>
-          5 crédits offerts · Aucune carte bancaire requise
-        </p>
+      <section style={{ position: "relative", overflow: "hidden", padding: "100px 40px", textAlign: "center" }}>
+        <div style={{ position: "absolute", bottom: "-40%", left: "50%", transform: "translateX(-50%)", width: "800px", height: "600px", background: "radial-gradient(ellipse at center, rgba(170,144,225,0.18) 0%, transparent 65%)", pointerEvents: "none" }} />
+        <div style={{ position: "relative" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(32px, 4.4vw, 56px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.03em", color: "var(--color-plum-deep)", margin: "0 0 20px", lineHeight: 1.0 }}>
+            Prêt à recruter autrement ?
+          </h2>
+          <p style={{ fontSize: "15px", color: "var(--color-text-secondary)", margin: "0 auto 36px", maxWidth: "420px", lineHeight: 1.6 }}>
+            Déposez votre premier brief aujourd'hui. Premiers profils sous 48h.
+          </p>
+          <Link href="/signup/brand" className="q-btn q-btn-primary anim-glow" style={{ fontSize: "14px", padding: "15px 36px" }}>
+            Commencer gratuitement →
+          </Link>
+          <p style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginTop: "14px" }}>5 crédits offerts · Aucune carte bancaire requise</p>
+        </div>
       </section>
 
-      {/* ════════════════════════════════════════════
-          FOOTER
-      ════════════════════════════════════════════ */}
-      <footer style={{ borderTop: "1px solid var(--color-border-base)", padding: "28px 40px" }}>
-        <div style={{ maxWidth: "1080px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      {/* ── Footer ── */}
+      <footer style={{ borderTop: "1px solid var(--color-border-base)", padding: "28px 40px", background: "var(--color-surface)" }}>
+        <div style={{ maxWidth: "1120px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Logo variant="light" size="sm" />
           <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
             <Link href="/pricing" className="link-sweep" style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>Tarifs</Link>
@@ -722,7 +441,6 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-
     </div>
   );
 }

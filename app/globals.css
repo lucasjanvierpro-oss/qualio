@@ -28,12 +28,12 @@
   --font-mono: var(--font-mono-base);
   --font-heading: var(--font-display);
 
-  /* Tighter radius — more editorial, less "generic SaaS card" */
-  --radius-sm:   2px;
-  --radius-md:   4px;
-  --radius-lg:   6px;
-  --radius-xl:   8px;
-  --radius-2xl:  10px;
+  /* Generous radius — soft, rounded, premium (AirPanel feel) */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --radius-2xl:  24px;
   --radius-full: 9999px;
 
   --color-sidebar: var(--color-surface);
@@ -47,47 +47,62 @@
 }
 
 :root {
-  /* Base — warm, slightly aged white. Not pure, not grey */
-  --color-bg:            #F8F7F4;
+  /* Base — cold lavender white. Clean, premium, AI-startup. */
+  --color-bg:            #F7F0FA;
   --color-surface:       #FFFFFF;
-  --color-surface-2:     #F2F1EE;
-  --color-border-base:   #E3E1DB;
-  --color-border-strong: #C5C2BB;
+  --color-surface-2:     #FBF5FF;
+  --color-border-base:   #EBE3F2;
+  --color-border-strong: #D8CCE6;
 
-  /* Text — warm near-black, not pure #000 */
-  --color-text-primary:   #18160F;
-  --color-text-secondary: #6A6760;
-  --color-text-tertiary:  #A09D97;
+  /* Text — deep plum ink, never pure black */
+  --color-text-primary:   #3A2E44;
+  --color-text-secondary: #69527A;
+  --color-text-tertiary:  #9B8AA8;
 
-  /* Accent — deep forest green. The one signature color. */
-  --color-accent:       #1B3D2A;
-  --color-accent-hover: #122B1D;
-  --color-accent-light: #E5EDE8;
+  /* Accent — lavender-violet. The signature. */
+  --color-accent:       #8765D7;
+  --color-accent-hover: #7754C8;
+  --color-accent-light: #EDE6FA;
   --color-accent-text:  #FFFFFF;
 
-  /* Lime — the luminous signature. AI-startup energy, fashion-forward. */
-  --color-lime:        #C8F169;
-  --color-lime-bright: #D9FF7A;
-  --color-lime-soft:   #F2FBDC;
-  --color-lime-ink:    #2A3D0F;
-  --color-lime-glow:   rgba(200, 241, 105, 0.35);
+  /* Plum — for headings and deep UI. */
+  --color-plum:        #573E69;
+  --color-plum-deep:   #3A2E44;
 
-  /* States — slightly desaturated, editorial */
-  --color-success:       #1B6B40;
-  --color-success-light: #E8F4EE;
-  --color-warning:       #8B5E00;
-  --color-warning-light: #FBF0D6;
-  --color-error:         #A81C1C;
-  --color-error-light:   #FDEBEB;
-  --color-info:          #1A46C0;
-  --color-info-light:    #DAE5FB;
+  /* Lavender scale + violet-blue — for gradients, halos, chips */
+  --color-lavender:      #AA90E1;
+  --color-lavender-soft: #C7B4EC;
+  --color-violet-blue:   #999BFF;
+  --color-lilac-soft:    #F0E9FA;
+  --color-lilac-tint:    #EBE0F7;
+
+  /* Mauve glow — powdery, diffuse, never neon */
+  --color-glow:      rgba(180, 156, 197, 0.28);
+  --color-glow-soft: rgba(180, 156, 197, 0.14);
+
+  /* Legacy lime aliases → mapped to lavender so old refs stay coherent */
+  --color-lime:        #8765D7;
+  --color-lime-bright: #AA90E1;
+  --color-lime-soft:   #EDE6FA;
+  --color-lime-ink:    #FFFFFF;
+  --color-lime-glow:   rgba(180, 156, 197, 0.28);
+
+  /* States — soft, in-palette */
+  --color-success:       #2E9E6B;
+  --color-success-light: #E4F6EE;
+  --color-warning:       #B9862B;
+  --color-warning-light: #FBF1DE;
+  --color-error:         #C4456B;
+  --color-error-light:   #FBE7EE;
+  --color-info:          #7A6FE8;
+  --color-info-light:    #ECEAFB;
 
   /* Status colors — for labels, not fills */
-  --color-status-draft:     #A09D97;
-  --color-status-active:    #1B6B40;
-  --color-status-matching:  #8B5E00;
-  --color-status-progress:  #1A46C0;
-  --color-status-completed: #18160F;
+  --color-status-draft:     #9B8AA8;
+  --color-status-active:    #2E9E6B;
+  --color-status-matching:  #B9862B;
+  --color-status-progress:  #7A6FE8;
+  --color-status-completed: #573E69;
 
   /* Layout */
   --sidebar-width: 200px;
@@ -163,12 +178,17 @@
 /* ─── Animations ─────────────────────────────────────────── */
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(22px); }
+  from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+/* Card reveal — fade + rise + micro-scale, the AirPanel signature */
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(28px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(var(--float-rotate, 0deg)); }
@@ -187,21 +207,28 @@
   50%       { opacity: 0.5; transform: scale(0.85); }
 }
 
-/* Utility animation classes */
+/* Utility animation classes — AirPanel ease: cubic-bezier(0.22, 1, 0.36, 1) */
 .anim-up {
   opacity: 0;
-  animation: fadeInUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.anim-card {
+  opacity: 0;
+  animation: cardReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 .anim-fade {
   opacity: 0;
-  animation: fadeIn 0.6s ease forwards;
+  animation: fadeIn 0.7s ease forwards;
 }
-.anim-d1 { animation-delay: 0.05s; }
-.anim-d2 { animation-delay: 0.18s; }
-.anim-d3 { animation-delay: 0.32s; }
-.anim-d4 { animation-delay: 0.48s; }
-.anim-d5 { animation-delay: 0.65s; }
-.anim-d6 { animation-delay: 0.82s; }
+/* Cascade delays — 0.06-0.12s stagger between siblings */
+.anim-d1 { animation-delay: 0.06s; }
+.anim-d2 { animation-delay: 0.16s; }
+.anim-d3 { animation-delay: 0.28s; }
+.anim-d4 { animation-delay: 0.42s; }
+.anim-d5 { animation-delay: 0.56s; }
+.anim-d6 { animation-delay: 0.70s; }
+.anim-d7 { animation-delay: 0.84s; }
+.anim-d8 { animation-delay: 0.98s; }
 
 .anim-float {
   animation: float 5s ease-in-out infinite;
@@ -211,45 +238,45 @@
   animation-delay: 1.5s;
 }
 
-/* Hover lift — add to cards */
+/* Hover lift — soft mauve shadow on cards */
 .hover-lift {
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.15s;
+  transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.26s ease, border-color 0.2s;
 }
 .hover-lift:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.10);
+  box-shadow: 0 12px 32px var(--color-glow-soft);
   border-color: var(--color-border-strong);
 }
 
 /* Hover lift dark variant */
 .hover-lift-dark {
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.15s;
+  transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s;
 }
 .hover-lift-dark:hover {
   transform: translateY(-3px);
-  border-color: #3B6B50;
+  border-color: rgba(170, 144, 225, 0.5);
 }
 
-/* ─── Luminous utilities (lime era) ───────────────────────── */
+/* ─── Lavender utilities (AirPanel palette) ───────────────── */
 
-/* Glow lift — lime halo on hover */
+/* Glow lift — powdery mauve halo on hover */
 .hover-glow {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s;
+  transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.26s ease, border-color 0.2s;
 }
 .hover-glow:hover {
   transform: translateY(-4px);
-  box-shadow: 0 0 0 1px var(--color-lime), 0 12px 40px var(--color-lime-glow);
-  border-color: var(--color-lime) !important;
+  box-shadow: 0 4px 12px 12px var(--color-glow-soft), 0 0 0 1px rgba(170, 144, 225, 0.4);
+  border-color: var(--color-lavender) !important;
 }
 
-/* Pulsing lime glow — for hero elements */
+/* Pulsing mauve glow — diffuse, for hero elements */
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 24px var(--color-lime-glow); }
-  50%      { box-shadow: 0 0 48px var(--color-lime-glow), 0 0 80px rgba(200, 241, 105, 0.15); }
+  0%, 100% { box-shadow: 0 0 24px var(--color-glow-soft); }
+  50%      { box-shadow: 0 0 40px var(--color-glow), 0 0 72px var(--color-glow-soft); }
 }
-.anim-glow { animation: glowPulse 3.5s ease-in-out infinite; }
+.anim-glow { animation: glowPulse 4s ease-in-out infinite; }
 
-/* Infinite marquee — for the tag strip */
+/* Infinite marquee — for the tag / logo strip */
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
@@ -257,13 +284,14 @@
 .anim-marquee {
   display: flex;
   width: max-content;
-  animation: marquee 30s linear infinite;
+  animation: marquee 34s linear infinite;
 }
 .anim-marquee:hover { animation-play-state: paused; }
 
-/* Gradient text — lime → white, for dark hero headlines */
-.text-gradient-lime {
-  background: linear-gradient(100deg, var(--color-lime-bright) 0%, #F4FFDA 50%, var(--color-lime) 100%);
+/* Gradient text — the two-tone headline accent (violet → lavender) */
+.text-gradient-lime,
+.text-gradient-plum {
+  background: linear-gradient(96deg, #8765D7 0%, #A88DDF 45%, #C98BC5 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -276,7 +304,21 @@
   70%  { transform: scale(1.03); }
   100% { opacity: 1; transform: scale(1); }
 }
-.anim-pop { opacity: 0; animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.anim-pop { opacity: 0; animation: popIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* Icon tile — rounded square with lavender gradient fill (AirPanel signature) */
+.icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(140deg, #E9DEFA 0%, #D8C7F2 100%);
+  border: 1px solid rgba(135, 101, 215, 0.18);
+  box-shadow: 0 4px 12px var(--color-glow-soft);
+  color: var(--color-accent);
+}
 
 /* Underline sweep on links */
 .link-sweep {
@@ -305,12 +347,12 @@
   color: var(--color-text-tertiary);
 }
 
-/* Status tag — sharp rectangle, not pill */
+/* Status tag — soft rounded pill */
 .q-tag {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 2px;
+  padding: 3px 11px;
+  border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
   font-family: var(--font-body);
@@ -319,12 +361,13 @@
   line-height: 1.4;
 }
 
-/* Card — less shadow, more border. Editorial feel. */
+/* Card — rounded, soft mauve shadow, hairline lavender border */
 .q-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border-base);
-  border-radius: 4px;
+  border-radius: 20px;
   padding: 24px;
+  box-shadow: 0 4px 18px var(--color-glow-soft);
 }
 
 /* Divider — hairline */
@@ -334,19 +377,19 @@
   margin: 0;
 }
 
-/* Button base */
+/* Button base — rounded pill */
 .q-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 9px 18px;
-  border-radius: 3px;
+  padding: 10px 20px;
+  border-radius: 999px;
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s, transform 0.18s;
   border: 1px solid transparent;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -356,8 +399,9 @@
   background: var(--color-accent);
   color: #fff;
   border-color: var(--color-accent);
+  box-shadow: 0 4px 14px var(--color-glow-soft);
 }
-.q-btn-primary:hover { background: var(--color-accent-hover); border-color: var(--color-accent-hover); }
+.q-btn-primary:hover { background: var(--color-accent-hover); border-color: var(--color-accent-hover); transform: translateY(-1px); box-shadow: 0 6px 20px var(--color-glow); }
 
 .q-btn-outline {
   background: transparent;
@@ -376,15 +420,16 @@
 /* Input */
 .q-input {
   width: 100%;
-  padding: 9px 12px;
+  padding: 11px 14px;
   border: 1px solid var(--color-border-base);
-  border-radius: 3px;
+  border-radius: 12px;
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--color-text-primary);
   background: var(--color-surface);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
+.q-input:focus { box-shadow: 0 0 0 3px var(--color-accent-light); }
 .q-input:focus { border-color: var(--color-accent); outline: none; }
 .q-input::placeholder { color: var(--color-text-tertiary); }
 
@@ -437,4 +482,10 @@
   color: var(--color-text-secondary);
   line-height: 1.6;
   max-width: 320px;
+}
+
+/* ─── Hero face grid — responsive ─────────────────────────── */
+.hero-faces { flex-shrink: 0; }
+@media (max-width: 1080px) {
+  .hero-faces { display: none; }
 }

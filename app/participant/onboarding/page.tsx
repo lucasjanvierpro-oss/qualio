@@ -1,8 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { saveOnboardingProfile } from "@/app/actions/onboarding";
+import Logo from "@/components/shared/Logo";
+
+// Jauge de qualité — encourage des réponses riches (meilleur matching ensuite).
+// 3 paliers : trop court / correct / excellent.
+function QualityMeter({ value, min }: { value: string; min: number }) {
+  const len = value.trim().length;
+  const excellent = min * 2;
+  const pct = Math.min(100, (len / excellent) * 100);
+  const state = len < min ? "short" : len < excellent ? "ok" : "great";
+  const color = state === "short" ? "var(--color-border-strong)" : state === "ok" ? "var(--color-lavender)" : "var(--color-accent)";
+  const msg = state === "short"
+    ? `Encore ${min - len} caractère${min - len > 1 ? "s" : ""} — développez un peu`
+    : state === "ok"
+    ? "Bien. Plus vous êtes précis, mieux on vous matche."
+    : "Excellent — c'est exactement ce qu'on cherche ✦";
+  return (
+    <div style={{ marginTop: "8px" }}>
+      <div style={{ height: "5px", background: "var(--color-border-base)", borderRadius: "999px", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: "999px", transition: "width 0.3s ease, background 0.3s ease" }} />
+      </div>
+      <p style={{ fontSize: "12px", color: state === "great" ? "var(--color-accent)" : "var(--color-text-tertiary)", marginTop: "6px", fontWeight: state === "great" ? 600 : 400 }}>
+        {msg}
+      </p>
+    </div>
+  );
+}
 
 export type OnboardingData = {
   // Étape 1 — Identité
@@ -167,7 +193,7 @@ function Step2({ data, update, onNext, onBack }: { data: OnboardingData; update:
       </div>
       <Field
         labelText="Décrivez votre parcours professionnel *"
-        hintText={`Comment êtes-vous arrivé(e) là où vous en êtes ? Quelles expériences, rencontres ou obsessions ont façonné votre regard ? Minimum 80 caractères. (${data.careerPath.trim().length}/80)`}
+        hintText="Comment êtes-vous arrivé(e) là où vous en êtes ? Quelles expériences, rencontres ou obsessions ont façonné votre regard ?"
       >
         <textarea
           style={ta}
@@ -175,6 +201,7 @@ function Step2({ data, update, onNext, onBack }: { data: OnboardingData; update:
           onChange={(e) => update({ careerPath: e.target.value })}
           placeholder="J'ai commencé à travailler dans le retail à 19 ans, puis j'ai rejoint un showroom parisien où j'ai développé une vraie connaissance du prêt-à-porter contemporain..."
         />
+        <QualityMeter value={data.careerPath} min={80} />
       </Field>
       <Field
         labelText="Note biographique courte (visible sur votre profil)"
@@ -206,7 +233,7 @@ function Step3({ data, update, onNext, onBack }: { data: OnboardingData; update:
       </div>
       <Field
         labelText="Décrivez votre relation à la mode et au style *"
-        hintText={`Comment achetez-vous ? Quelles tendances vous intéressent ? Quelle est votre démarche quand vous découvrez une nouvelle marque ? Minimum 80 caractères. (${data.styleRelationship.trim().length}/80)`}
+        hintText="Comment achetez-vous ? Quelles tendances vous intéressent ? Quelle est votre démarche quand vous découvrez une nouvelle marque ?"
       >
         <textarea
           style={ta}
@@ -214,6 +241,7 @@ function Step3({ data, update, onNext, onBack }: { data: OnboardingData; update:
           onChange={(e) => update({ styleRelationship: e.target.value })}
           placeholder="La mode pour moi c'est avant tout une forme d'expression quotidienne. Je ne suis pas les tendances aveuglement — je picore chez des marques indépendantes que j'ai découvertes avant qu'elles explosent..."
         />
+        <QualityMeter value={data.styleRelationship} min={80} />
       </Field>
       <Field labelText="Budget mode mensuel approximatif">
         <select
@@ -254,7 +282,7 @@ function Step4({ data, update, onNext, onBack }: { data: OnboardingData; update:
       </div>
       <Field
         labelText="Sur quoi avez-vous une vraie expertise ? *"
-        hintText={`Citez des marques spécifiques, des créateurs, des pièces, des catégories. On cherche quelqu'un capable d'analyser avec précision, pas de citer les grandes maisons. Minimum 80 caractères. (${data.expertise.trim().length}/80)`}
+        hintText="Citez des marques spécifiques, des créateurs, des pièces, des catégories. On cherche quelqu'un capable d'analyser avec précision, pas de citer les grandes maisons."
       >
         <textarea
           style={{ ...ta, minHeight: "140px" }}
@@ -262,6 +290,7 @@ function Step4({ data, update, onNext, onBack }: { data: OnboardingData; update:
           onChange={(e) => update({ expertise: e.target.value })}
           placeholder="Je suis expert(e) du streetwear premium et des collaborations limitées. Je connais bien l'écosystème Salehe Bembury, Wales Bonner, et les marques émergentes comme Aimé Leon Dore ou Corteiz avant qu'elles arrivent en Europe..."
         />
+        <QualityMeter value={data.expertise} min={80} />
       </Field>
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <ContinueBtn disabled={!ok} onClick={onNext} />
@@ -281,7 +310,7 @@ function Step5({ data, update, onNext, onBack }: { data: OnboardingData; update:
       </div>
       <Field
         labelText="Donnez un exemple de tendance, marque ou mouvement que vous avez identifié avant qu'il soit mainstream *"
-        hintText={`Soyez concret : quelle tendance, à quelle époque, comment l'avez-vous repérée ? Minimum 60 caractères. (${data.marketVision.trim().length}/60)`}
+        hintText="Soyez concret : quelle tendance, à quelle époque, comment l'avez-vous repérée ?"
       >
         <textarea
           style={{ ...ta, minHeight: "140px" }}
@@ -289,6 +318,7 @@ function Step5({ data, update, onNext, onBack }: { data: OnboardingData; update:
           onChange={(e) => update({ marketVision: e.target.value })}
           placeholder="En 2022 j'ai commencé à parler de l'esthétique 'quiet luxury' bien avant que le terme n'existe dans les médias. Je voyais des clients de 30+ ans abandonner les logos visibles pour des pièces intemporelles..."
         />
+        <QualityMeter value={data.marketVision} min={60} />
       </Field>
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <ContinueBtn disabled={!ok} onClick={onNext} />
@@ -308,7 +338,7 @@ function Step6({ data, update, onNext, onBack }: { data: OnboardingData; update:
       </div>
       <Field
         labelText="Décrivez votre dernier achat mode ou lifestyle *"
-        hintText={`Quoi, où, combien, pourquoi ce choix plutôt qu'un autre ? Ce que ça dit de vous. Minimum 60 caractères. (${data.lastPurchase.trim().length}/60)`}
+        hintText="Quoi, où, combien, pourquoi ce choix plutôt qu'un autre ? Ce que ça dit de vous."
       >
         <textarea
           style={{ ...ta, minHeight: "140px" }}
@@ -316,6 +346,7 @@ function Step6({ data, update, onNext, onBack }: { data: OnboardingData; update:
           onChange={(e) => update({ lastPurchase: e.target.value })}
           placeholder="J'ai acheté une veste vintage Helmut Lang des années 90 sur Vestiaire Collective pour 280€. Je la cherchais depuis 6 mois — cette coupe structurée et ce traitement du cuir sont impossibles à retrouver aujourd'hui..."
         />
+        <QualityMeter value={data.lastPurchase} min={60} />
       </Field>
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <ContinueBtn disabled={!ok} onClick={onNext} />
@@ -448,11 +479,36 @@ function Step7({ data, update, onFinish, onBack, saving }: {
 
 // ─── SHELL ────────────────────────────────────────────────
 
+const DRAFT_KEY = "qualio_onboarding_draft";
+
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<OnboardingData>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [restored, setRestored] = useState(false);
   const router = useRouter();
+
+  // Restaure le brouillon au chargement
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { data: OnboardingData; step: number };
+        if (parsed.data) {
+          setData({ ...EMPTY, ...parsed.data });
+          setStep(Math.min(parsed.step ?? 0, STEPS.length - 1));
+          setRestored(true);
+        }
+      }
+    } catch { /* brouillon corrompu — on ignore */ }
+  }, []);
+
+  // Sauvegarde auto à chaque changement
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ data, step }));
+    } catch { /* quota/private mode — non bloquant */ }
+  }, [data, step]);
 
   function update(patch: Partial<OnboardingData>) {
     setData((prev) => ({ ...prev, ...patch }));
@@ -465,6 +521,7 @@ export default function OnboardingPage() {
     setSaving(true);
     try {
       await saveOnboardingProfile(data);
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* noop */ }
       router.push("/participant/dashboard");
     } catch {
       setSaving(false);
@@ -474,18 +531,18 @@ export default function OnboardingPage() {
   const progress = ((step + 1) / STEPS.length) * 100;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-background)", display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div style={{ minHeight: "100vh", background: "var(--color-bg)", display: "flex", flexDirection: "column", alignItems: "center" }}>
       {/* Header */}
-      <div style={{ width: "100%", background: "var(--color-surface)", borderBottom: "1px solid var(--color-border)", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: "60px", flexShrink: 0 }}>
-        <span style={{ fontFamily: "var(--font-display)", fontSize: "20px", color: "var(--color-text-primary)" }}>Qualio</span>
+      <div style={{ width: "100%", background: "rgba(247,240,250,0.82)", backdropFilter: "blur(14px)", borderBottom: "1px solid var(--color-border-base)", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: "64px", flexShrink: 0, position: "sticky", top: 0, zIndex: 20 }}>
+        <Logo variant="light" size="sm" href="/" />
         <span style={{ fontSize: "13px", color: "var(--color-text-tertiary)" }}>
-          Étape {step + 1} / {STEPS.length} — {STEPS[step]}
+          Étape {step + 1} / {STEPS.length} — <span style={{ color: "var(--color-plum)", fontWeight: 600 }}>{STEPS[step]}</span>
         </span>
       </div>
 
       {/* Progress bar */}
-      <div style={{ width: "100%", height: "3px", background: "var(--color-border)", flexShrink: 0 }}>
-        <div style={{ height: "100%", width: `${progress}%`, background: "var(--color-accent)", transition: "width 0.3s ease" }} />
+      <div style={{ width: "100%", height: "4px", background: "var(--color-border-base)", flexShrink: 0 }}>
+        <div style={{ height: "100%", width: `${progress}%`, background: "linear-gradient(90deg, #8765D7, #AA90E1)", transition: "width 0.4s cubic-bezier(0.22,1,0.36,1)" }} />
       </div>
 
       {/* Step dots */}
@@ -499,8 +556,15 @@ export default function OnboardingPage() {
         ))}
       </div>
 
+      {/* Brouillon restauré */}
+      {restored && (
+        <div style={{ marginTop: "12px", padding: "7px 16px", borderRadius: "999px", background: "var(--color-accent-light)", border: "1px solid var(--color-lavender)", fontSize: "12px", color: "var(--color-accent)", fontWeight: 600 }}>
+          ✦ Brouillon restauré — vous pouvez reprendre où vous en étiez
+        </div>
+      )}
+
       {/* Content */}
-      <div style={{ width: "100%", maxWidth: "600px", padding: "32px 24px 80px" }}>
+      <div key={step} className="anim-up" style={{ width: "100%", maxWidth: "600px", padding: "32px 24px 80px" }}>
         {step === 0 && <Step1 data={data} update={update} onNext={next} />}
         {step === 1 && <Step2 data={data} update={update} onNext={next} onBack={back} />}
         {step === 2 && <Step3 data={data} update={update} onNext={next} onBack={back} />}

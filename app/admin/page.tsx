@@ -146,8 +146,8 @@ export default async function AdminOverview() {
                     fontSize: "11px",
                     fontWeight: 700,
                     padding: "4px 10px",
-                    border: "1px solid #2B5E3A",
-                    color: "#5A9A6A",
+                    border: "1px solid #6B4FA8",
+                    color: "#8765D7",
                     borderRadius: "2px",
                   }}>
                     Gérer →
@@ -215,8 +215,8 @@ export default async function AdminOverview() {
                     fontWeight: 700,
                     padding: "3px 8px",
                     borderRadius: "2px",
-                    border: `1px solid ${p.idVerificationStatus === "VERIFIED" ? "#2B5E3A" : "#5E4A1A"}`,
-                    color: p.idVerificationStatus === "VERIFIED" ? "#5A9A6A" : "#D97706",
+                    border: `1px solid ${p.idVerificationStatus === "VERIFIED" ? "#6B4FA8" : "#5E4A1A"}`,
+                    color: p.idVerificationStatus === "VERIFIED" ? "#8765D7" : "#D97706",
                     letterSpacing: "0.04em",
                     textTransform: "uppercase",
                   }}>

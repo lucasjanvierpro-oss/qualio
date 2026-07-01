@@ -104,7 +104,7 @@ export default function ParticipantsClient({ participants }: { participants: Par
                 </div>
                 <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "13px", color: "#9E9B95", textAlign: "center" }}>{p.participationCount}</div>
                 <div>
-                  <span style={{ fontSize: "12px", color: "#E6EDE9", background: "#1B3D2A", padding: "4px 10px", borderRadius: "6px", fontWeight: 600 }}>Voir →</span>
+                  <span style={{ fontSize: "12px", color: "#E6EDE9", background: "#573E69", padding: "4px 10px", borderRadius: "6px", fontWeight: 600 }}>Voir →</span>
                 </div>
               </Link>
             );

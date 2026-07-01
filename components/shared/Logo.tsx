@@ -22,14 +22,14 @@ export default function Logo({
       background: "rgba(255,255,255,0.05)",
       border: "1px solid rgba(255,255,255,0.14)",
       color: "#F8F7F4",
-      dot: "var(--color-lime)",
+      dot: "var(--color-accent)",
       dotGlow: "0 0 8px var(--color-lime-glow), 0 0 16px var(--color-lime-glow)",
     },
     light: {
       background: "var(--color-surface)",
       border: "1px solid var(--color-border-base)",
       color: "var(--color-text-primary)",
-      dot: "var(--color-lime)",
+      dot: "var(--color-accent)",
       dotGlow: "0 0 6px var(--color-lime-glow)",
     },
     solid: {

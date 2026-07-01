@@ -157,8 +157,8 @@ export default function AdminPaymentsPage() {
               fontSize: "12px",
               fontWeight: 600,
               border: "1px solid",
-              borderColor: filter === f.key ? "#2B5E3A" : "#252320",
-              background: filter === f.key ? "#1B3D2A" : "transparent",
+              borderColor: filter === f.key ? "#6B4FA8" : "#252320",
+              background: filter === f.key ? "#573E69" : "transparent",
               color: filter === f.key ? "#fff" : "#7A7875",
               borderRadius: "2px",
               cursor: "pointer",
@@ -249,7 +249,7 @@ export default function AdminPaymentsPage() {
                 {/* Action */}
                 <div>
                   {feedback[r.id] ? (
-                    <span style={{ fontSize: "12px", color: feedback[r.id].startsWith("✓") ? "#5A9A6A" : "#D97706" }}>
+                    <span style={{ fontSize: "12px", color: feedback[r.id].startsWith("✓") ? "#8765D7" : "#D97706" }}>
                       {feedback[r.id]}
                     </span>
                   ) : r.status === "PENDING" && r.type === "CASH" ? (
@@ -259,9 +259,9 @@ export default function AdminPaymentsPage() {
                         disabled={processing === r.id}
                         style={{
                           padding: "6px 12px",
-                          background: "#1B3D2A",
+                          background: "#573E69",
                           color: "#fff",
-                          border: "1px solid #2B5E3A",
+                          border: "1px solid #6B4FA8",
                           borderRadius: "2px",
                           fontSize: "11px",
                           fontWeight: 700,
@@ -300,7 +300,7 @@ export default function AdminPaymentsPage() {
                         disabled={!voucherInputs[r.id]?.trim() || processing === r.id}
                         style={{
                           padding: "5px 10px",
-                          background: voucherInputs[r.id]?.trim() ? "#1B3D2A" : "#252320",
+                          background: voucherInputs[r.id]?.trim() ? "#573E69" : "#252320",
                           color: voucherInputs[r.id]?.trim() ? "#fff" : "#4A4845",
                           border: "none",
                           borderRadius: "2px",
@@ -313,11 +313,11 @@ export default function AdminPaymentsPage() {
                       </button>
                     </div>
                   ) : r.status === "PAID" && r.type === "VOUCHER" ? (
-                    <span style={{ fontFamily: "var(--font-mono-base)", fontSize: "12px", color: "#5A9A6A" }}>
+                    <span style={{ fontFamily: "var(--font-mono-base)", fontSize: "12px", color: "#8765D7" }}>
                       {r.voucherCode}
                     </span>
                   ) : r.status === "PAID" ? (
-                    <span style={{ fontSize: "12px", color: "#5A9A6A" }}>
+                    <span style={{ fontSize: "12px", color: "#8765D7" }}>
                       {r.paidAt ? new Date(r.paidAt).toLocaleDateString("fr-FR") : "Effectué ✓"}
                     </span>
                   ) : null}
