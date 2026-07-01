@@ -12,6 +12,9 @@ type ParticipantForm = {
   password: string;
 };
 
+// Passe à true une fois LinkedIn configuré dans Supabase (Auth → Providers → LinkedIn)
+const LINKEDIN_ENABLED = false;
+
 export default function ParticipantSignupPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,27 +57,31 @@ export default function ParticipantSignupPage() {
 
       {mode === "choice" && (
         <div className="space-y-3">
-          {/* LinkedIn */}
-          <button
-            onClick={handleLinkedIn}
-            disabled={linkedinLoading}
-            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-lg border text-sm font-medium transition-colors disabled:opacity-60"
-            style={{
-              background: "var(--color-surface)",
-              borderColor: "var(--color-border-base)",
-              color: "var(--color-text-primary)",
-            }}
-          >
-            <LinkedInIcon />
-            {linkedinLoading ? "Redirection…" : "Continuer avec LinkedIn"}
-          </button>
+          {LINKEDIN_ENABLED && (
+            <>
+              {/* LinkedIn */}
+              <button
+                onClick={handleLinkedIn}
+                disabled={linkedinLoading}
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-lg border text-sm font-medium transition-colors disabled:opacity-60"
+                style={{
+                  background: "var(--color-surface)",
+                  borderColor: "var(--color-border-base)",
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                <LinkedInIcon />
+                {linkedinLoading ? "Redirection…" : "Continuer avec LinkedIn"}
+              </button>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 border-t" style={{ borderColor: "var(--color-border-base)" }} />
-            <span className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>ou</span>
-            <div className="flex-1 border-t" style={{ borderColor: "var(--color-border-base)" }} />
-          </div>
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 border-t" style={{ borderColor: "var(--color-border-base)" }} />
+                <span className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>ou</span>
+                <div className="flex-1 border-t" style={{ borderColor: "var(--color-border-base)" }} />
+              </div>
+            </>
+          )}
 
           {/* Email option */}
           <button
