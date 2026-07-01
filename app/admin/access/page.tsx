@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import AdminAccessClient from "./AdminAccessClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminAccessPage() {
   const [codes, pendingBrands] = await Promise.all([
     prisma.inviteCode.findMany({ orderBy: { createdAt: "desc" } }),

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+export const dynamic = "force-dynamic";
+
 type Reward = {
   id: string;
   type: "CASH" | "VOUCHER";

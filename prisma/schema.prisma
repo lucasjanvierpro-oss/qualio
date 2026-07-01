@@ -222,6 +222,10 @@ model ParticipantGhostFile {
   aiBestStudyTypes     String[]
   aiRecommendedBrands  String[]
 
+  // Tags invisibles — vocabulaire normalisé pour le moteur de recherche marques.
+  // Jamais affichés à la marque ni au participant.
+  aiTags               String[] @default([])
+
   // Meta
   generatedAt     DateTime @default(now())
   lastUpdatedAt   DateTime @updatedAt

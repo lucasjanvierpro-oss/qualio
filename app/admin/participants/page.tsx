@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import ParticipantsClient from "./ParticipantsClient";
 
+export const dynamic = "force-dynamic";
+
 function calcAge(dob: Date | null): number | null {
   if (!dob) return null;
   const today = new Date();

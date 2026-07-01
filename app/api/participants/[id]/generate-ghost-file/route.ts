@@ -18,6 +18,8 @@ export async function POST(
       shoppingBudgetRange: true, shoppingChannels: true,
       followerRange: true, instagramUrl: true, tiktokUrl: true,
       screenerAnswers: true,
+      interests: true, brandAffinities: true, shoppingFrequency: true,
+      isEarlyAdopter: true, dateOfBirth: true, languages: true,
     },
   });
 
@@ -46,6 +48,11 @@ PROFIL PARTICIPANT :
 - Bio professionnelle : ${profile.professionalBio ?? "non renseigné"}
 - Budget mode mensuel : ${profile.shoppingBudgetRange ?? "non renseigné"}
 - Canaux d'achat : ${(profile.shoppingChannels ?? []).join(", ") || "non renseigné"}
+- Fréquence d'achat : ${profile.shoppingFrequency ?? "non renseigné"}
+- Early adopter déclaré : ${profile.isEarlyAdopter === true ? "oui" : profile.isEarlyAdopter === false ? "non" : "non renseigné"}
+- Centres d'intérêt : ${(profile.interests ?? []).join(", ") || "non renseigné"}
+- Affinités marques : ${(profile.brandAffinities ?? []).join(", ") || "non renseigné"}
+- Langues : ${(profile.languages ?? []).join(", ") || "fr"}
 - Abonnés (réseau principal) : ${profile.followerRange ?? "non renseigné"}
 - Instagram : ${profile.instagramUrl ?? "non renseigné"}
 
@@ -84,7 +91,8 @@ Réponds UNIQUEMENT avec du JSON valide, sans markdown, sans texte avant ou apr�
   "aiStrengths": [],
   "aiWeaknesses": [],
   "aiBestStudyTypes": [],
-  "aiRecommendedBrands": []
+  "aiRecommendedBrands": [],
+  "aiTags": []
 }
 
 Valeurs attendues :
@@ -96,12 +104,17 @@ Valeurs attendues :
 - aiStrengths : 3-5 points forts concrets
 - aiWeaknesses : 1-3 points faibles ou limites
 - aiBestStudyTypes : ex ["entretien 1:1 tendances", "test produit luxe", "focus group streetwear"]
-- aiRecommendedBrands : 4-6 marques qui gagneraient à interroger ce profil`;
+- aiRecommendedBrands : 4-6 marques qui gagneraient à interroger ce profil
+- aiTags : 15 à 25 tags de recherche NORMALISÉS. Règles strictes :
+  · minuscules, sans accents, mots composés avec tiret (ex "quiet-luxury", "seconde-main")
+  · couvrir TOUTES les dimensions : expertise (ex "styliste", "buyer", "journaliste-mode"), styles/esthétiques (ex "streetwear", "quiet-luxury", "vintage", "avant-garde"), marques citées en minuscules (ex "lacoste", "jacquemus", "nike"), comportements (ex "early-adopter", "resale", "collectionneur", "gros-budget", "petit-budget"), génération (ex "gen-z", "millennial"), ville (ex "paris", "lyon"), influence (ex "createur-contenu", "micro-influence"), univers (ex "tennis", "sneakers", "beaute", "menswear", "womenswear")
+  · déduire des tags implicites depuis les réponses qualitatives (si la personne parle de friperies → "seconde-main", "vintage" ; si elle achète au drop → "hype", "drops")
+  · ces tags servent UNIQUEMENT au moteur de recherche interne, jamais affichés`;
 
   try {
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -113,7 +126,17 @@ Valeurs attendues :
       secondaryExpertises: string[]; generationTag: string; influenceTier: string;
       redFlags: string[]; aiProfileSummary: string; aiStrengths: string[];
       aiWeaknesses: string[]; aiBestStudyTypes: string[]; aiRecommendedBrands: string[];
+      aiTags?: string[];
     };
+
+    // Normalisation défensive des tags (minuscules, sans accents, tirets)
+    const normalizedTags = [...new Set((parsed.aiTags ?? []).map((t) =>
+      t.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+    ).filter(Boolean))];
+    parsed.aiTags = normalizedTags;
 
     await prisma.participantGhostFile.upsert({
       where: { participantProfileId: id },

@@ -65,6 +65,13 @@
   --color-accent-light: #E5EDE8;
   --color-accent-text:  #FFFFFF;
 
+  /* Lime — the luminous signature. AI-startup energy, fashion-forward. */
+  --color-lime:        #C8F169;
+  --color-lime-bright: #D9FF7A;
+  --color-lime-soft:   #F2FBDC;
+  --color-lime-ink:    #2A3D0F;
+  --color-lime-glow:   rgba(200, 241, 105, 0.35);
+
   /* States — slightly desaturated, editorial */
   --color-success:       #1B6B40;
   --color-success-light: #E8F4EE;
@@ -222,6 +229,69 @@
   transform: translateY(-3px);
   border-color: #3B6B50;
 }
+
+/* ─── Luminous utilities (lime era) ───────────────────────── */
+
+/* Glow lift — lime halo on hover */
+.hover-glow {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s;
+}
+.hover-glow:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 1px var(--color-lime), 0 12px 40px var(--color-lime-glow);
+  border-color: var(--color-lime) !important;
+}
+
+/* Pulsing lime glow — for hero elements */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 24px var(--color-lime-glow); }
+  50%      { box-shadow: 0 0 48px var(--color-lime-glow), 0 0 80px rgba(200, 241, 105, 0.15); }
+}
+.anim-glow { animation: glowPulse 3.5s ease-in-out infinite; }
+
+/* Infinite marquee — for the tag strip */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.anim-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+.anim-marquee:hover { animation-play-state: paused; }
+
+/* Gradient text — lime → white, for dark hero headlines */
+.text-gradient-lime {
+  background: linear-gradient(100deg, var(--color-lime-bright) 0%, #F4FFDA 50%, var(--color-lime) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Scale-in pop for badges */
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.85); }
+  70%  { transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.anim-pop { opacity: 0; animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* Underline sweep on links */
+.link-sweep {
+  position: relative;
+  text-decoration: none;
+}
+.link-sweep::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -2px;
+  width: 0; height: 1px;
+  background: currentColor;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.link-sweep:hover::after { width: 100%; }
 
 /* ─── Qualio utility classes ──────────────────────────────── */
 

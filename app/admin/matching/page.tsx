@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import MatchingClient from "./MatchingClient";
 
+// Page admin — toujours rendue à la demande (jamais prérendue au build)
+export const dynamic = "force-dynamic";
+
 function calcAge(dob: Date | null): number | null {
   if (!dob) return null;
   const today = new Date();

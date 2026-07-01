@@ -13,7 +13,15 @@ type Filters = {
   influenceTier?: string;
   generationTag?: string;
   keywords?: string[];
+  tags?: string[];
 };
+
+function normalizeTag(t: string): string {
+  return t.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 async function extractFilters(query: string): Promise<Filters> {
   const msg = await anthropic.messages.create({
@@ -31,7 +39,8 @@ Format attendu :
   "minScore": null,
   "influenceTier": null,
   "generationTag": null,
-  "keywords": []
+  "keywords": [],
+  "tags": []
 }
 
 Valeurs possibles :
@@ -41,7 +50,8 @@ Valeurs possibles :
 - generationTag : "Gen Z", "Millennial", "Gen X", null
 - minScore : nombre entre 1 et 10, null si non précisé
 - city : nom de ville exacte ou null
-- keywords : mots-clés importants pour affiner (max 3)` }],
+- keywords : mots-clés importants pour affiner (max 3)
+- tags : 5 à 12 tags de recherche normalisés déduits de la requête, y compris synonymes et notions implicites. Format : minuscules, sans accents, tirets (ex "quiet-luxury", "seconde-main", "gen-z", "sneakers", "lacoste", "early-adopter", "gros-budget"). Étends la requête : si la marque cherche "des acheteurs Lacoste jeunes", tags = ["lacoste", "gen-z", "tennis", "sportswear", "preppy", "polo"]` }],
   });
 
   const text = msg.content[0].type === "text" ? msg.content[0].text.trim() : "{}";
@@ -74,45 +84,83 @@ export async function POST(request: NextRequest) {
   const page = body.page ?? 0;
   const pageSize = 24;
 
-  // Build where clause
-  const where: Record<string, unknown> = {
-    idVerificationStatus: "VERIFIED",
-    isBlacklisted: false,
-    ghostFile: {
-      processingStatus: "done",
-      ...(filters.profileType ? { profileType: filters.profileType } : {}),
-      ...(filters.primaryExpertise ? { primaryExpertise: { contains: filters.primaryExpertise, mode: "insensitive" } } : {}),
-      ...(filters.minScore ? { overallQualityScore: { gte: filters.minScore } } : {}),
-      ...(filters.influenceTier ? { influenceTier: filters.influenceTier } : {}),
-      ...(filters.generationTag ? { generationTag: filters.generationTag } : {}),
+  // Tags de recherche normalisés (extraits de la requête + keywords)
+  const searchTags = [...new Set([
+    ...(filters.tags ?? []),
+    ...(filters.keywords ?? []),
+  ].map(normalizeTag).filter(Boolean))];
+
+  function buildWhere(withTags: boolean): Record<string, unknown> {
+    return {
+      idVerificationStatus: "VERIFIED",
+      isBlacklisted: false,
+      ghostFile: {
+        processingStatus: "done",
+        ...(filters.profileType ? { profileType: filters.profileType } : {}),
+        ...(filters.primaryExpertise ? { primaryExpertise: { contains: filters.primaryExpertise, mode: "insensitive" } } : {}),
+        ...(filters.minScore ? { overallQualityScore: { gte: filters.minScore } } : {}),
+        ...(filters.influenceTier ? { influenceTier: filters.influenceTier } : {}),
+        ...(filters.generationTag ? { generationTag: filters.generationTag } : {}),
+        ...(withTags && searchTags.length > 0 ? { aiTags: { hasSome: searchTags } } : {}),
+      },
+      ...(filters.city ? { city: { contains: filters.city, mode: "insensitive" } } : {}),
+    };
+  }
+
+  const ghostFileSelect = {
+    select: {
+      overallQualityScore: true,
+      profileType: true,
+      primaryExpertise: true,
+      secondaryExpertises: true,
+      generationTag: true,
+      influenceTier: true,
+      aiStrengths: true,
+      aiRecommendedBrands: true,
+      aiTags: true,
+      processingStatus: true,
     },
-    ...(filters.city ? { city: { contains: filters.city, mode: "insensitive" } } : {}),
   };
 
-  const [profiles, total] = await Promise.all([
+  // Passe 1 : match sur les tags invisibles (le plus précis)
+  let where = buildWhere(true);
+  let [profiles, total] = await Promise.all([
     prisma.participantProfile.findMany({
       where,
-      include: {
-        ghostFile: {
-          select: {
-            overallQualityScore: true,
-            profileType: true,
-            primaryExpertise: true,
-            secondaryExpertises: true,
-            generationTag: true,
-            influenceTier: true,
-            aiStrengths: true,
-            aiRecommendedBrands: true,
-            processingStatus: true,
-          },
-        },
-      },
+      include: { ghostFile: ghostFileSelect },
       orderBy: { ghostFile: { overallQualityScore: "desc" } },
       take: pageSize,
       skip: page * pageSize,
     }),
     prisma.participantProfile.count({ where }),
   ]);
+
+  // Passe 2 (fallback) : si aucun profil ne matche les tags, on élargit sans tags
+  let tagMatchUsed = searchTags.length > 0 && total > 0;
+  if (searchTags.length > 0 && total === 0) {
+    where = buildWhere(false);
+    [profiles, total] = await Promise.all([
+      prisma.participantProfile.findMany({
+        where,
+        include: { ghostFile: ghostFileSelect },
+        orderBy: { ghostFile: { overallQualityScore: "desc" } },
+        take: pageSize,
+        skip: page * pageSize,
+      }),
+      prisma.participantProfile.count({ where }),
+    ]);
+    tagMatchUsed = false;
+  }
+
+  // Tri secondaire : nombre de tags matchés (pertinence), puis score qualité
+  if (tagMatchUsed) {
+    profiles.sort((a, b) => {
+      const aMatches = (a.ghostFile?.aiTags ?? []).filter((t) => searchTags.includes(t)).length;
+      const bMatches = (b.ghostFile?.aiTags ?? []).filter((t) => searchTags.includes(t)).length;
+      if (bMatches !== aMatches) return bMatches - aMatches;
+      return (b.ghostFile?.overallQualityScore ?? 0) - (a.ghostFile?.overallQualityScore ?? 0);
+    });
+  }
 
   const results = profiles.map((p) => ({
     id: p.id,
@@ -136,5 +184,5 @@ export async function POST(request: NextRequest) {
     } : null,
   }));
 
-  return NextResponse.json({ results, total, page, pageSize, filtersUsed: filters });
+  return NextResponse.json({ results, total, page, pageSize, filtersUsed: filters, tagMatchUsed });
 }

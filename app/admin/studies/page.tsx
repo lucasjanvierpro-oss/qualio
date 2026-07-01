@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   DRAFT:       { bg: "#2A2926", color: "#6B6760", label: "Brouillon" },
   ACTIVE:      { bg: "#1A3D2A", color: "#4ADE80", label: "Active" },
