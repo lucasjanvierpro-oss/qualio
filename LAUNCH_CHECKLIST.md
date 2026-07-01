@@ -7,8 +7,8 @@
 
 ## A. CONFIGURATION & DÉPLOIEMENT
 
-- [ ] 🔴 Projet Supabase actif (⚠️ actuellement **en pause** — le réveiller sur supabase.com avant tout)
-- [ ] 🔴 `npx prisma db push` exécuté après réveil de Supabase (ajoute le champ `aiTags`)
+- [x] 🔴 Projet Supabase actif ✅ (réveillé le 01/07)
+- [x] 🔴 `npx prisma db push` exécuté ✅ (champ `aiTags` créé le 01/07)
 - [ ] 🔴 Bucket Supabase Storage `id-documents` créé en mode **privé** (Dashboard → Storage → New bucket)
 - [ ] 🔴 Toutes les variables d'environnement remplies dans `.env.local` (voir `.env.local.example`) :
   - [ ] 🔴 `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` + `SUPABASE_SERVICE_ROLE_KEY`

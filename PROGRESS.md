@@ -95,3 +95,26 @@
 > - http://localhost:3000/brand/studies/new — Création étude (5 étapes)
 > - http://localhost:3000/brand/dashboard — Dashboard marque (nécessite auth)
 > - http://localhost:3000/admin — Backoffice admin (nécessite auth admin)
+
+---
+
+## 📍 ÉTAT ACTUEL — 1er juillet 2026
+
+### Terminé depuis la dernière mise à jour
+- ✅ **Système de tags invisibles** : champ `aiTags` en DB, génération auto à l'onboarding (15-25 tags normalisés), backfill pour profils existants (`/api/admin/backfill-tags`), moteur de recherche marques branché dessus (match + tri par pertinence + fallback)
+- ✅ **Refonte visuelle "lime"** : palette lumineuse (#C8F169), hover-glow, marquee de tags, gradient text, animations pop/sweep
+- ✅ **Logo pastille** : composant réutilisable `components/shared/Logo.tsx` (3 variantes)
+- ✅ **Landing page** refaite (style AI-startup × luxe)
+- ✅ **Pages admin en force-dynamic** (le build ne dépend plus de la DB)
+- ✅ **Supabase réveillé + `prisma db push` passé** (aiTags en prod)
+- ✅ Docs : `LAUNCH_CHECKLIST.md` (suivi de test) + `DEPLOYMENT.md` (guide mise en ligne)
+
+### Reste à faire (par ordre de priorité)
+1. 🔴 **Mise en ligne** : GitHub → Vercel (suivre `DEPLOYMENT.md`)
+2. 🔴 **Bucket Supabase `id-documents`** (privé) à créer dans le dashboard
+3. 🔴 **Clés API à obtenir** : Anthropic (IA), Whereby (visio), Resend (emails) — le code est prêt, il ne manque que les clés
+4. 🔴 **Webhook Stripe prod** après déploiement Vercel
+5. 🟡 **Peupler la base** : 50 profils participants qualifiés (objectif MVP)
+6. 🟡 **Dérouler la LAUNCH_CHECKLIST** de bout en bout avec des comptes de test
+7. 🟡 Domaine custom + domaine Resend vérifié
+8. ⚪ Appliquer le design lime aux pages internes (dashboards) — tokens déjà propagés, raffinements possibles
