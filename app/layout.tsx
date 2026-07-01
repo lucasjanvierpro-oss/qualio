@@ -1,23 +1,20 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Syne, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-// Display — Cormorant Garamond italic: editorial luxury, used by high-fashion brands
-const cormorant = Cormorant_Garamond({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  style: ["normal", "italic"],
-  display: "swap",
-});
-
-// Body — Syne: geometric grotesque by Bonjour Monde (French studio).
-// Distinctive letterform rhythm at 12–14px, used by French creative agencies.
-// The difference from Inter/Space Grotesk is immediately visible.
-const syne = Syne({
+// Une seule famille, classique et neutre : Inter — pour titres ET corps.
+// Titres = graisses lourdes (700/800), corps = 400/500. Comme Airpanel.
+const inter = Inter({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const interDisplay = Inter({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
   display: "swap",
 });
 
@@ -42,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${cormorant.variable} ${syne.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${interDisplay.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

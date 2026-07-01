@@ -155,7 +155,7 @@ function Step1({ data, update, onNext }: { data: OnboardingData; update: (p: Par
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, margin: "0 0 6px" }}>Commençons par vous</h2>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, margin: "0 0 6px" }}>Commençons par vous</h2>
         <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: 0 }}>Ces informations resteront confidentielles et ne seront jamais partagées avec les marques.</p>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
@@ -188,7 +188,7 @@ function Step2({ data, update, onNext, onBack }: { data: OnboardingData; update:
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, margin: "0 0 6px" }}>Votre parcours</h2>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, margin: "0 0 6px" }}>Votre parcours</h2>
         <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: 0 }}>Racontez-nous votre histoire dans l'univers de la mode, du luxe ou du style.</p>
       </div>
       <Field
@@ -228,7 +228,7 @@ function Step3({ data, update, onNext, onBack }: { data: OnboardingData; update:
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, margin: "0 0 6px" }}>Votre rapport au style</h2>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, margin: "0 0 6px" }}>Votre rapport au style</h2>
         <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: 0 }}>Comment la mode s'inscrit-elle dans votre quotidien ?</p>
       </div>
       <Field
@@ -277,7 +277,7 @@ function Step4({ data, update, onNext, onBack }: { data: OnboardingData; update:
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, margin: "0 0 6px" }}>Votre expertise</h2>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, margin: "0 0 6px" }}>Votre expertise</h2>
         <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: 0 }}>Ce que vous maîtrisez vraiment — sans fausse modestie, sans exagération.</p>
       </div>
       <Field
@@ -305,7 +305,7 @@ function Step5({ data, update, onNext, onBack }: { data: OnboardingData; update:
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, margin: "0 0 6px" }}>Vision du marché</h2>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, margin: "0 0 6px" }}>Vision du marché</h2>
         <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: 0 }}>Êtes-vous du genre à voir les choses avant les autres ?</p>
       </div>
       <Field
@@ -333,7 +333,7 @@ function Step6({ data, update, onNext, onBack }: { data: OnboardingData; update:
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, margin: "0 0 6px" }}>Votre dernier achat</h2>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, margin: "0 0 6px" }}>Votre dernier achat</h2>
         <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: 0 }}>Une question concrète pour mieux vous comprendre.</p>
       </div>
       <Field
@@ -379,7 +379,7 @@ function Step7({ data, update, onFinish, onBack, saving }: {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, margin: "0 0 6px" }}>Présence sociale & disponibilités</h2>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, margin: "0 0 6px" }}>Présence sociale & disponibilités</h2>
         <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: 0 }}>Dernière étape. Ces infos nous aident à vous matcher avec les bonnes études.</p>
       </div>
 

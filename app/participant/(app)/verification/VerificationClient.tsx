@@ -86,7 +86,7 @@ export default function VerificationClient({
       <p className="q-label" style={{ marginBottom: "10px" }}>Vérification</p>
       <h1 style={{
         fontFamily: "var(--font-display)",
-        fontSize: "28px", fontWeight: 400, fontStyle: "italic",
+        fontSize: "28px", fontWeight: 800, fontStyle: "normal",
         letterSpacing: "-0.02em",
         color: "var(--color-text-primary)",
         margin: "0 0 6px",

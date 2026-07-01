@@ -55,7 +55,7 @@ export default async function BrandDashboard() {
             fontFamily: "var(--font-display)",
             fontSize: "32px",
             fontWeight: 400,
-            fontStyle: "italic",
+            fontStyle: "normal",
             letterSpacing: "-0.02em",
             color: "var(--color-text-primary)",
             margin: 0,

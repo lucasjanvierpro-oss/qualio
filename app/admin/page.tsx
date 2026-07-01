@@ -53,7 +53,7 @@ export default async function AdminOverview() {
           fontFamily: "var(--font-display)",
           fontSize: "30px",
           fontWeight: 400,
-          fontStyle: "italic",
+          fontStyle: "normal",
           letterSpacing: "-0.02em",
           color: "#F8F7F4",
           margin: 0,

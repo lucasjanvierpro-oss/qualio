@@ -102,7 +102,7 @@ export default function RealtimeChatBrand({ threads }: { threads: Thread[] }) {
     return (
       <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid var(--color-border)" }}>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 400, color: "var(--color-text-primary)", margin: 0 }}>Messages</h1>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 800, color: "var(--color-text-primary)", margin: 0 }}>Messages</h1>
         </div>
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "12px", color: "var(--color-text-secondary)" }}>
           <div style={{ fontSize: "40px" }}>💬</div>
@@ -118,7 +118,7 @@ export default function RealtimeChatBrand({ threads }: { threads: Thread[] }) {
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid var(--color-border)" }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 400, color: "var(--color-text-primary)", margin: 0 }}>Messages</h1>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 800, color: "var(--color-text-primary)", margin: 0 }}>Messages</h1>
       </div>
 
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>

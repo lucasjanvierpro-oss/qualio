@@ -107,7 +107,7 @@ export default function NewStudyPage() {
     <div style={{ maxWidth: "660px", margin: "0 auto", padding: "40px 24px 80px" }}>
       {/* Header */}
       <div style={{ marginBottom: "32px" }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, color: "var(--color-text-primary)", margin: "0 0 4px" }}>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 4px" }}>
           Nouvelle étude
         </h1>
         <p style={{ fontSize: "13px", color: "var(--color-text-tertiary)", margin: 0 }}>

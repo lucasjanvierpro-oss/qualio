@@ -51,7 +51,7 @@ export default async function ParticipantLayout({ children }: { children: ReactN
               fontFamily: "var(--font-display)",
               fontSize: "26px",
               fontWeight: 400,
-              fontStyle: "italic",
+              fontStyle: "normal",
               color: "var(--color-text-primary)",
               letterSpacing: "-0.01em",
               lineHeight: 1,

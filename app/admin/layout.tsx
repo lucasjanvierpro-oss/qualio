@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               fontFamily: "var(--font-display)",
               fontSize: "26px",
               fontWeight: 400,
-              fontStyle: "italic",
+              fontStyle: "normal",
               color: "#F8F7F4",
               letterSpacing: "-0.01em",
               lineHeight: 1,

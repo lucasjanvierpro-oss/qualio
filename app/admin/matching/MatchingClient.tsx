@@ -124,7 +124,7 @@ export default function MatchingClient({
   if (!activeStudy) {
     return (
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 32px" }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, color: "#F9F8F6", margin: "0 0 24px" }}>File de matching</h1>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, color: "#F9F8F6", margin: "0 0 24px" }}>File de matching</h1>
         <div style={{ textAlign: "center", padding: "80px 20px", color: "#6B6760" }}>
           <div style={{ fontSize: "32px", marginBottom: "12px" }}>✅</div>
           <div style={{ fontSize: "16px", color: "#9E9B95" }}>Aucune étude active à matcher pour le moment.</div>
@@ -152,7 +152,7 @@ export default function MatchingClient({
 
   return (
     <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 32px" }}>
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, color: "#F9F8F6", margin: "0 0 24px" }}>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, color: "#F9F8F6", margin: "0 0 24px" }}>
         File de matching
       </h1>
 
@@ -308,7 +308,7 @@ export default function MatchingClient({
                         {p.city ?? "—"}{p.age ? `, ${p.age} ans` : ""}{p.profession ? ` · ${p.profession}` : ""}
                       </div>
                       {ai?.reason && (
-                        <div style={{ fontSize: "11px", color: "#9E9B95", marginTop: "4px", fontStyle: "italic" }}>"{ai.reason}"</div>
+                        <div style={{ fontSize: "11px", color: "#9E9B95", marginTop: "4px", fontStyle: "normal" }}>"{ai.reason}"</div>
                       )}
                       {!ai && (
                         <div style={{ display: "flex", gap: "4px", marginTop: "4px", flexWrap: "wrap" }}>
@@ -390,7 +390,7 @@ export default function MatchingClient({
                   <span style={{ fontFamily: "monospace", fontSize: "20px", fontWeight: 700, color: SCORE_COLOR[selectedAi.score]?.text }}>{selectedAi.score}/5</span>
                   <span style={{ fontSize: "11px", color: "#6B6760", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Score Claude IA</span>
                 </div>
-                <p style={{ fontSize: "12px", color: "#9E9B95", margin: 0, fontStyle: "italic" }}>"{selectedAi.reason}"</p>
+                <p style={{ fontSize: "12px", color: "#9E9B95", margin: 0, fontStyle: "normal" }}>"{selectedAi.reason}"</p>
               </div>
             )}
 

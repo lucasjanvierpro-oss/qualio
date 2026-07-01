@@ -383,7 +383,7 @@ export default function BrandProfilesClient() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
               <div>
-                <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, margin: "0 0 4px" }}>
+                <h2 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, margin: "0 0 4px" }}>
                   {selected.firstName} {selected.lastInitial}
                 </h2>
                 <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>

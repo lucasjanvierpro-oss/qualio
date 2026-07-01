@@ -65,7 +65,7 @@ export default function Logo({
       <span style={{
         fontFamily: "var(--font-display)",
         fontSize,
-        fontStyle: "italic",
+        fontStyle: "normal",
         fontWeight: 400,
         color: styles.color,
         letterSpacing: "-0.01em",

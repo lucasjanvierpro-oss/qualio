@@ -69,7 +69,7 @@ export default async function ParticipantStudiesPage() {
 
   return (
     <div style={{ maxWidth: "860px", margin: "0 auto", padding: "40px 32px" }}>
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, color: "var(--color-text-primary)", margin: "0 0 6px" }}>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 6px" }}>
         Mes études
       </h1>
       <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: "0 0 36px" }}>

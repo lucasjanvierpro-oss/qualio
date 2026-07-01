@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import StudyReportView, { type StructuredReport } from "./StudyReportView";
 
 // Render markdown-like report content into JSX (server-side, no library needed)
 function ReportDisplay({ content }: { content: string }) {
@@ -13,7 +14,7 @@ function ReportDisplay({ content }: { content: string }) {
         if (line.startsWith("### ")) {
           return (
             <h3 key={i} style={{
-              fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 400,
+              fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 800,
               color: "var(--color-accent)", margin: "36px 0 12px",
               borderBottom: "1px solid var(--color-accent-light)", paddingBottom: "8px",
             }}>
@@ -23,7 +24,7 @@ function ReportDisplay({ content }: { content: string }) {
         }
         if (line.startsWith("## ")) {
           return (
-            <h2 key={i} style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 400, color: "var(--color-text-primary)", margin: "28px 0 14px" }}>
+            <h2 key={i} style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 800, color: "var(--color-text-primary)", margin: "28px 0 14px" }}>
               {line.replace("## ", "")}
             </h2>
           );
@@ -106,6 +107,19 @@ export default async function BrandStudyReportPage({ params }: { params: Promise
   const fmtDate = (d: Date) =>
     new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(d);
 
+  // Nouveau rapport structuré → interface à onglets
+  if (report?.structuredContent) {
+    return (
+      <StudyReportView
+        report={report.structuredContent as StructuredReport}
+        studyTitle={study.title}
+        brandName={study.brandProfile.companyName}
+        generatedAt={fmtDate(report.generatedAt)}
+        studyId={id}
+      />
+    );
+  }
+
   return (
     <div style={{ maxWidth: "860px", margin: "0 auto", padding: "32px 32px 64px" }}>
       {/* Breadcrumb */}
@@ -120,7 +134,7 @@ export default async function BrandStudyReportPage({ params }: { params: Promise
       {!report ? (
         <div style={{ textAlign: "center", padding: "80px 40px", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "14px" }}>
           <div style={{ fontSize: "40px", marginBottom: "16px" }}>📋</div>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 400, margin: "0 0 10px" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 800, margin: "0 0 10px" }}>
             Rapport en préparation
           </h2>
           <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", maxWidth: "420px", margin: "0 auto 24px", lineHeight: 1.7 }}>
@@ -137,7 +151,7 @@ export default async function BrandStudyReportPage({ params }: { params: Promise
             <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>
               Qualio · Synthèse qualitative · {fmtDate(report.generatedAt)}
             </div>
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "32px", fontWeight: 400, margin: "0 0 6px", color: "var(--color-text-primary)" }}>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "32px", fontWeight: 800, margin: "0 0 6px", color: "var(--color-text-primary)" }}>
               {study.title}
             </h1>
             <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>

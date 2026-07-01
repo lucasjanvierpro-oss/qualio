@@ -30,7 +30,7 @@ export default async function AdminStudiesPage() {
     <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 32px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
         <div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, color: "#F9F8F6", margin: "0 0 4px" }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, color: "#F9F8F6", margin: "0 0 4px" }}>
             Toutes les études
           </h1>
           <p style={{ fontSize: "13px", color: "#6B6760", margin: 0 }}>{studies.length} étude{studies.length !== 1 ? "s" : ""}</p>

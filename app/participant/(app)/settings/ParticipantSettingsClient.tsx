@@ -71,7 +71,7 @@ export default function ParticipantSettingsClient({ email }: { email: string }) 
 
   return (
     <div style={{ maxWidth: "600px", margin: "0 auto", padding: "40px 32px" }}>
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 400, color: "var(--color-text-primary)", margin: "0 0 36px" }}>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 36px" }}>
         Paramètres
       </h1>
 

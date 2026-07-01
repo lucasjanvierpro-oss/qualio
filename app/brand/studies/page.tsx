@@ -44,7 +44,7 @@ export default async function BrandStudiesPage() {
             fontFamily: "var(--font-display)",
             fontSize: "30px",
             fontWeight: 400,
-            fontStyle: "italic",
+            fontStyle: "normal",
             letterSpacing: "-0.02em",
             color: "var(--color-text-primary)",
             margin: 0,

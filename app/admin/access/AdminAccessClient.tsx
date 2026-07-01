@@ -56,7 +56,7 @@ export default function AdminAccessClient({
 
 return (
     <div style={{ maxWidth: "900px", margin: "0 auto", padding: "40px 32px" }}>
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, color: "#F9F8F6", margin: "0 0 8px" }}>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, color: "#F9F8F6", margin: "0 0 8px" }}>
         Gestion des accès
       </h1>
       <p style={{ fontSize: "13px", color: "#6B6760", margin: "0 0 36px" }}>

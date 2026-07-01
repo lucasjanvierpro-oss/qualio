@@ -146,7 +146,7 @@ export default function AdminVerificationsClient({
         </p>
         <h1 style={{
           fontFamily: "var(--font-display)",
-          fontSize: "28px", fontWeight: 400, fontStyle: "italic",
+          fontSize: "28px", fontWeight: 800, fontStyle: "normal",
           letterSpacing: "-0.02em", color: "#F8F7F4", margin: 0,
         }}>
           Pièces d'identité

@@ -491,7 +491,7 @@ export default function AdminStudyDetailClient({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "28px" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" }}>
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 400, color: "var(--color-text-primary)", margin: 0 }}>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, color: "var(--color-text-primary)", margin: 0 }}>
               {study.title}
             </h1>
             <span style={{ padding: "3px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 600, background: s.bg, color: s.text }}>
@@ -679,7 +679,7 @@ export default function AdminStudyDetailClient({
                           {p.age ? `${p.age} ans` : ""}{p.city ? ` · ${p.city}` : ""}{p.profession ? ` · ${p.profession}` : ""}
                         </div>
                         {ai?.reason ? (
-                          <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "3px", fontStyle: "italic" }}>"{ai.reason}"</div>
+                          <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "3px", fontStyle: "normal" }}>"{ai.reason}"</div>
                         ) : (
                           <div style={{ display: "flex", gap: "4px", marginTop: "4px", flexWrap: "wrap" }}>
                             {p.interests.slice(0, 4).map((interest) => (
@@ -747,7 +747,7 @@ export default function AdminStudyDetailClient({
                         <span style={{ fontFamily: "monospace", fontSize: "14px", fontWeight: 700, color: colors.text, background: colors.bg, padding: "3px 10px", borderRadius: "6px" }}>
                           {sc}/5 IA
                         </span>
-                        <span style={{ fontSize: "12px", color: "var(--color-text-tertiary)", fontStyle: "italic" }}>"{aiScores[selectedParticipant.id].reason}"</span>
+                        <span style={{ fontSize: "12px", color: "var(--color-text-tertiary)", fontStyle: "normal" }}>"{aiScores[selectedParticipant.id].reason}"</span>
                       </div>
                     );
                   })()}

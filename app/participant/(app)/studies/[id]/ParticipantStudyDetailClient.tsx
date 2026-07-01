@@ -188,7 +188,7 @@ export default function ParticipantStudyDetailClient({
 
       {/* Study details */}
       <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px", padding: "24px", marginBottom: "20px" }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 400, color: "var(--color-text-primary)", margin: "0 0 20px" }}>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 20px" }}>
           {study.title}
         </h1>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "20px" }}>

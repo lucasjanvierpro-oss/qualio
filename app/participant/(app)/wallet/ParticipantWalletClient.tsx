@@ -273,7 +273,7 @@ export default function ParticipantWalletClient({
   return (
     <div style={{ maxWidth: "720px", margin: "0 auto", padding: "40px 32px" }}>
       {/* Header */}
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "30px", fontWeight: 400, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "30px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
         Mes récompenses
       </h1>
       <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: "0 0 32px" }}>

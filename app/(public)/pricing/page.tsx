@@ -89,7 +89,7 @@ export default function PricingPage() {
       {/* Nav */}
       <nav style={{ padding: "0 40px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--color-border-base)" }}>
         <Link href="/" style={{ textDecoration: "none" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontStyle: "italic", color: "var(--color-text-primary)" }}>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontStyle: "normal", color: "var(--color-text-primary)" }}>
             Qualio
           </span>
         </Link>
@@ -107,7 +107,7 @@ export default function PricingPage() {
         <h1 style={{
           fontFamily: "var(--font-display)",
           fontSize: "clamp(32px, 4vw, 52px)",
-          fontWeight: 400, fontStyle: "italic",
+          fontWeight: 800, fontStyle: "normal",
           letterSpacing: "-0.03em",
           color: "var(--color-text-primary)",
           margin: "0 0 16px",
@@ -227,7 +227,7 @@ export default function PricingPage() {
 
       {/* Bottom CTA */}
       <div style={{ textAlign: "center", padding: "72px 40px" }}>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 400, fontStyle: "italic", letterSpacing: "-0.025em", color: "var(--color-text-primary)", margin: "0 0 20px" }}>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 800, fontStyle: "normal", letterSpacing: "-0.025em", color: "var(--color-text-primary)", margin: "0 0 20px" }}>
           Prêt à recruter autrement ?
         </h2>
         <Link href="/signup/brand" style={{ display: "inline-block", padding: "13px 32px", background: "var(--color-accent)", color: "#fff", borderRadius: "3px", fontSize: "14px", fontWeight: 700, textDecoration: "none" }}>
@@ -241,7 +241,7 @@ export default function PricingPage() {
       {/* Footer */}
       <footer style={{ borderTop: "1px solid var(--color-border-base)", padding: "24px 40px" }}>
         <div style={{ maxWidth: "960px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: "16px", fontStyle: "italic", color: "var(--color-text-primary)" }}>Qualio</span>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: "16px", fontStyle: "normal", color: "var(--color-text-primary)" }}>Qualio</span>
           <div style={{ display: "flex", gap: "20px" }}>
             <Link href="/" style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textDecoration: "none" }}>Accueil</Link>
             <Link href="/login" style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textDecoration: "none" }}>Connexion</Link>

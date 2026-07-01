@@ -325,6 +325,7 @@ model StudyReport {
   study   Study  @relation(fields: [studyId], references: [id], onDelete: Cascade)
 
   markdownContent    String   @db.Text
+  structuredContent  Json?    // Rapport structuré multi-catégories (onglets)
   generatedAt        DateTime @default(now())
   generatedByAdminId String?
   aiModelUsed        String   @default("claude-sonnet-4-6")

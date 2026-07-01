@@ -49,7 +49,7 @@ function ReportDisplay({ content }: { content: string }) {
         if (line.startsWith("### ")) {
           return (
             <h3 key={i} style={{
-              fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 400,
+              fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 800,
               color: "var(--color-accent)", margin: "36px 0 12px",
               borderBottom: "1px solid var(--color-accent-light)", paddingBottom: "8px",
             }}>
@@ -60,7 +60,7 @@ function ReportDisplay({ content }: { content: string }) {
         // H2 headers ## TITLE
         if (line.startsWith("## ")) {
           return (
-            <h2 key={i} style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 400, color: "var(--color-text-primary)", margin: "28px 0 14px" }}>
+            <h2 key={i} style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 800, color: "var(--color-text-primary)", margin: "28px 0 14px" }}>
               {line.replace("## ", "")}
             </h2>
           );
@@ -132,7 +132,7 @@ function renderInline(text: string): React.ReactNode {
     } else if (quoteMatch) {
       if (quoteMatch[1]) parts.push(<span key={key++}>{quoteMatch[1]}</span>);
       parts.push(
-        <span key={key++} style={{ fontStyle: "italic", color: "var(--color-text-primary)", background: "var(--color-surface-2)", padding: "1px 6px", borderRadius: "4px", borderLeft: "2px solid var(--color-accent-light)" }}>
+        <span key={key++} style={{ fontStyle: "normal", color: "var(--color-text-primary)", background: "var(--color-surface-2)", padding: "1px 6px", borderRadius: "4px", borderLeft: "2px solid var(--color-accent-light)" }}>
           "{quoteMatch[2]}"
         </span>
       );
@@ -225,7 +225,7 @@ export default function AdminReportClient({ study }: { study: Study }) {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "28px" }}>
         <div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 400, margin: "0 0 4px" }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 800, margin: "0 0 4px" }}>
             Rapport de synthèse
           </h1>
           <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>
@@ -368,7 +368,7 @@ export default function AdminReportClient({ study }: { study: Study }) {
               <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>
                 Qualio · Synthèse qualitative
               </div>
-              <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 400, margin: "0 0 4px" }}>{study.title}</h1>
+              <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 800, margin: "0 0 4px" }}>{study.title}</h1>
               <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>{study.brandName}</div>
             </div>
             <ReportDisplay content={report} />

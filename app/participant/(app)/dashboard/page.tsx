@@ -62,7 +62,7 @@ export default async function ParticipantDashboard() {
           fontFamily: "var(--font-display)",
           fontSize: "32px",
           fontWeight: 400,
-          fontStyle: "italic",
+          fontStyle: "normal",
           letterSpacing: "-0.02em",
           color: "var(--color-text-primary)",
           margin: 0,
@@ -95,7 +95,7 @@ export default async function ParticipantDashboard() {
             <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.10em", color: "rgba(255,255,255,0.5)", marginBottom: "8px" }}>
               Prochain entretien
             </p>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 400, fontStyle: "italic", color: "#fff", marginBottom: "5px" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 800, fontStyle: "normal", color: "#fff", marginBottom: "5px" }}>
               {upcomingInterview.study.title}
             </div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>

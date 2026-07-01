@@ -107,7 +107,7 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
 
   return (
     <div style={{ maxWidth: "720px", margin: "0 auto", padding: "40px 32px" }}>
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 400, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
         Mon profil
       </h1>
       <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: "0 0 28px" }}>

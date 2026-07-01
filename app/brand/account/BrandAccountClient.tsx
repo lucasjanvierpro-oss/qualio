@@ -66,7 +66,7 @@ export default function BrandAccountClient({
           ✓ Paiement confirmé — vos crédits ont été ajoutés à votre compte.
         </div>
       )}
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 400, color: "var(--color-text-primary)", margin: "0 0 32px" }}>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 32px" }}>
         Compte & abonnement
       </h1>
 

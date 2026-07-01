@@ -270,12 +270,12 @@ export default function LandingPage() {
             </div>
 
             <h1 style={{ margin: "0 0 22px", lineHeight: 1.02 }}>
-              <span className="anim-up anim-d2" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "14px", flexWrap: "wrap", fontFamily: "var(--font-display)", fontSize: "clamp(40px, 5.6vw, 70px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.035em", color: "var(--color-plum-deep)" }}>
+              <span className="anim-up anim-d2" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "14px", flexWrap: "wrap", fontFamily: "var(--font-display)", fontSize: "clamp(40px, 5.6vw, 70px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.035em", color: "var(--color-plum-deep)" }}>
                 Recrutez les
                 <span style={{ display: "inline-flex", width: "58px", height: "58px", borderRadius: "18px", background: "linear-gradient(140deg, #8765D7, #C98BC5)", verticalAlign: "middle", boxShadow: "0 8px 24px var(--color-glow)" }} />
                 bons profils.
               </span>
-              <span className="anim-up anim-d3 text-gradient-plum" style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "clamp(40px, 5.6vw, 70px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.035em" }}>
+              <span className="anim-up anim-d3 text-gradient-plum" style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "clamp(40px, 5.6vw, 70px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.035em" }}>
                 En 72 heures.
               </span>
             </h1>
@@ -329,8 +329,8 @@ export default function LandingPage() {
         <Reveal>
           <div style={{ textAlign: "center", marginBottom: "52px" }}>
             <h2 style={{ margin: 0, lineHeight: 1.1 }}>
-              <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.6vw, 44px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.025em" }}>Zéro délai, </span>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.6vw, 44px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.025em", color: "var(--color-plum-deep)" }}>zéro friction</span>
+              <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.6vw, 44px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.025em" }}>Zéro délai, </span>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.6vw, 44px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.025em", color: "var(--color-plum-deep)" }}>zéro friction</span>
             </h2>
           </div>
         </Reveal>
@@ -359,8 +359,8 @@ export default function LandingPage() {
             <div style={{ textAlign: "center", marginBottom: "48px" }}>
               <p className="q-label" style={{ marginBottom: "14px" }}>Ce que vous pouvez explorer</p>
               <h2 style={{ margin: 0, lineHeight: 1.1 }}>
-                <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 42px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em", color: "var(--color-plum-deep)" }}>Des insights actionnables, </span>
-                <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 42px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em" }}>pour chaque métier</span>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 42px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--color-plum-deep)" }}>Des insights actionnables, </span>
+                <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 42px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.02em" }}>pour chaque métier</span>
               </h2>
             </div>
           </Reveal>
@@ -404,8 +404,8 @@ export default function LandingPage() {
             <div>
               <p className="q-label" style={{ color: "var(--color-accent)", marginBottom: "16px" }}>✦ Panel vérifié</p>
               <h2 style={{ margin: "0 0 20px", lineHeight: 1.12 }}>
-                <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3vw, 40px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em", color: "var(--color-plum-deep)" }}>Pas un panel générique.<br /></span>
-                <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3vw, 40px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em" }}>De vrais insiders.</span>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3vw, 40px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--color-plum-deep)" }}>Pas un panel générique.<br /></span>
+                <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3vw, 40px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.02em" }}>De vrais insiders.</span>
               </h2>
               <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", lineHeight: 1.7, margin: "0 0 30px" }}>
                 Stylistes, buyers, créatifs, early adopters documentés. Chaque profil passe un screener qualitatif, une vérification d'identité, et notre moteur d'analyse lui attribue des centaines de signaux invisibles utilisés pour le matching.
@@ -433,8 +433,8 @@ export default function LandingPage() {
             <div style={{ textAlign: "center", marginBottom: "16px" }}>
               <p className="q-label" style={{ marginBottom: "14px" }}>Workflow orchestré</p>
               <h2 style={{ margin: "0 0 12px", lineHeight: 1.1 }}>
-                <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 42px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em", color: "var(--color-plum-deep)" }}>Du brief au rapport, </span>
-                <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 42px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em" }}>sans logistique</span>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 42px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--color-plum-deep)" }}>Du brief au rapport, </span>
+                <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 42px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.02em" }}>sans logistique</span>
               </h2>
             </div>
           </Reveal>
@@ -459,8 +459,8 @@ export default function LandingPage() {
         <Reveal>
           <div style={{ textAlign: "center", marginBottom: "52px" }}>
             <h2 style={{ margin: 0, lineHeight: 1.1 }}>
-              <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.6vw, 44px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.025em" }}>3 étapes simples, </span>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.6vw, 44px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.025em", color: "var(--color-plum-deep)" }}>des profils immédiats</span>
+              <span className="text-gradient-plum" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.6vw, 44px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.025em" }}>3 étapes simples, </span>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 3.6vw, 44px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.025em", color: "var(--color-plum-deep)" }}>des profils immédiats</span>
             </h2>
           </div>
         </Reveal>
@@ -475,7 +475,7 @@ export default function LandingPage() {
             <Reveal key={s.n} delay={i * 0.1} style={{ position: "relative", zIndex: 1 }}>
               <div className="q-card hover-glow" style={{ height: "100%" }}>
                 <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "linear-gradient(140deg, #E9DEFA, #C7B4EC)", border: "1px solid rgba(135,101,215,0.18)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-mono-base)", fontSize: "17px", fontWeight: 700, color: "var(--color-accent)", marginBottom: "20px" }}>{s.n}</div>
-                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontStyle: "italic", fontWeight: 400, color: "var(--color-plum)", margin: "0 0 10px" }}>{s.title}</h3>
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontStyle: "normal", fontWeight: 800, color: "var(--color-plum)", margin: "0 0 10px" }}>{s.title}</h3>
                 <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.65, margin: 0 }}>{s.desc}</p>
               </div>
             </Reveal>
@@ -489,7 +489,7 @@ export default function LandingPage() {
           <Reveal>
             <div style={{ textAlign: "center", marginBottom: "48px" }}>
               <p className="q-label" style={{ marginBottom: "14px" }}>Pourquoi Qualio</p>
-              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 40px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em", color: "var(--color-plum-deep)", margin: 0, lineHeight: 1.1 }}>
+              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 40px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--color-plum-deep)", margin: 0, lineHeight: 1.1 }}>
                 Ce qu'une agence ou un panel<br />classique ne vous donnera pas
               </h2>
             </div>
@@ -524,7 +524,7 @@ export default function LandingPage() {
         <Reveal>
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <p className="q-label" style={{ marginBottom: "14px" }}>Tarifs</p>
-            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 40px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.025em", color: "var(--color-plum-deep)", margin: "0 0 8px" }}>Simple et transparent</h2>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 40px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.025em", color: "var(--color-plum-deep)", margin: "0 0 8px" }}>Simple et transparent</h2>
             <p style={{ fontSize: "13px", color: "var(--color-text-tertiary)" }}>1 crédit = 1 participant confirmé · Crédits sans expiration</p>
           </div>
         </Reveal>
@@ -583,7 +583,7 @@ export default function LandingPage() {
       <section style={{ position: "relative", overflow: "hidden", padding: "100px 40px", textAlign: "center", background: "var(--color-surface)" }}>
         <div style={{ position: "absolute", bottom: "-40%", left: "50%", transform: "translateX(-50%)", width: "800px", height: "600px", background: "radial-gradient(ellipse at center, rgba(170,144,225,0.18) 0%, transparent 65%)", pointerEvents: "none" }} />
         <Reveal style={{ position: "relative" }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(32px, 4.4vw, 56px)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.03em", color: "var(--color-plum-deep)", margin: "0 0 20px", lineHeight: 1.0 }}>Prêt à recruter autrement ?</h2>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(32px, 4.4vw, 56px)", fontStyle: "normal", fontWeight: 800, letterSpacing: "-0.03em", color: "var(--color-plum-deep)", margin: "0 0 20px", lineHeight: 1.0 }}>Prêt à recruter autrement ?</h2>
           <p style={{ fontSize: "15px", color: "var(--color-text-secondary)", margin: "0 auto 36px", maxWidth: "420px", lineHeight: 1.6 }}>Déposez votre premier brief aujourd'hui. Premiers profils sous 48h.</p>
           <Link href="/signup/brand" className="q-btn q-btn-primary anim-glow" style={{ fontSize: "14px", padding: "15px 36px" }}>Commencer gratuitement →</Link>
           <p style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginTop: "14px" }}>5 crédits offerts · Aucune carte bancaire requise</p>
