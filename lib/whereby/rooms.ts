@@ -4,29 +4,36 @@ export type WherebyRoom = {
   meetingId: string;
 };
 
-// Crée une room Whereby avec enregistrement cloud AUTOMATIQUE.
-// L'enregistrement démarre dès qu'un participant rejoint, sans action de l'hôte.
-// Quand il est prêt, Whereby envoie un webhook → /api/webhooks/whereby.
+// Crée une room Whereby (visio encastrée dans qualio).
 //
-// Prérequis côté compte Whereby :
-//  - Plan Embedded avec "cloud recording" activé
-//  - Un webhook configuré vers https://TON-SITE/api/webhooks/whereby
+// L'enregistrement cloud + transcription est une fonction PAYANTE (plan Build).
+// Il n'est activé que si WHEREBY_RECORDING_ENABLED=true — sinon la création de
+// salle échouerait sur le plan gratuit (Explore).
+//   - Explore (gratuit) : visio seule → laisse WHEREBY_RECORDING_ENABLED vide
+//   - Build (payant)   : enregistrement + transcription → mets =true
+// Quand actif, Whereby envoie un webhook → /api/webhooks/whereby.
 export async function createWherebyRoom(endDate: Date): Promise<WherebyRoom> {
+  const recordingEnabled = process.env.WHEREBY_RECORDING_ENABLED === "true";
+
+  const body: Record<string, unknown> = {
+    endDate: endDate.toISOString(),
+    fields: ["hostRoomUrl"],
+  };
+  if (recordingEnabled) {
+    body.recording = {
+      type: "cloud",
+      destination: { provider: "whereby" },
+      startTrigger: "automatic",
+    };
+  }
+
   const response = await fetch("https://api.whereby.dev/v1/meetings", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.WHEREBY_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      endDate: endDate.toISOString(),
-      fields: ["hostRoomUrl"],
-      recording: {
-        type: "cloud",
-        destination: { provider: "whereby" },
-        startTrigger: "automatic",
-      },
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
