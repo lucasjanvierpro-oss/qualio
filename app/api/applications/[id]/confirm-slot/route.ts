@@ -47,13 +47,15 @@ export async function POST(
   const durationMinutes = application.study.interviewDuration;
   const endDate = new Date(scheduledDate.getTime() + durationMinutes * 60 * 1000 + 60 * 60 * 1000);
 
-  // Create Whereby room
+  // Create Whereby room (avec enregistrement cloud auto)
   let videoLink = `https://qualio.whereby.com/interview-${id}`;
   let hostRoomUrl = videoLink;
+  let wherebyMeetingId: string | null = null;
   try {
     const room = await createWherebyRoom(endDate);
     videoLink = room.roomUrl;
     hostRoomUrl = room.hostRoomUrl;
+    wherebyMeetingId = room.meetingId;
   } catch {
     // Fall back to placeholder if not configured
   }
@@ -65,6 +67,9 @@ export async function POST(
       scheduledAt: scheduledDate,
       durationMinutes,
       videoLink,
+      hostRoomUrl,
+      wherebyMeetingId,
+      recordingStatus: wherebyMeetingId ? "pending" : null,
       status: "scheduled",
     },
   });

@@ -376,7 +376,16 @@ model Interview {
   scheduledAt     DateTime
   durationMinutes Int     @default(30)
   videoLink       String?
+  hostRoomUrl     String?
+  wherebyMeetingId String?
   status          String  @default("scheduled")
+
+  // Enregistrement & transcription (pipeline auto)
+  recordingStatus String?   // "pending" | "recording" | "ready" | "failed"
+  recordingUrl    String?   @db.Text
+  transcriptStatus String?  // "pending" | "processing" | "done" | "failed"
+  transcriptId    String?   // id du job AssemblyAI
+  transcript      String?   @db.Text
 
   completedAt   DateTime?
   brandRating   Int?

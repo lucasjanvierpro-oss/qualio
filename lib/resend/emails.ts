@@ -7,6 +7,25 @@ function getResend() {
 const FROM = "Qualio <noreply@qualio.io>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://qualio.io";
 
+export async function sendReportReady(to: string, contactFirstName: string, studyTitle: string, studyId: string) {
+  return getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `Votre rapport de synthèse est prêt — ${studyTitle}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 24px;">
+        <h1 style="font-size: 22px; color: #3A2E44;">Votre rapport est disponible${contactFirstName ? `, ${contactFirstName}` : ""}</h1>
+        <p style="color: #69527A; line-height: 1.6;">
+          La synthèse analytique de votre étude <strong>${studyTitle}</strong> a été générée à partir des entretiens. Insights, verbatims, personas et recommandations vous attendent.
+        </p>
+        <a href="${APP_URL}/brand/studies/${studyId}/report" style="display: inline-block; margin-top: 24px; padding: 12px 24px; background: #8765D7; color: #fff; border-radius: 999px; text-decoration: none; font-weight: 600;">
+          Voir le rapport →
+        </a>
+      </div>
+    `,
+  });
+}
+
 export async function sendWelcomeBrand(to: string, companyName: string) {
   return getResend().emails.send({
     from: FROM,
