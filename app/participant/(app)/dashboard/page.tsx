@@ -110,9 +110,7 @@ export default async function ParticipantDashboard() {
           </div>
           {upcomingInterview.videoLink ? (
             <a
-              href={upcomingInterview.videoLink}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={`/participant/interview/${upcomingInterview.id}`}
               style={{
                 padding: "10px 20px",
                 background: "#fff",

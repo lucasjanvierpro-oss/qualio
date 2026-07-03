@@ -115,12 +115,10 @@ export default function ParticipantStudyDetailClient({
               {isUpcoming ? `${fmt(interview.scheduledAt, { weekday: "long", day: "numeric", month: "long" })} à ${fmt(interview.scheduledAt, { hour: "2-digit", minute: "2-digit" })}` : "Entretien"}
             </div>
             <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff" }}>Rejoindre votre entretien vidéo</div>
-            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginTop: "4px" }}>Durée : {interview.durationMinutes} minutes · Whereby</div>
+            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginTop: "4px" }}>Durée : {interview.durationMinutes} minutes · directement ici</div>
           </div>
           <a
-            href={interview.videoLink}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`/participant/interview/${interview.id}`}
             style={{ padding: "13px 24px", background: "#fff", color: "var(--color-accent)", borderRadius: "9px", fontSize: "15px", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}
           >
             🎥 Rejoindre
