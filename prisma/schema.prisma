@@ -229,7 +229,7 @@ model ParticipantGhostFile {
   // Meta
   generatedAt     DateTime @default(now())
   lastUpdatedAt   DateTime @updatedAt
-  aiModelUsed     String   @default("claude-sonnet-4-6")
+  aiModelUsed     String   @default("claude-sonnet-5")
   processingStatus String  @default("pending") // "pending" | "processing" | "done" | "error"
 
   @@map("participant_ghost_files")
@@ -328,7 +328,7 @@ model StudyReport {
   structuredContent  Json?    // Rapport structuré multi-catégories (onglets)
   generatedAt        DateTime @default(now())
   generatedByAdminId String?
-  aiModelUsed        String   @default("claude-sonnet-4-6")
+  aiModelUsed        String   @default("claude-sonnet-5")
   pdfUrl             String?
 
   @@map("study_reports")

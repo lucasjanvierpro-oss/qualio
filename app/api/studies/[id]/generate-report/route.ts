@@ -135,7 +135,7 @@ ${additionalContext ? `NOTES ADDITIONNELLES DE L'ÉQUIPE QUALIO :\n${additionalC
 Génère maintenant le rapport de synthèse complet selon le format défini.`;
 
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "claude-sonnet-5",
     max_tokens: 4000,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userMessage }],
@@ -163,7 +163,7 @@ Génère maintenant le rapport de synthèse complet selon le format défini.`;
       markdownContent: raw,
       structuredContent: structured as Prisma.InputJsonValue,
       generatedByAdminId: dbUser.id,
-      aiModelUsed: "claude-sonnet-4-6",
+      aiModelUsed: "claude-sonnet-5",
     },
     update: {
       markdownContent: raw,

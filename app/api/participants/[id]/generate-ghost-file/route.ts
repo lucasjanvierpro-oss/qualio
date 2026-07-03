@@ -113,7 +113,7 @@ Valeurs attendues :
 
   try {
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-sonnet-5",
       max_tokens: 2048,
       messages: [{ role: "user", content: prompt }],
     });
@@ -143,12 +143,12 @@ Valeurs attendues :
       create: {
         participantProfileId: id,
         processingStatus: "done",
-        aiModelUsed: "claude-sonnet-4-6",
+        aiModelUsed: "claude-sonnet-5",
         ...parsed,
       },
       update: {
         processingStatus: "done",
-        aiModelUsed: "claude-sonnet-4-6",
+        aiModelUsed: "claude-sonnet-5",
         ...parsed,
       },
     });
