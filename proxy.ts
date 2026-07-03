@@ -18,8 +18,13 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Stripe webhook — no auth needed
-  if (pathname.startsWith("/api/stripe/webhook")) {
+  // Endpoints appelés par des services externes (aucune session utilisateur) :
+  // webhooks Stripe & Whereby, et cron Vercel. Ils gèrent leur propre sécurité.
+  if (
+    pathname.startsWith("/api/stripe/webhook") ||
+    pathname.startsWith("/api/webhooks/") ||
+    pathname.startsWith("/api/cron/")
+  ) {
     return supabaseResponse;
   }
 
