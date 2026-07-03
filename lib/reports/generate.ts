@@ -1,4 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/app/generated/prisma/client";
+import { sendReportReady } from "@/lib/resend/emails";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -110,4 +113,97 @@ export async function generateReport(userMessage: string): Promise<{
     structured = null;
   }
   return { raw, structured };
+}
+
+function calcAge(dob: Date | null): number | null {
+  if (!dob) return null;
+  const t = new Date();
+  let a = t.getFullYear() - dob.getFullYear();
+  const m = t.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && t.getDate() < dob.getDate())) a--;
+  return a;
+}
+
+export type AutoReportResult =
+  | { ok: true; reportGenerated: true }
+  | { ok: false; reason: "no_transcripts" | "not_all_done" | "no_key" | "study_not_found" | "generation_failed" };
+
+// Assemble les transcripts d'une étude et génère le rapport structuré.
+// Appelée automatiquement (webhook) OU manuellement (secours admin).
+// requireAll = true : n'agit que si TOUS les entretiens sont transcrits.
+export async function generateAndStoreReportFromTranscripts(
+  studyId: string,
+  opts: { requireAll?: boolean } = {}
+): Promise<AutoReportResult> {
+  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, reason: "no_key" };
+
+  const interviews = await prisma.interview.findMany({
+    where: { studyId, status: { not: "cancelled" } },
+    include: {
+      application: {
+        include: {
+          participantProfile: {
+            select: {
+              profession: true, dateOfBirth: true,
+              ghostFile: { select: { primaryExpertise: true, profileType: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const transcribed = interviews.filter((iv) => iv.transcriptStatus === "done" && iv.transcript);
+  if (transcribed.length === 0) return { ok: false, reason: "no_transcripts" };
+  if (opts.requireAll && transcribed.length < interviews.length) return { ok: false, reason: "not_all_done" };
+
+  const study = await prisma.study.findUnique({
+    where: { id: studyId },
+    include: { brandProfile: { include: { user: { select: { email: true } } } } },
+  });
+  if (!study) return { ok: false, reason: "study_not_found" };
+
+  const participantProfiles: ParticipantInput[] = transcribed.map((iv) => {
+    const p = iv.application.participantProfile;
+    return {
+      type: p.ghostFile?.profileType ?? p.profession ?? "Participant",
+      age: calcAge(p.dateOfBirth),
+      profession: p.profession,
+      expertise: p.ghostFile?.primaryExpertise ?? null,
+    };
+  });
+  const verbatims: VerbatimInput[] = transcribed.map((iv) => ({
+    participantType: iv.application.participantProfile.ghostFile?.profileType ?? iv.application.participantProfile.profession ?? "Participant",
+    content: iv.transcript ?? "",
+  }));
+
+  const userMessage = buildUserMessage({
+    studyObjective: study.objective,
+    brandContext: `Étude menée pour ${study.brandProfile.companyName}`,
+    participantProfiles,
+    studyFormat: `${transcribed.length} entretiens ${study.studyType === "ONE_ON_ONE" ? "1:1" : "focus group"} de ${study.interviewDuration} minutes, transcrits automatiquement`,
+    verbatims,
+  });
+
+  try {
+    const { raw, structured } = await generateReport(userMessage);
+    if (!structured) return { ok: false, reason: "generation_failed" };
+
+    await prisma.studyReport.upsert({
+      where: { studyId },
+      create: { studyId, markdownContent: raw, structuredContent: structured as Prisma.InputJsonValue, aiModelUsed: REPORT_MODEL },
+      update: { markdownContent: raw, structuredContent: structured as Prisma.InputJsonValue, generatedAt: new Date() },
+    });
+    await prisma.study.update({ where: { id: studyId }, data: { status: "COMPLETED" } });
+    await sendReportReady(
+      study.brandProfile.user.email,
+      study.brandProfile.contactFirstName ?? "",
+      study.title,
+      study.id
+    ).catch(() => null);
+    return { ok: true, reportGenerated: true };
+  } catch (err) {
+    console.error("[auto-report] génération échouée", err);
+    return { ok: false, reason: "generation_failed" };
+  }
 }
