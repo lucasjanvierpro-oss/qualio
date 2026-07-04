@@ -1,18 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { fetchWherebyTranscript, fetchWherebyRecordingLink } from "@/lib/whereby/rooms";
 import { generateAndStoreReportFromTranscripts } from "@/lib/reports/generate";
 
-// Webhook Whereby — reçoit les événements d'enregistrement ET de transcription.
-// À configurer : dashboard Whereby → Webhooks → URL de ce endpoint.
+// Webhook Whereby.
 //
-// Pipeline (100% Whereby, sans service tiers) :
-//  1. Fin d'entretien → Whereby enregistre puis transcrit (plan Build)
-//  2. Événement "recording ready" → on stocke l'URL de l'enregistrement (référence)
-//  3. Événement "transcription ready" → on stocke le transcript sur l'entretien,
-//     puis si TOUS les entretiens de l'étude sont transcrits → rapport auto.
-//
-// NB : le format exact du payload dépend de la config du compte Whereby.
-// On loggue le brut au premier test pour caler les noms de champs.
+// Comportement réel (vérifié via l'API) :
+//  - transcription.started : porte le transcriptionId → on le mémorise
+//  - recording.finished    : session finie → on récupère le lien mp4 + on va
+//                            chercher le transcript (via /transcriptions/{id})
+//  - room.session.ended    : filet de sécurité → même récupération
+//  Le texte du transcript se récupère par API, pas dans le payload.
+//  Quand tous les entretiens d'une étude sont transcrits → rapport auto.
+
+// Va chercher le transcript (s'il est prêt) et déclenche le rapport si complet.
+async function tryTranscriptAndReport(interviewId: string): Promise<string> {
+  const iv = await prisma.interview.findUnique({ where: { id: interviewId } });
+  if (!iv) return "interview_gone";
+  if (iv.transcriptStatus === "done") return "already_done";
+  if (!iv.transcriptId) return "no_transcript_id";
+
+  const text = await fetchWherebyTranscript(iv.transcriptId);
+  if (!text) return "transcript_not_ready";
+
+  await prisma.interview.update({
+    where: { id: interviewId },
+    data: { transcript: text, transcriptStatus: "done", status: "completed", completedAt: new Date() },
+  });
+
+  const result = await generateAndStoreReportFromTranscripts(iv.studyId, { requireAll: true });
+  return result.ok ? "report_generated" : `report_${result.reason}`;
+}
+
 export async function POST(req: NextRequest) {
   let payload: Record<string, unknown>;
   try {
@@ -21,17 +40,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  // Log complet du payload — sert à caler les noms de champs au premier test réel.
-  console.log("[whereby-webhook] payload reçu:", JSON.stringify(payload));
+  console.log("[whereby-webhook] payload:", JSON.stringify(payload));
 
   const type = String(payload.type ?? "").toLowerCase();
   const data = (payload.data ?? payload) as Record<string, unknown>;
 
-  // Whereby identifie la salle par "roomName" (ex "/470c1e94-..."), pas meetingId.
   const roomName = String(data.roomName ?? "");
-  const meetingId = String(data.meetingId ?? data.roomSessionId ?? "");
+  const meetingId = String(data.meetingId ?? "");
   if (!roomName && !meetingId) {
-    console.warn("[whereby-webhook] payload sans roomName:", JSON.stringify(payload).slice(0, 800));
     return NextResponse.json({ received: true, warning: "no_room_name" });
   }
 
@@ -44,61 +60,38 @@ export async function POST(req: NextRequest) {
     },
   });
   if (!interview) {
-    console.warn("[whereby-webhook] aucun entretien pour roomName", roomName || meetingId);
+    console.warn("[whereby-webhook] aucun entretien pour", roomName || meetingId);
     return NextResponse.json({ received: true, warning: "interview_not_found" });
   }
 
-  // ── Enregistrement prêt ──────────────────────────────────────────────
-  if (type.includes("recording")) {
-    const recordingUrl = String(
-      (data.recordingUrl as string) ??
-      ((data.recording as Record<string, unknown>)?.url as string) ??
-      (data.assetUrl as string) ?? (data.url as string) ?? ""
-    );
-    await prisma.interview.update({
-      where: { id: interview.id },
-      data: { recordingStatus: "ready", recordingUrl: recordingUrl || null },
-    });
-    return NextResponse.json({ received: true, note: "recording_saved" });
+  // ── Transcription démarrée : on mémorise l'id du transcript ──────────
+  if (type.includes("transcription")) {
+    const transcriptionId = String(data.transcriptionId ?? "");
+    if (transcriptionId) {
+      await prisma.interview.update({
+        where: { id: interview.id },
+        data: { transcriptId: transcriptionId, transcriptStatus: "processing" },
+      });
+    }
+    return NextResponse.json({ received: true, note: "transcription_started" });
   }
 
-  // ── Transcription prête ──────────────────────────────────────────────
-  if (type.includes("transcription") || type.includes("transcript")) {
-    // Le transcript peut arriver en texte direct, ou via une URL à télécharger.
-    let transcriptText = String(
-      (data.transcript as string) ??
-      (data.text as string) ??
-      ((data.transcription as Record<string, unknown>)?.text as string) ?? ""
-    );
-    const transcriptUrl = String(
-      (data.transcriptUrl as string) ??
-      ((data.transcription as Record<string, unknown>)?.url as string) ??
-      (data.url as string) ?? ""
-    );
-
-    if (!transcriptText && transcriptUrl) {
-      try {
-        const r = await fetch(transcriptUrl);
-        transcriptText = await r.text();
-      } catch (err) {
-        console.error("[whereby-webhook] téléchargement transcript échoué", err);
-      }
-    }
-
-    if (!transcriptText) {
-      console.warn("[whereby-webhook] transcription sans texte:", JSON.stringify(payload).slice(0, 800));
-      await prisma.interview.update({ where: { id: interview.id }, data: { transcriptStatus: "failed" } });
-      return NextResponse.json({ received: true, warning: "empty_transcript" });
-    }
-
+  // ── Enregistrement fini : lien mp4 + on tente le transcript ─────────
+  if (type.includes("recording")) {
+    const recordingId = String(data.recordingId ?? "");
+    const link = recordingId ? await fetchWherebyRecordingLink(recordingId) : null;
     await prisma.interview.update({
       where: { id: interview.id },
-      data: { transcript: transcriptText, transcriptStatus: "done", status: "completed", completedAt: new Date() },
+      data: { recordingStatus: "ready", recordingUrl: link },
     });
+    const outcome = await tryTranscriptAndReport(interview.id);
+    return NextResponse.json({ received: true, note: "recording_saved", outcome });
+  }
 
-    // Génère le rapport si tous les entretiens de l'étude sont transcrits.
-    const result = await generateAndStoreReportFromTranscripts(interview.studyId, { requireAll: true });
-    return NextResponse.json({ received: true, report: result });
+  // ── Fin de session : filet de sécurité pour le transcript ───────────
+  if (type.includes("session.ended")) {
+    const outcome = await tryTranscriptAndReport(interview.id);
+    return NextResponse.json({ received: true, note: "session_ended", outcome });
   }
 
   return NextResponse.json({ received: true, ignored: type });

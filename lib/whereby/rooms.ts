@@ -44,3 +44,44 @@ export async function createWherebyRoom(endDate: Date): Promise<WherebyRoom> {
 
   return response.json() as Promise<WherebyRoom>;
 }
+
+// ─── Récupération des transcripts & enregistrements ──────────────────────
+const WHEREBY_BASE = "https://api.whereby.dev/v1";
+function wherebyHeaders() {
+  return { Authorization: `Bearer ${process.env.WHEREBY_API_KEY}` };
+}
+
+// Récupère le texte du transcript, seulement s'il est "ready".
+// Flux : /transcriptions/{id} (état) → /access-link (lien signé) → contenu .md.
+export async function fetchWherebyTranscript(transcriptionId: string): Promise<string | null> {
+  try {
+    const metaRes = await fetch(`${WHEREBY_BASE}/transcriptions/${transcriptionId}`, { headers: wherebyHeaders() });
+    if (!metaRes.ok) return null;
+    const meta = (await metaRes.json()) as { state?: string };
+    if (meta.state !== "ready") return null; // pas encore prêt → on réessaiera plus tard
+
+    const linkRes = await fetch(`${WHEREBY_BASE}/transcriptions/${transcriptionId}/access-link`, { headers: wherebyHeaders() });
+    if (!linkRes.ok) return null;
+    const { accessLink } = (await linkRes.json()) as { accessLink?: string };
+    if (!accessLink) return null;
+
+    const contentRes = await fetch(accessLink);
+    if (!contentRes.ok) return null;
+    const text = (await contentRes.text()).trim();
+    return text || null;
+  } catch {
+    return null;
+  }
+}
+
+// Lien signé de téléchargement de l'enregistrement mp4 (pour l'archive vidéo).
+export async function fetchWherebyRecordingLink(recordingId: string): Promise<string | null> {
+  try {
+    const r = await fetch(`${WHEREBY_BASE}/recordings/${recordingId}/access-link`, { headers: wherebyHeaders() });
+    if (!r.ok) return null;
+    const { accessLink } = (await r.json()) as { accessLink?: string };
+    return accessLink ?? null;
+  } catch {
+    return null;
+  }
+}
