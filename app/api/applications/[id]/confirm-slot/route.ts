@@ -51,11 +51,13 @@ export async function POST(
   let videoLink = `https://qualio.whereby.com/interview-${id}`;
   let hostRoomUrl = videoLink;
   let wherebyMeetingId: string | null = null;
+  let wherebyRoomName: string | null = null;
   try {
     const room = await createWherebyRoom(endDate);
     videoLink = room.roomUrl;
     hostRoomUrl = room.hostRoomUrl;
     wherebyMeetingId = room.meetingId;
+    wherebyRoomName = room.roomName;
   } catch {
     // Fall back to placeholder if not configured
   }
@@ -69,6 +71,7 @@ export async function POST(
       videoLink,
       hostRoomUrl,
       wherebyMeetingId,
+      wherebyRoomName,
       recordingStatus: wherebyMeetingId ? "pending" : null,
       status: "scheduled",
     },
@@ -79,9 +82,13 @@ export async function POST(
     data: { status: "CONFIRMED" },
   });
 
-  // Send confirmation emails
+  // Send confirmation emails — le lien pointe vers la visio DANS qualio (backup mail),
+  // pas vers le lien Whereby brut. Chacun rejoint depuis son espace.
   const participantEmail = application.participantProfile.user.email;
   const brandEmail = application.study.brandProfile.user.email;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const participantJoinUrl = `${appUrl}/participant/interview/${interview.id}`;
+  const brandJoinUrl = `${appUrl}/brand/interview/${interview.id}`;
 
   await Promise.allSettled([
     sendInterviewConfirmed(
@@ -89,7 +96,7 @@ export async function POST(
       application.participantProfile.firstName,
       application.study.title,
       scheduledDate,
-      videoLink,
+      participantJoinUrl,
       true
     ),
     sendInterviewConfirmed(
@@ -97,7 +104,7 @@ export async function POST(
       application.study.brandProfile.contactFirstName ?? "Team",
       application.study.title,
       scheduledDate,
-      hostRoomUrl,
+      brandJoinUrl,
       false
     ),
   ]);

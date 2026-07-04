@@ -27,15 +27,24 @@ export async function POST(req: NextRequest) {
   const type = String(payload.type ?? "").toLowerCase();
   const data = (payload.data ?? payload) as Record<string, unknown>;
 
-  const meetingId = String(data.meetingId ?? data.roomName ?? data.roomSessionId ?? "");
-  if (!meetingId) {
-    console.warn("[whereby-webhook] payload sans meetingId:", JSON.stringify(payload).slice(0, 800));
-    return NextResponse.json({ received: true, warning: "no_meeting_id" });
+  // Whereby identifie la salle par "roomName" (ex "/470c1e94-..."), pas meetingId.
+  const roomName = String(data.roomName ?? "");
+  const meetingId = String(data.meetingId ?? data.roomSessionId ?? "");
+  if (!roomName && !meetingId) {
+    console.warn("[whereby-webhook] payload sans roomName:", JSON.stringify(payload).slice(0, 800));
+    return NextResponse.json({ received: true, warning: "no_room_name" });
   }
 
-  const interview = await prisma.interview.findFirst({ where: { wherebyMeetingId: meetingId } });
+  const interview = await prisma.interview.findFirst({
+    where: {
+      OR: [
+        ...(roomName ? [{ wherebyRoomName: roomName }] : []),
+        ...(meetingId ? [{ wherebyMeetingId: meetingId }] : []),
+      ],
+    },
+  });
   if (!interview) {
-    console.warn("[whereby-webhook] aucun entretien pour meetingId", meetingId);
+    console.warn("[whereby-webhook] aucun entretien pour roomName", roomName || meetingId);
     return NextResponse.json({ received: true, warning: "interview_not_found" });
   }
 

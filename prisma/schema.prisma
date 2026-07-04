@@ -378,6 +378,7 @@ model Interview {
   videoLink       String?
   hostRoomUrl     String?
   wherebyMeetingId String?
+  wherebyRoomName  String?  // ex "/470c1e94-..." — clé de matching des webhooks
   status          String  @default("scheduled")
 
   // Enregistrement & transcription (pipeline auto)

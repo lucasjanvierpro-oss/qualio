@@ -2,6 +2,7 @@ export type WherebyRoom = {
   roomUrl: string;
   hostRoomUrl: string;
   meetingId: string;
+  roomName: string; // ex "/470c1e94-..." — utilisé pour matcher les webhooks
 };
 
 // Crée une room Whereby (visio encastrée dans qualio).
