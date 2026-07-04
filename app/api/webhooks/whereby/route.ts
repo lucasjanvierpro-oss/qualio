@@ -21,6 +21,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
+  // Log complet du payload — sert à caler les noms de champs au premier test réel.
+  console.log("[whereby-webhook] payload reçu:", JSON.stringify(payload));
+
   const type = String(payload.type ?? "").toLowerCase();
   const data = (payload.data ?? payload) as Record<string, unknown>;
 
