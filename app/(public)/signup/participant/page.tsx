@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/shared/Logo";
 import { detectLanguage, setLanguage, type Lang } from "@/lib/i18n/detect";
 import { EMPTY_ONBOARDING, type OnboardingState } from "@/lib/onboarding/types";
 import { computeScore, levelFromScore, LEVEL_META } from "@/lib/onboarding/scoring";
-import { createFunnelAccount, saveFunnelStep } from "@/app/actions/funnel";
+import { createFunnelAccount, saveFunnelStep, completeFunnel } from "@/app/actions/funnel";
 import VoiceInput from "@/components/onboarding/VoiceInput";
+import BadgeUpload from "@/components/onboarding/BadgeUpload";
 
 const DRAFT = "rarelyst_funnel_draft";
 
@@ -40,6 +41,16 @@ const T = {
     behavioralTitle: "Cochez tout ce qui vous correspond — sans pression.",
     behavioralSub: "Il n'y a pas de mauvaise réponse.",
     expertTitle: "Quelques questions pour mieux vous connaître",
+    levelReached: "Niveau atteint", levelSub: "Les badges optionnels peuvent faire monter votre niveau.",
+    boostProfile: "Boostez votre profil", boostSub: "Optionnel, mais augmente votre niveau et vos chances d'être sélectionné(e).",
+    notAdded: "Non ajouté", added: "Ajouté ✓", addUrl: "Coller l'URL", upload: "Choisir un fichier", uploading: "Envoi…",
+    logisticsTitle: "Logistique", availabilityLabel: "Vos disponibilités",
+    morning: "Matin", afternoon: "Après-midi", evening: "Soir",
+    formatLabel: "Format préféré", langsLabel: "Langue(s) d'entretien", rewardLabel: "Préférence de récompense",
+    charterTitle: "Charte de participation", charterIntro: "Tout paiement en dehors de Rarelyst est strictement interdit.",
+    accept: "J'accepte la charte et j'active mon profil", scrollToEnd: "Faites défiler jusqu'en bas",
+    finalTitle: "Dernière étape — vérifiez votre email",
+    resendEmail: "Renvoyer l'email", goDashboard: "Accéder à mes études",
   },
   en: {
     createProfile: "Create your profile", firstName: "First name", lastName: "Last name", email: "Email",
@@ -68,8 +79,46 @@ const T = {
     behavioralTitle: "Check everything that applies — no pressure.",
     behavioralSub: "There are no wrong answers.",
     expertTitle: "A few questions to get to know you better",
+    levelReached: "Level reached", levelSub: "Optional badges can raise your level.",
+    boostProfile: "Boost your profile", boostSub: "Optional, but it raises your level and your chances of being selected.",
+    notAdded: "Not added", added: "Added ✓", addUrl: "Paste URL", upload: "Choose a file", uploading: "Uploading…",
+    logisticsTitle: "Logistics", availabilityLabel: "Your availability",
+    morning: "Morning", afternoon: "Afternoon", evening: "Evening",
+    formatLabel: "Preferred format", langsLabel: "Interview language(s)", rewardLabel: "Reward preference",
+    charterTitle: "Participation Charter", charterIntro: "Any payment outside of Rarelyst is strictly prohibited.",
+    accept: "I accept the charter and activate my profile", scrollToEnd: "Scroll to the bottom",
+    finalTitle: "Last step — verify your email",
+    resendEmail: "Resend email", goDashboard: "Access studies",
   },
 } as const;
+
+// ── Bloc 3 : données (jours, format, récompense, charte, badges) ──
+const DAYS: { fr: string; en: string }[] = [
+  { fr: "Lundi", en: "Mon" }, { fr: "Mardi", en: "Tue" }, { fr: "Mercredi", en: "Wed" },
+  { fr: "Jeudi", en: "Thu" }, { fr: "Vendredi", en: "Fri" }, { fr: "Samedi", en: "Sat" },
+];
+const SLOTS = ["morning", "afternoon", "evening"] as const;
+const FORMAT_OPTS: { val: string; fr: string; en: string }[] = [
+  { val: "one_on_one", fr: "Entretien individuel (1:1) en visio", en: "Individual video interview" },
+  { val: "focus_group", fr: "Focus group en visio (4-8 personnes)", en: "Video focus group" },
+  { val: "both", fr: "Les deux me conviennent", en: "Both work for me" },
+];
+const REWARD_OPTS: { val: string; fr: string; en: string }[] = [
+  { val: "cash", fr: "Virement bancaire (cash)", en: "Bank transfer" },
+  { val: "voucher", fr: "Bon d'achat (Amazon, Fnac…)", en: "Gift card" },
+  { val: "products", fr: "Produits de la marque", en: "Brand products" },
+  { val: "any", fr: "Peu importe", en: "No preference" },
+];
+const INTERVIEW_LANGS = ["Français", "English", "Español", "Italiano", "Deutsch"];
+const CHARTER_RULES: { fr: string; en: string }[] = [
+  { fr: "Fournir des informations exactes sur votre identité, parcours et expériences.", en: "Provide accurate information about your identity, background and experiences." },
+  { fr: "Répondre honnêtement à toutes les questions des études.", en: "Answer all study questions honestly." },
+  { fr: "Ne candidater qu'aux études correspondant réellement à votre profil.", en: "Only apply to studies that genuinely match your profile." },
+  { fr: "Respecter la confidentialité totale des sujets abordés en entretien.", en: "Maintain full confidentiality about topics discussed in interviews." },
+  { fr: "Ne jamais contacter les marques directement en dehors de la plateforme.", en: "Never contact brands directly outside of the platform." },
+  { fr: "Un seul compte par personne — tout doublon entraîne une exclusion définitive.", en: "One account per person — duplicates result in permanent exclusion." },
+  { fr: "Communiquer de manière respectueuse avec l'équipe Rarelyst.", en: "Communicate respectfully with the Rarelyst team." },
+];
 
 // ── Bloc 2 : données (type de profil, checklist, adaptatives, expertes) ──
 const PROFILE_TYPES: { tag: string; fr: string; en: string }[] = [
@@ -154,7 +203,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
-const SCREENS = ["account", "gain", "demographics", "universes", "profile_type", "behavioral", "expert"] as const;
+const SCREENS = ["account", "gain", "demographics", "universes", "profile_type", "behavioral", "expert", "level", "badges", "logistics", "charter", "final"] as const;
 
 export default function ParticipantFunnel() {
   const router = useRouter();
@@ -165,6 +214,8 @@ export default function ParticipantFunnel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [accountCreated, setAccountCreated] = useState(false);
+  const [scrolledCharter, setScrolledCharter] = useState(false);
+  const [linkedinScan, setLinkedinScan] = useState<"idle" | "scanning" | "done">("idle");
 
   const t = T[lang];
 
@@ -192,7 +243,7 @@ export default function ParticipantFunnel() {
 
   const score = computeScore(data);
   const level = levelFromScore(score);
-  const progress = Math.round(((screen + 1) / 9) * 100); // 9 étapes au total à terme
+  const progress = Math.round(((screen + 1) / SCREENS.length) * 100);
 
   function up(patch: Partial<OnboardingState>) { setData((d) => ({ ...d, ...patch })); }
   function toggle<K extends keyof OnboardingState>(key: K, val: string) {
@@ -200,6 +251,14 @@ export default function ParticipantFunnel() {
       const arr = (d[key] as unknown as string[]) ?? [];
       const next = arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
       return { ...d, [key]: next };
+    });
+  }
+  function toggleSlot(dayIdx: number, slot: string) {
+    setData((d) => {
+      const key = String(dayIdx);
+      const cur = d.availability[key] ?? [];
+      const next = cur.includes(slot) ? cur.filter((x) => x !== slot) : [...cur, slot];
+      return { ...d, availability: { ...d.availability, [key]: next } };
     });
   }
 
@@ -221,11 +280,20 @@ export default function ParticipantFunnel() {
     // Univers : min 1
     if (SCREENS[screen] === "universes" && data.macroUniverses.length === 0) { setError(t.min1); return; }
 
+    // Charte : finalisation du profil (score, niveau, ghost file)
+    if (SCREENS[screen] === "charter") {
+      setLoading(true);
+      const finalState = { ...data, agreedToCodeOfConduct: true };
+      await completeFunnel(finalState).catch(() => {});
+      setLoading(false);
+      setScreen((s) => s + 1); // → écran final
+      return;
+    }
+
     // Sauvegarde progressive (si connecté)
     if (accountCreated) { saveFunnelStep(screen, data).catch(() => {}); }
 
     if (screen < SCREENS.length - 1) setScreen((s) => s + 1);
-    else router.push("/participant/dashboard"); // fin du Bloc 1 pour l'instant
   }
 
   const cur = SCREENS[screen];
@@ -405,15 +473,141 @@ export default function ParticipantFunnel() {
           </div>
         )}
 
+        {/* ── Écran B : niveau atteint ── */}
+        {cur === "level" && (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ fontSize: "64px", marginBottom: "8px" }}>{LEVEL_META[level].icon}</div>
+            <div className="q-label" style={{ marginBottom: "6px" }}>{t.levelReached}</div>
+            <h1 style={{ fontSize: "30px", fontWeight: 800, color: LEVEL_META[level].color, margin: "0 0 16px" }}>{LEVEL_META[level].label}</h1>
+            {LEVEL_META[level].next && (
+              <div style={{ maxWidth: "300px", margin: "0 auto 16px" }}>
+                <div style={{ height: "8px", background: "var(--color-border-base)", borderRadius: "999px", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${Math.min(100, (score / (LEVEL_META[level].next as number)) * 100)}%`, background: LEVEL_META[level].color, borderRadius: "999px" }} />
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "6px" }}>{score} pts</div>
+              </div>
+            )}
+            <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", maxWidth: "380px", margin: "0 auto", lineHeight: 1.6 }}>{t.levelSub}</p>
+          </div>
+        )}
+
+        {/* ── Étape 6 : badges ── */}
+        {cur === "badges" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div><h1 style={{ fontSize: "22px", fontWeight: 800, color: "var(--color-plum-deep)", margin: "0 0 4px" }}>{t.boostProfile}</h1>
+              <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: 0 }}>{t.boostSub}</p></div>
+            {/* LinkedIn */}
+            <div className="q-card" style={{ padding: "18px 20px" }}>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-plum)", marginBottom: "10px" }}>LinkedIn {data.linkedinUrl && <span style={{ color: "var(--color-success)", fontSize: "12px" }}>✓</span>}</div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input style={inp} placeholder="linkedin.com/in/…" value={data.linkedinUrl} onChange={(e) => up({ linkedinUrl: e.target.value })} />
+                <button type="button" disabled={linkedinScan === "scanning" || !data.linkedinUrl.includes("linkedin.com")} onClick={async () => {
+                  setLinkedinScan("scanning");
+                  await fetch("/api/onboarding/scan-linkedin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: data.linkedinUrl }) }).catch(() => {});
+                  setLinkedinScan("done");
+                }} className="q-btn q-btn-primary" style={{ fontSize: "13px", whiteSpace: "nowrap" }}>{linkedinScan === "scanning" ? "…" : (lang === "fr" ? "Vérifier" : "Verify")}</button>
+              </div>
+            </div>
+            {/* Instagram */}
+            <div className="q-card" style={{ padding: "18px 20px" }}>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-plum)", marginBottom: "10px" }}>Instagram {data.instagramUrl && <span style={{ color: "var(--color-success)", fontSize: "12px" }}>✓</span>}</div>
+              <input style={inp} placeholder="@votre_compte" value={data.instagramUrl} onChange={(e) => up({ instagramUrl: e.target.value })} />
+            </div>
+            {/* CV + Portfolio */}
+            <BadgeUpload kind="cv" label={lang === "fr" ? "Votre CV récent" : "Your resume / CV"} value={data.cvUrl} onChange={(url) => up({ cvUrl: url })} lang={lang} />
+            <BadgeUpload kind="portfolio" label={lang === "fr" ? "Votre portfolio / book" : "Your portfolio"} value={data.portfolioUrl} onChange={(url) => up({ portfolioUrl: url })} lang={lang} />
+          </div>
+        )}
+
+        {/* ── Étape 7 : logistique ── */}
+        {cur === "logistics" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+            <h1 style={{ fontSize: "22px", fontWeight: 800, color: "var(--color-plum-deep)", margin: 0 }}>{t.logisticsTitle}</h1>
+            <div>
+              <label style={lbl}>{t.availabilityLabel}</label>
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr", gap: "6px", fontSize: "12px", alignItems: "center" }}>
+                <span />
+                <span style={{ textAlign: "center", color: "var(--color-text-tertiary)" }}>{t.morning}</span>
+                <span style={{ textAlign: "center", color: "var(--color-text-tertiary)" }}>{t.afternoon}</span>
+                <span style={{ textAlign: "center", color: "var(--color-text-tertiary)" }}>{t.evening}</span>
+                {DAYS.map((d, di) => (
+                  <Fragment key={di}>
+                    <span style={{ color: "var(--color-plum)", fontWeight: 600 }}>{d[lang]}</span>
+                    {SLOTS.map((s) => {
+                      const on = (data.availability[String(di)] ?? []).includes(s);
+                      return <button key={`${di}${s}`} type="button" onClick={() => toggleSlot(di, s)} style={{ height: "34px", borderRadius: "8px", cursor: "pointer", border: `1px solid ${on ? "var(--color-accent)" : "var(--color-border-base)"}`, background: on ? "var(--color-accent)" : "var(--color-surface)", color: on ? "#fff" : "var(--color-text-tertiary)", fontSize: "13px" }}>{on ? "✓" : ""}</button>;
+                    })}
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label style={lbl}>{t.formatLabel}</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {FORMAT_OPTS.map((f) => <Chip key={f.val} active={data.preferredFormat === f.val} onClick={() => up({ preferredFormat: f.val })}>{f[lang]}</Chip>)}
+              </div>
+            </div>
+            <div>
+              <label style={lbl}>{t.langsLabel}</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {INTERVIEW_LANGS.map((l) => <Chip key={l} active={data.interviewLanguages.includes(l)} onClick={() => toggle("interviewLanguages", l)}>{l}</Chip>)}
+              </div>
+            </div>
+            <div>
+              <label style={lbl}>{t.rewardLabel}</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {REWARD_OPTS.map((r) => <Chip key={r.val} active={data.rewardPreference === r.val} onClick={() => up({ rewardPreference: r.val })}>{r[lang]}</Chip>)}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Étape 8 : charte ── */}
+        {cur === "charter" && (
+          <div>
+            <h1 style={{ fontSize: "22px", fontWeight: 800, color: "var(--color-plum-deep)", margin: "0 0 14px" }}>{t.charterTitle}</h1>
+            <div onScroll={(e) => { const el = e.currentTarget; if (el.scrollHeight - el.scrollTop - el.clientHeight < 30) setScrolledCharter(true); }}
+              style={{ maxHeight: "320px", overflowY: "auto", border: "1px solid var(--color-border-base)", borderRadius: "12px", padding: "18px" }}>
+              <div style={{ padding: "12px 14px", background: "var(--color-warning-light)", border: "1px solid var(--color-warning)", borderRadius: "10px", fontSize: "13px", color: "var(--color-warning)", fontWeight: 600, marginBottom: "16px" }}>⚠️ {t.charterIntro}</div>
+              <ol style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                {CHARTER_RULES.map((r, i) => <li key={i} style={{ fontSize: "13px", color: "var(--color-text-primary)", lineHeight: 1.6 }}>{r[lang]}</li>)}
+              </ol>
+            </div>
+            <label style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "16px", fontSize: "13px", color: scrolledCharter ? "var(--color-text-primary)" : "var(--color-text-tertiary)", cursor: scrolledCharter ? "pointer" : "not-allowed" }}>
+              <input type="checkbox" disabled={!scrolledCharter} checked={data.agreedToCodeOfConduct} onChange={(e) => up({ agreedToCodeOfConduct: e.target.checked })} />
+              {scrolledCharter ? t.accept : t.scrollToEnd}
+            </label>
+          </div>
+        )}
+
+        {/* ── Écran final : vérification email ── */}
+        {cur === "final" && (
+          <div style={{ textAlign: "center", padding: "24px 0" }}>
+            <div style={{ fontSize: "48px", marginBottom: "12px" }}>📬</div>
+            <h1 style={{ fontSize: "24px", fontWeight: 800, color: "var(--color-plum-deep)", margin: "0 0 12px" }}>{t.finalTitle}</h1>
+            <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", maxWidth: "400px", margin: "0 auto 24px", lineHeight: 1.6 }}>
+              {lang === "fr" ? `Un lien de confirmation a été envoyé à ${account.email || "votre email"}. Cliquez dessus pour candidater aux études.` : `A confirmation link was sent to ${account.email || "your email"}. Click it to apply to studies.`}
+            </p>
+            <button onClick={() => { try { localStorage.removeItem(DRAFT); } catch {} router.push("/participant/dashboard"); }} className="q-btn q-btn-primary" style={{ fontSize: "14px" }}>{t.goDashboard} →</button>
+          </div>
+        )}
+
         {error && <p style={{ color: "var(--color-error)", fontSize: "13px", marginTop: "14px" }}>{error}</p>}
 
-        {/* Navigation */}
-        <div style={{ display: "flex", gap: "10px", marginTop: "26px" }}>
-          {screen > 0 && <button onClick={() => setScreen((s) => s - 1)} className="q-btn" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border-strong)", color: "var(--color-plum)" }}>{t.back}</button>}
-          <button onClick={next} disabled={loading || (cur === "account" && !accountOk)} className="q-btn q-btn-primary" style={{ flex: 1, opacity: loading || (cur === "account" && !accountOk) ? 0.6 : 1 }}>
-            {loading ? "…" : t.continue}
-          </button>
-        </div>
+        {/* Navigation (masquée sur l'écran final, qui a son propre bouton) */}
+        {cur !== "final" && (
+          <div style={{ display: "flex", gap: "10px", marginTop: "26px" }}>
+            {screen > 0 && <button onClick={() => setScreen((s) => s - 1)} className="q-btn" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border-strong)", color: "var(--color-plum)" }}>{t.back}</button>}
+            <button
+              onClick={next}
+              disabled={loading || (cur === "account" && !accountOk) || (cur === "charter" && !data.agreedToCodeOfConduct)}
+              className="q-btn q-btn-primary"
+              style={{ flex: 1, opacity: loading || (cur === "account" && !accountOk) || (cur === "charter" && !data.agreedToCodeOfConduct) ? 0.6 : 1 }}
+            >
+              {loading ? "…" : cur === "charter" ? t.accept : t.continue}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
