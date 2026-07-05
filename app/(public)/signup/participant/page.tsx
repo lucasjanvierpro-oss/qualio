@@ -7,6 +7,7 @@ import { detectLanguage, setLanguage, type Lang } from "@/lib/i18n/detect";
 import { EMPTY_ONBOARDING, type OnboardingState } from "@/lib/onboarding/types";
 import { computeScore, levelFromScore, LEVEL_META } from "@/lib/onboarding/scoring";
 import { createFunnelAccount, saveFunnelStep } from "@/app/actions/funnel";
+import VoiceInput from "@/components/onboarding/VoiceInput";
 
 const DRAFT = "rarelyst_funnel_draft";
 
@@ -35,6 +36,10 @@ const T = {
     engageOpts: ["Je suis leurs collections et défilés", "J'assiste à leurs événements", "J'achète régulièrement leurs produits", "Je fais de la veille (newsletters, Instagram…)", "Je travaille ou ai travaillé avec elles", "Je revends / collecte leurs pièces", "Je les recommande à mon entourage"],
     profileLevel: "Niveau de profil", emailBanner: "Vérifiez votre email pour activer votre compte — vous pouvez continuer.",
     min1: "Sélectionnez au moins un univers.",
+    profileTitle: "Comment vous définiriez-vous principalement ?",
+    behavioralTitle: "Cochez tout ce qui vous correspond — sans pression.",
+    behavioralSub: "Il n'y a pas de mauvaise réponse.",
+    expertTitle: "Quelques questions pour mieux vous connaître",
   },
   en: {
     createProfile: "Create your profile", firstName: "First name", lastName: "Last name", email: "Email",
@@ -59,8 +64,67 @@ const T = {
     engageOpts: ["I follow their collections and shows", "I attend their events", "I buy their products regularly", "I do active trend-watching", "I work or have worked with them", "I resell / collect their pieces", "I recommend them to my network"],
     profileLevel: "Profile level", emailBanner: "Verify your email to activate your account — you can continue.",
     min1: "Select at least one universe.",
+    profileTitle: "How would you primarily define yourself?",
+    behavioralTitle: "Check everything that applies — no pressure.",
+    behavioralSub: "There are no wrong answers.",
+    expertTitle: "A few questions to get to know you better",
   },
 } as const;
+
+// ── Bloc 2 : données (type de profil, checklist, adaptatives, expertes) ──
+const PROFILE_TYPES: { tag: string; fr: string; en: string }[] = [
+  { tag: "industry_insider", fr: "Professionnel(le) de l'industrie", en: "Industry professional" },
+  { tag: "advanced_consumer", fr: "Acheteur(se) passionné(e) et averti(e)", en: "Passionate and informed buyer" },
+  { tag: "early_adopter", fr: "Early adopter — parmi les premiers à adopter", en: "Early adopter" },
+  { tag: "collector_reseller", fr: "Collectionneur(se) ou reselleur(se)", en: "Collector or reseller" },
+  { tag: "tastemaker", fr: "Prescripteur(rice) — mon entourage suit mes conseils", en: "Tastemaker" },
+  { tag: "analyst", fr: "Analyste et observateur(rice) des tendances", en: "Trend analyst / observer" },
+];
+
+const CHECKLIST: { tag: string; fr: string; en: string }[] = [
+  { tag: "drop_alert", fr: "Activer une alerte pour un drop / sortie limitée", en: "Set up alerts for drops" },
+  { tag: "queue_physical", fr: "Faire la queue physiquement pour une sortie", en: "Physically queued for a release" },
+  { tag: "resale_active", fr: "Avoir un compte StockX, GOAT, Grailed ou Vestiaire actif", en: "Active resale account" },
+  { tag: "sneaker_collector", fr: "Posséder plus de 20 paires de sneakers", en: "Own 20+ pairs of sneakers" },
+  { tag: "industry_access", fr: "Être invité(e) à des événements mode / press days", en: "Invited to fashion events / press days" },
+  { tag: "show_access", fr: "Avoir assisté à un défilé ou showroom professionnel", en: "Attended a runway or showroom" },
+  { tag: "fashion_intel", fr: "Être abonné(e) à des newsletters de veille mode", en: "Subscribed to fashion intel newsletters" },
+  { tag: "prescripteur", fr: "Conseiller régulièrement mon entourage sur des achats", en: "Regularly advise friends on purchases" },
+  { tag: "industry_work", fr: "Travailler ou avoir travaillé dans la mode / luxe / retail", en: "Worked in fashion / luxury / retail" },
+  { tag: "community_member", fr: "Participer à des communautés en ligne mode (Discord, forum…)", en: "Part of online fashion communities" },
+];
+
+const ADAPTIVE: Record<string, { id: string; fr: string; en: string }[]> = {
+  industry_insider: [
+    { id: "org", fr: "Dans quel type de structure travaillez-vous ou avez-vous travaillé ?", en: "What type of organisation do you work or have you worked for?" },
+    { id: "role", fr: "Quel a été votre rôle lors d'un événement ou lancement de marque récent ?", en: "What was your role in a recent brand event or launch?" },
+  ],
+  early_adopter: [
+    { id: "adopted", fr: "Citez une marque ou un produit adopté avant qu'il devienne connu. Quand, comment ?", en: "Name a brand or product you adopted before it became known. When, how?" },
+    { id: "waitlist", fr: "Êtes-vous sur des listes d'attente de marques en ce moment ? Lesquelles ?", en: "Are you currently on any brand waitlists? Which ones?" },
+  ],
+  collector_reseller: [
+    { id: "platforms", fr: "Sur quelles plateformes achetez-vous ou revendez-vous ?", en: "Which platforms do you buy or resell on?" },
+    { id: "transaction", fr: "Décrivez votre dernière transaction notable — quoi, combien, pourquoi ?", en: "Describe your last notable transaction — what, how much, why?" },
+  ],
+  tastemaker: [
+    { id: "advice", fr: "Votre entourage vous a-t-il demandé votre avis récemment ? Exemple précis.", en: "Has someone recently asked your advice on a purchase? Specific example." },
+    { id: "presence", fr: "Avez-vous une présence en ligne où vous partagez vos recommandations ?", en: "Do you have an online presence where you share recommendations?" },
+  ],
+  analyst: [
+    { id: "sources", fr: "Quelles sources utilisez-vous pour votre veille mode ?", en: "What sources do you use for fashion intelligence?" },
+    { id: "trend", fr: "Donnez un exemple d'une tendance que vous avez anticipée.", en: "Give an example of a trend you anticipated." },
+  ],
+  advanced_consumer: [
+    { id: "budget", fr: "Quel est votre budget mode moyen par mois et comment le répartissez-vous ?", en: "What is your average monthly fashion budget and how do you allocate it?" },
+  ],
+};
+
+const EXPERT_Q: { id: string; fr: string; en: string; min: number }[] = [
+  { id: "self", fr: "En une phrase, comment vous décririez-vous en tant que consommateur ou professionnel de la mode ?", en: "In one sentence, how would you describe yourself as a fashion consumer or professional?", min: 40 },
+  { id: "discover", fr: "La dernière fois que vous avez découvert ou recommandé quelque chose avant votre entourage — racontez.", en: "Tell us about the last time you discovered or recommended something before those around you.", min: 60 },
+  { id: "brand", fr: "Quelle décision récente d'une marque vous a marqué(e) — positivement ou négativement ? Pourquoi ?", en: "What recent brand decision stood out to you — positively or negatively? Why?", min: 60 },
+];
 
 // Marques par univers (index macro → liste)
 const BRANDS: Record<number, string[]> = {
@@ -90,7 +154,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
-const SCREENS = ["account", "gain", "demographics", "universes"] as const;
+const SCREENS = ["account", "gain", "demographics", "universes", "profile_type", "behavioral", "expert"] as const;
 
 export default function ParticipantFunnel() {
   const router = useRouter();
@@ -277,6 +341,67 @@ export default function ParticipantFunnel() {
                 {t.engageOpts.map((e) => <Chip key={e} active={data.engagementTypes.includes(e)} onClick={() => toggle("engagementTypes", e)}>{e}</Chip>)}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── Étape 3 : type de profil ── */}
+        {cur === "profile_type" && (
+          <div>
+            <h1 style={{ fontSize: "22px", fontWeight: 800, color: "var(--color-plum-deep)", margin: "0 0 16px" }}>{t.profileTitle}</h1>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {PROFILE_TYPES.map((p) => {
+                const active = data.selfProfileType === p.tag;
+                return (
+                  <button key={p.tag} type="button" onClick={() => up({ selfProfileType: p.tag as OnboardingState["selfProfileType"] })} style={{
+                    textAlign: "left", padding: "16px 18px", borderRadius: "14px", cursor: "pointer",
+                    border: `1px solid ${active ? "var(--color-accent)" : "var(--color-border-base)"}`,
+                    background: active ? "var(--color-accent-light)" : "var(--color-surface)",
+                    fontSize: "14px", fontWeight: 600, color: active ? "var(--color-accent)" : "var(--color-plum)",
+                    transition: "all 0.15s",
+                  }}>{p[lang]}</button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Étape 4 : preuves comportementales ── */}
+        {cur === "behavioral" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+            <div>
+              <h1 style={{ fontSize: "20px", fontWeight: 800, color: "var(--color-plum-deep)", margin: "0 0 4px" }}>{t.behavioralTitle}</h1>
+              <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: "0 0 12px" }}>{t.behavioralSub}</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {CHECKLIST.map((c) => <Chip key={c.tag} active={data.behavioralChecklist.includes(c.tag)} onClick={() => toggle("behavioralChecklist", c.tag)}>{c[lang]}</Chip>)}
+              </div>
+            </div>
+            {data.selfProfileType && ADAPTIVE[data.selfProfileType] && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {ADAPTIVE[data.selfProfileType].map((q) => (
+                  <div key={q.id}>
+                    <label style={lbl}>{q[lang]}</label>
+                    <textarea rows={3} style={{ ...inp, resize: "vertical", lineHeight: 1.6 }}
+                      value={data.adaptiveAnswers[q.id] ?? ""}
+                      onChange={(e) => up({ adaptiveAnswers: { ...data.adaptiveAnswers, [q.id]: e.target.value } })} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Étape 5 : questions expertes (vocal) ── */}
+        {cur === "expert" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+            <h1 style={{ fontSize: "22px", fontWeight: 800, color: "var(--color-plum-deep)", margin: 0 }}>{t.expertTitle}</h1>
+            {EXPERT_Q.map((q, i) => (
+              <div key={q.id}>
+                <label style={{ ...lbl, marginBottom: "8px" }}>{i + 1}. {q[lang]}</label>
+                <VoiceInput lang={lang} minChars={q.min}
+                  value={data.expertAnswers[q.id] ?? ""}
+                  onChange={(v) => up({ expertAnswers: { ...data.expertAnswers, [q.id]: v } })} />
+              </div>
+            ))}
           </div>
         )}
 
