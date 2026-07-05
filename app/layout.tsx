@@ -25,10 +25,37 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const SITE_URL = "https://www.rarelyst.co";
+
 export const metadata: Metadata = {
-  title: "Qualio — Recrutez les bons profils. En 72h.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Rarelyst — Participants experts pour vos études qualitatives",
+    template: "%s · Rarelyst",
+  },
   description:
-    "Des entretiens qualitatifs avec des participants vraiment ciblés. Pour les équipes insights qui veulent aller vite.",
+    "Rarelyst connecte les équipes insights des grandes marques mode et luxe avec des participants experts en moins de 72h. Recrutement qualitatif rapide et ciblé.",
+  keywords: [
+    "recrutement quali", "études qualitatives", "consumer insights",
+    "mode", "luxe", "panel expert", "entretiens qualitatifs", "Rarelyst",
+  ],
+  authors: [{ name: "Rarelyst" }],
+  robots: { index: true, follow: true },
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    title: "Rarelyst — Participants experts pour vos études qualitatives",
+    description:
+      "Recrutez 5 à 8 profils experts mode/luxe en 72h pour vos entretiens qualitatifs.",
+    url: SITE_URL,
+    siteName: "Rarelyst",
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Rarelyst — Participants experts",
+    description: "Recrutez les bons profils pour vos études quali mode et luxe.",
+  },
 };
 
 export default function RootLayout({

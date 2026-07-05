@@ -163,6 +163,37 @@ model ParticipantProfile {
   interests       String[]
   brandAffinities String[]
 
+  // ─── Tunnel de qualification Rarelyst ───────────────────
+  onboardingStep     Int     @default(0)
+  onboardingStatus   String  @default("incomplete") // "incomplete" | "complete"
+  preferredLanguage  String  @default("fr")
+
+  gender             String?
+  employmentStatus   String?
+  educationLevel     String?
+  householdIncome    String?
+  ethnicity          String?
+
+  macroUniverses      String[] // univers macro sélectionnés
+  engagementTypes     String[] // types d'engagement avec les marques
+  selfProfileType     String?  // auto-identification: industry_insider, early_adopter, ...
+  behavioralChecklist String[] // items comportementaux cochés
+
+  adaptiveAnswers    Json?     // réponses aux questions adaptatives (par type)
+  expertAnswers      Json?     // 3 questions expertes universelles
+
+  preferredFormat    String?   // "one_on_one" | "focus_group" | "both"
+  interviewLanguages String[]
+
+  agreedToCodeOfConduct Boolean @default(false)
+
+  cvUrl            String?
+  portfolioUrl     String?
+  linkedinVerified Boolean @default(false)
+
+  profileScore Int    @default(0)
+  profileLevel String @default("bronze") // bronze | silver | gold | platine
+
   // Vérification
   idVerificationStatus VerificationStatus @default(PENDING)
   idDocumentUrl        String?
