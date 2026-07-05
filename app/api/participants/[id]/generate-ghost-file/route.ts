@@ -13,13 +13,16 @@ export async function POST(
   const profile = await prisma.participantProfile.findUnique({
     where: { id },
     select: {
-      firstName: true, lastName: true, city: true, profession: true,
-      yearsOfExperience: true, professionalBio: true,
-      shoppingBudgetRange: true, shoppingChannels: true,
-      followerRange: true, instagramUrl: true, tiktokUrl: true,
-      screenerAnswers: true,
-      interests: true, brandAffinities: true, shoppingFrequency: true,
-      isEarlyAdopter: true, dateOfBirth: true, languages: true,
+      firstName: true, lastName: true, city: true, country: true, profession: true,
+      dateOfBirth: true, gender: true, professionalBio: true,
+      employmentStatus: true, educationLevel: true, householdIncome: true,
+      macroUniverses: true, brandAffinities: true, engagementTypes: true,
+      selfProfileType: true, behavioralChecklist: true,
+      adaptiveAnswers: true, expertAnswers: true,
+      interviewLanguages: true, followerRange: true, instagramUrl: true, linkedinUrl: true,
+      cvAnalysis: true,
+      // legacy (anciens profils)
+      screenerAnswers: true, interests: true, shoppingBudgetRange: true,
     },
   });
 
@@ -36,33 +39,37 @@ export async function POST(
     update: { processingStatus: "processing" },
   });
 
-  const answers = profile.screenerAnswers as Record<string, string> | null ?? {};
+  const MACRO = ["Luxe & Haute couture", "Streetwear & Sneakers premium", "Mode contemporaine française", "Mode contemporaine internationale", "Prêt-à-porter sport premium", "Vintage & Seconde main"];
+  const expert = (profile.expertAnswers as Record<string, string> | null) ?? {};
+  const adaptive = (profile.adaptiveAnswers as Record<string, string> | null) ?? {};
+  const legacy = (profile.screenerAnswers as Record<string, string> | null) ?? {};
+  const universes = (profile.macroUniverses ?? []).map((i) => MACRO[Number(i)] ?? i).filter(Boolean);
+  const expertText = Object.values(expert).filter(Boolean).join("\n");
+  const adaptiveText = Object.values(adaptive).filter(Boolean).join("\n");
+  const legacyText = Object.values(legacy).filter(Boolean).join("\n");
+  const dob = profile.dateOfBirth;
+  const age = dob ? Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000)) : null;
 
   const prompt = `Tu es un expert en recrutement qualitatif pour des marques de mode et de luxe. Analyse le profil suivant et génère un rapport structuré en JSON.
 
 PROFIL PARTICIPANT :
 - Prénom/Nom : ${profile.firstName} ${profile.lastName}
-- Ville : ${profile.city ?? "non renseigné"}
-- Profession : ${profile.profession ?? "non renseigné"}
-- Années d'expérience : ${profile.yearsOfExperience ?? "non renseigné"}
-- Bio professionnelle : ${profile.professionalBio ?? "non renseigné"}
-- Budget mode mensuel : ${profile.shoppingBudgetRange ?? "non renseigné"}
-- Canaux d'achat : ${(profile.shoppingChannels ?? []).join(", ") || "non renseigné"}
-- Fréquence d'achat : ${profile.shoppingFrequency ?? "non renseigné"}
-- Early adopter déclaré : ${profile.isEarlyAdopter === true ? "oui" : profile.isEarlyAdopter === false ? "non" : "non renseigné"}
-- Centres d'intérêt : ${(profile.interests ?? []).join(", ") || "non renseigné"}
+- Âge : ${age ?? "non renseigné"} · Genre : ${profile.gender ?? "non renseigné"} · Ville : ${profile.city ?? "non renseigné"}
+- Statut d'emploi : ${profile.employmentStatus ?? "non renseigné"} · Éducation : ${profile.educationLevel ?? "non renseigné"}
+- Auto-identification : ${profile.selfProfileType ?? "non renseigné"}
+- Univers mode : ${universes.join(", ") || "non renseigné"}
 - Affinités marques : ${(profile.brandAffinities ?? []).join(", ") || "non renseigné"}
-- Langues : ${(profile.languages ?? []).join(", ") || "fr"}
-- Abonnés (réseau principal) : ${profile.followerRange ?? "non renseigné"}
-- Instagram : ${profile.instagramUrl ?? "non renseigné"}
+- Types d'engagement : ${(profile.engagementTypes ?? []).join(", ") || "non renseigné"}
+- Preuves comportementales cochées : ${(profile.behavioralChecklist ?? []).join(", ") || "aucune"}
+- Abonnés (réseau principal) : ${profile.followerRange ?? "non renseigné"} · Instagram : ${profile.instagramUrl ?? "—"} · LinkedIn : ${profile.linkedinUrl ?? "—"}
+${profile.cvAnalysis ? `- Synthèse CV/portfolio (IA) : ${profile.cvAnalysis}` : ""}
 
-RÉPONSES QUALITATIVES :
-Parcours professionnel : "${answers.careerPath ?? ""}"
-Rapport au style : "${answers.styleRelationship ?? ""}"
-Expertise déclarée : "${answers.expertise ?? ""}"
-Vision du marché : "${answers.marketVision ?? ""}"
-Dernier achat : "${answers.lastPurchase ?? ""}"
-Description audience : "${answers.socialDescription ?? ""}"
+RÉPONSES QUALITATIVES (le plus important — évalue la profondeur et l'authenticité) :
+Questions adaptatives :
+${adaptiveText || "(non renseigné)"}
+
+Questions expertes :
+${expertText || legacyText || "(non renseigné)"}
 
 INSTRUCTIONS :
 - Évalue objectivement la qualité et l'authenticité des réponses
@@ -92,10 +99,12 @@ Réponds UNIQUEMENT avec du JSON valide, sans markdown, sans texte avant ou apr�
   "aiWeaknesses": [],
   "aiBestStudyTypes": [],
   "aiRecommendedBrands": [],
-  "aiTags": []
+  "aiTags": [],
+  "brandSummary": ""
 }
 
 Valeurs attendues :
+- brandSummary : résumé PRÉSENTABLE de 4-6 phrases, VISIBLE PAR LES MARQUES. Décris qui est cette personne comme profil consommateur/expert : son univers, son rapport à la mode, sa valeur pour une étude. Ton valorisant mais factuel, à la 3e personne (ex "Styliste indépendante spécialisée dans le quiet luxury…"). AUCUN score, AUCun jugement de qualité, AUCUN nom de famille — c'est une vitrine du profil, pas une évaluation interne.
 - profileType : "expert", "insider", "influencer", "creative", "enthusiast" ou "généraliste"
 - primaryExpertise : ex "streetwear", "luxe", "mode contemporaine", "beauté", "retail", "styling"
 - generationTag : "Gen Z", "Millennial", "Gen X" ou "Boomer"
@@ -126,7 +135,7 @@ Valeurs attendues :
       secondaryExpertises: string[]; generationTag: string; influenceTier: string;
       redFlags: string[]; aiProfileSummary: string; aiStrengths: string[];
       aiWeaknesses: string[]; aiBestStudyTypes: string[]; aiRecommendedBrands: string[];
-      aiTags?: string[];
+      aiTags?: string[]; brandSummary?: string;
     };
 
     // Normalisation défensive des tags (minuscules, sans accents, tirets)
@@ -136,22 +145,19 @@ Valeurs attendues :
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "")
     ).filter(Boolean))];
-    parsed.aiTags = normalizedTags;
+    // brandSummary → PROFIL (visible marques) ; le reste → ghost file (interne)
+    const { brandSummary, ...ghost } = parsed;
+    ghost.aiTags = normalizedTags;
 
     await prisma.participantGhostFile.upsert({
       where: { participantProfileId: id },
-      create: {
-        participantProfileId: id,
-        processingStatus: "done",
-        aiModelUsed: "claude-sonnet-5",
-        ...parsed,
-      },
-      update: {
-        processingStatus: "done",
-        aiModelUsed: "claude-sonnet-5",
-        ...parsed,
-      },
+      create: { participantProfileId: id, processingStatus: "done", aiModelUsed: "claude-sonnet-5", ...ghost },
+      update: { processingStatus: "done", aiModelUsed: "claude-sonnet-5", ...ghost },
     });
+
+    if (brandSummary) {
+      await prisma.participantProfile.update({ where: { id }, data: { brandSummary } });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

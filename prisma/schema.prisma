@@ -189,7 +189,11 @@ model ParticipantProfile {
 
   cvUrl            String?
   portfolioUrl     String?
+  cvAnalysis       String? @db.Text // synthèse IA du CV / portfolio uploadé
   linkedinVerified Boolean @default(false)
+
+  // Résumé présentable, VISIBLE par les marques (≠ ghost file interne)
+  brandSummary     String? @db.Text
 
   profileScore Int    @default(0)
   profileLevel String @default("bronze") // bronze | silver | gold | platine

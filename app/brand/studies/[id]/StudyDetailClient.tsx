@@ -52,6 +52,7 @@ type CandidateRow = {
   profession: string;
   interests: string[];
   bio: string;
+  brandSummary?: string;
   score: number;
   status: string;
 };
@@ -71,6 +72,7 @@ function mapApplications(apps: Application[]): CandidateRow[] {
     profession: a.participantProfile.profession ?? "",
     interests: a.participantProfile.interests,
     bio: a.participantProfile.bio ?? "",
+    brandSummary: (a.participantProfile as { brandSummary?: string | null }).brandSummary ?? "",
     score: a.adminScore ?? 3,
     status: a.status,
   }));
@@ -429,16 +431,18 @@ export default function StudyDetailClient({
                   ))}
                 </div>
 
-                {/* Expanded bio */}
-                {isOpen && screener && (
+                {/* Expanded : résumé marque (IA) en priorité, sinon bio */}
+                {isOpen && (c.brandSummary || screener) && (
                   <div style={{
                     padding: "16px 20px",
                     background: "var(--color-surface-2)",
                     borderTop: "1px solid var(--color-border-base)",
                   }}>
-                    <p className="q-label" style={{ marginBottom: "8px" }}>Profil</p>
-                    <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: 0, lineHeight: 1.65 }}>
-                      {screener}
+                    <p className="q-label" style={{ marginBottom: "8px", color: c.brandSummary ? "var(--color-accent)" : undefined }}>
+                      {c.brandSummary ? "✦ Synthèse du profil" : "Profil"}
+                    </p>
+                    <p style={{ fontSize: "13px", color: "var(--color-text-primary)", margin: 0, lineHeight: 1.65 }}>
+                      {c.brandSummary || screener}
                     </p>
                   </div>
                 )}

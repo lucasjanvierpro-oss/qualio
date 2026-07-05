@@ -30,6 +30,7 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
                       profession: true,
                       interests: true,
                       bio: true,
+                      brandSummary: true,
                       screenerAnswers: true,
                     },
                   },
