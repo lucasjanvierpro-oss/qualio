@@ -29,7 +29,14 @@ export default function BadgeUpload({
     try {
       const res = await fetch("/api/onboarding/upload-doc", { method: "POST", body: fd });
       const d = await res.json() as { url?: string; error?: string };
-      if (d.url) onChange(d.url);
+      if (d.url) {
+        onChange(d.url);
+        // Analyse IA en arrière-plan (nourrit le résumé marque)
+        fetch("/api/onboarding/analyze-document", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: d.url }),
+        }).catch(() => {});
+      }
       else setError(d.error === "too_large" ? (lang === "fr" ? "Trop volumineux (max 10 Mo)" : "Too large (max 10MB)") : (lang === "fr" ? "Erreur" : "Error"));
     } catch {
       setError(lang === "fr" ? "Erreur réseau" : "Network error");
