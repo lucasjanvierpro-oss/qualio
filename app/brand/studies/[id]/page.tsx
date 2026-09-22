@@ -46,10 +46,9 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
 
   const study = dbUser?.brandProfile?.studies?.[0];
 
-  // Fall back to mock data for study ID "1" (demo purposes)
-  if (!study && id !== "1") notFound();
+  if (!study) notFound();
 
   const credits = dbUser?.brandProfile?.credits ?? 12;
 
-  return <StudyDetailClient study={study ?? null} studyId={id} credits={credits} />;
+  return <StudyDetailClient study={study} studyId={id} credits={credits} />;
 }

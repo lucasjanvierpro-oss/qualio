@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { createWherebyRoom } from "@/lib/whereby/rooms";
-import { sendInterviewConfirmed } from "@/lib/resend/emails";
+import { sendInterviewConfirmed, scheduleInterviewReminders } from "@/lib/resend/emails";
 
 export async function POST(
   req: NextRequest,
@@ -100,23 +100,13 @@ export async function POST(
   const participantJoinUrl = `${appUrl}/participant/interview/${interview.id}`;
   const brandJoinUrl = `${appUrl}/brand/interview/${interview.id}`;
 
+  const brandFirstName = application.study.brandProfile.contactFirstName ?? "";
+  const common = { interviewId: interview.id, durationMinutes };
   await Promise.allSettled([
-    sendInterviewConfirmed(
-      participantEmail,
-      application.participantProfile.firstName,
-      application.study.title,
-      scheduledDate,
-      participantJoinUrl,
-      true
-    ),
-    sendInterviewConfirmed(
-      brandEmail,
-      application.study.brandProfile.contactFirstName ?? "Team",
-      application.study.title,
-      scheduledDate,
-      brandJoinUrl,
-      false
-    ),
+    sendInterviewConfirmed(participantEmail, application.participantProfile.firstName, application.study.title, scheduledDate, participantJoinUrl, true, common),
+    sendInterviewConfirmed(brandEmail, brandFirstName, application.study.title, scheduledDate, brandJoinUrl, false, common),
+    scheduleInterviewReminders({ to: participantEmail, firstName: application.participantProfile.firstName, scheduledAt: scheduledDate, joinUrl: participantJoinUrl }),
+    scheduleInterviewReminders({ to: brandEmail, firstName: brandFirstName || "bonjour", scheduledAt: scheduledDate, joinUrl: brandJoinUrl }),
   ]);
 
   return NextResponse.json({ ok: true, interview, videoLink });

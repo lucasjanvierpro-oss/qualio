@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { sendRewardAvailable } from "@/lib/resend/emails";
+import { generateAndStoreReportFromTranscripts } from "@/lib/reports/generate";
 
 export async function PATCH(
   req: NextRequest,
@@ -69,6 +70,9 @@ export async function PATCH(
       where: { id: interview.applicationId },
       data: { status: "NO_SHOW" },
     });
+    // Si cet absent était le dernier entretien attendu, les autres sont peut-être
+    // tous transcrits : on tente le rapport sans attendre une action manuelle.
+    await generateAndStoreReportFromTranscripts(interview.studyId, { requireAll: true }).catch(() => null);
   }
 
   return NextResponse.json({ ok: true, interview });

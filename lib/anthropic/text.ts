@@ -30,3 +30,16 @@ export const MAX_TOKENS_JSON = 8000;
 export function wasTruncated(message: Anthropic.Message): boolean {
   return message.stop_reason === "max_tokens";
 }
+
+/**
+ * Extrait le premier objet JSON d'une réponse, même entouré de texte ou d'un
+ * bloc markdown. Lève une erreur s'il n'y en a pas.
+ */
+export function extractJsonObject(raw: string): string {
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const body = (fenced ? fenced[1] : raw).trim();
+  const start = body.indexOf("{");
+  const end = body.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) throw new Error("no JSON object in response");
+  return body.slice(start, end + 1);
+}

@@ -60,16 +60,10 @@ export function normalizeTag(t: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-// Extrait le premier objet JSON d'une réponse, même si le modèle l'a entouré
-// de texte ou d'un bloc markdown.
-export function extractJson(raw: string): string {
-  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const body = (fenced ? fenced[1] : raw).trim();
-  const start = body.indexOf("{");
-  const end = body.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) throw new Error("no JSON object in response");
-  return body.slice(start, end + 1);
-}
+import { extractJsonObject } from "../anthropic/text";
+
+// Conservé pour les appels existants.
+export const extractJson = extractJsonObject;
 
 const SCORE_FIELDS = [
   "expertiseScore", "vocabularyScore", "consistencyScore", "earlyAdopterScore",

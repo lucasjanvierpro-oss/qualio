@@ -100,7 +100,7 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
 
   function handleSave() {
     startTransition(async () => {
-      await updateParticipantProfile(profile.id, { ...form, interests, brandAffinities });
+      await updateParticipantProfile({ ...form, interests, brandAffinities });
       setSaved(true);
     });
   }

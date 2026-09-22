@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getSessionUser } from "@/lib/auth/guards";
 
 type ProfileUpdate = {
   firstName: string;
@@ -18,9 +19,12 @@ type ProfileUpdate = {
   brandAffinities: string[];
 };
 
-export async function updateParticipantProfile(participantId: string, data: ProfileUpdate) {
+export async function updateParticipantProfile(data: ProfileUpdate) {
+  const me = await getSessionUser();
+  if (!me?.participantProfileId) throw new Error("Not authenticated");
+
   await prisma.participantProfile.update({
-    where: { id: participantId },
+    where: { id: me.participantProfileId },
     data: {
       firstName: data.firstName,
       lastName: data.lastName,

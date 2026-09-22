@@ -36,13 +36,6 @@ type Study = {
   applications: Application[];
 };
 
-const MOCK_CANDIDATES = [
-  { id: "m1", applicationId: "a1", name: "Amina D.", age: 28, city: "Paris", profession: "Styliste", interests: ["Mode", "Luxe", "Streetwear"], bio: "Passionnée de mode depuis toujours, j'achète régulièrement chez Lacoste, AMI et Jacquemus.", score: 5, status: "SHORTLISTED" },
-  { id: "m2", applicationId: "a2", name: "Thomas R.", age: 34, city: "Lyon", profession: "Chef de produit", interests: ["Sport", "Mode", "Tech"], bio: "Early adopter, je suis les tendances lifestyle et achète environ 2 fois par mois.", score: 4, status: "SHORTLISTED" },
-  { id: "m3", applicationId: "a3", name: "Céline M.", age: 26, city: "Paris", profession: "Consultante", interests: ["Luxe", "Beauté", "Mode"], bio: "Cliente Lacoste régulière, j'adore la ligne Polo classique et les nouvelles collaborations.", score: 5, status: "SHORTLISTED" },
-  { id: "m4", applicationId: "a4", name: "Karim B.", age: 31, city: "Marseille", profession: "Architecte", interests: ["Design", "Mode", "Lifestyle"], bio: "Sensible à l'esthétique et au patrimoine des marques françaises.", score: 4, status: "INVITED" },
-];
-
 type CandidateRow = {
   id: string;
   applicationId: string;
@@ -92,12 +85,11 @@ export default function StudyDetailClient({
   studyId,
   credits,
 }: {
-  study: Study | null;
+  study: Study;
   studyId: string;
   credits: number;
 }) {
-  const isMock = !study;
-  const candidates: CandidateRow[] = isMock ? MOCK_CANDIDATES : mapApplications(study.applications);
+  const candidates: CandidateRow[] = mapApplications(study.applications);
 
   const [rows, setRows]             = useState(candidates);
   const [tab, setTab]               = useState<"pending" | "accepted" | "confirmed" | "rejected">("pending");
@@ -126,7 +118,7 @@ export default function StudyDetailClient({
   const confirmedCount = confirmed.length;
   const deadline       = study?.deadlineAt
     ? new Date(study.deadlineAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })
-    : "12 juin";
+    : "à définir";
   const studyType      = study?.studyType === "FOCUS_GROUP" ? "Focus group" : "Entretien 1:1";
   const meta           = STATUS_META[status] ?? STATUS_META.ACTIVE;
   const progress       = Math.min((confirmedCount / target) * 100, 100);
@@ -134,22 +126,21 @@ export default function StudyDetailClient({
   async function handleAccept(row: CandidateRow) {
     if (localCredits < 1) { setNoCreditsModal(true); return; }
     setLoading(row.applicationId);
-    if (!isMock) {
-      const result = await acceptApplication(row.applicationId);
-      if (result?.error === "not_enough_credits") {
-        setNoCreditsModal(true);
-        setLoading(null);
-        return;
-      }
+    const result = await acceptApplication(row.applicationId);
+    if (result?.error === "not_enough_credits") {
+      setNoCreditsModal(true);
+      setLoading(null);
+      return;
     }
+    // Déjà décidé (double clic, autre onglet) : l'état affiché suit, sans débit.
     setRows((prev) => prev.map((r) => r.applicationId === row.applicationId ? { ...r, status: "INVITED" } : r));
-    setLocalCredits((c) => c - 1);
+    if (!result?.error) setLocalCredits((c) => c - 1);
     setLoading(null);
   }
 
   async function handleReject(row: CandidateRow) {
     setLoading(row.applicationId);
-    if (!isMock) await rejectApplication(row.applicationId);
+    await rejectApplication(row.applicationId);
     setRows((prev) => prev.map((r) => r.applicationId === row.applicationId ? { ...r, status: "REJECTED" } : r));
     setLoading(null);
   }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { fetchWherebyTranscript, fetchWherebyRecordingLink } from "@/lib/whereby/rooms";
+import { fetchWherebyTranscript, fetchWherebyRecordingLink, findTranscriptionForRoom, startRecordingTranscription } from "@/lib/whereby/rooms";
 import { generateAndStoreReportFromTranscripts } from "@/lib/reports/generate";
 
 // Webhook Whereby.
@@ -18,9 +18,20 @@ async function tryTranscriptAndReport(interviewId: string): Promise<string> {
   const iv = await prisma.interview.findUnique({ where: { id: interviewId } });
   if (!iv) return "interview_gone";
   if (iv.transcriptStatus === "done") return "already_done";
-  if (!iv.transcriptId) return "no_transcript_id";
 
-  const text = await fetchWherebyTranscript(iv.transcriptId);
+  // L'événement « transcription démarrée » a pu être manqué, ou la transcription
+  // en direct n'est pas activée : on la cherche à partir de la salle.
+  let transcriptId = iv.transcriptId;
+  if (!transcriptId && iv.wherebyRoomName) {
+    const found = await findTranscriptionForRoom(iv.wherebyRoomName);
+    if (found) {
+      transcriptId = found.transcriptionId;
+      await prisma.interview.update({ where: { id: interviewId }, data: { transcriptId, transcriptStatus: "processing" } });
+    }
+  }
+  if (!transcriptId) return "no_transcript_id";
+
+  const text = await fetchWherebyTranscript(transcriptId);
   if (!text) return "transcript_not_ready";
 
   await prisma.interview.update({
@@ -64,14 +75,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true, warning: "interview_not_found" });
   }
 
-  // ── Transcription démarrée : on mémorise l'id du transcript ──────────
+  // ── Transcription : démarrée, terminée ou échouée ───────────────────
   if (type.includes("transcription")) {
     const transcriptionId = String(data.transcriptionId ?? "");
+    if (type.includes("failed")) {
+      await prisma.interview.update({ where: { id: interview.id }, data: { transcriptStatus: "failed" } });
+      return NextResponse.json({ received: true, note: "transcription_failed" });
+    }
     if (transcriptionId) {
       await prisma.interview.update({
         where: { id: interview.id },
         data: { transcriptId: transcriptionId, transcriptStatus: "processing" },
       });
+    }
+    // Terminée : le texte est prêt, on le récupère tout de suite.
+    if (type.includes("finished")) {
+      const outcome = await tryTranscriptAndReport(interview.id);
+      return NextResponse.json({ received: true, note: "transcription_finished", outcome });
     }
     return NextResponse.json({ received: true, note: "transcription_started" });
   }
@@ -84,7 +104,16 @@ export async function POST(req: NextRequest) {
       where: { id: interview.id },
       data: { recordingStatus: "ready", recordingUrl: link },
     });
-    const outcome = await tryTranscriptAndReport(interview.id);
+    let outcome = await tryTranscriptAndReport(interview.id);
+    // Aucune transcription pour cette salle : on la demande nous-mêmes à partir
+    // de l'enregistrement. Whereby préviendra par webhook quand elle sera prête.
+    if (outcome === "no_transcript_id" && recordingId) {
+      const started = await startRecordingTranscription(recordingId);
+      if (started) {
+        await prisma.interview.update({ where: { id: interview.id }, data: { transcriptId: started, transcriptStatus: "processing" } });
+        outcome = "transcription_requested";
+      }
+    }
     return NextResponse.json({ received: true, note: "recording_saved", outcome });
   }
 

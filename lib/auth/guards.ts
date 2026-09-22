@@ -41,3 +41,44 @@ export async function requireBrand(): Promise<NextResponse | null> {
 
   return null;
 }
+
+// ── Pour les server actions ───────────────────────────────────────────
+// Une server action est un point d'entrée public : son identifiant figure
+// dans le code envoyé au navigateur, et n'importe qui peut l'appeler avec
+// n'importe quels arguments. Chaque action doit donc vérifier elle-même QUI
+// l'appelle, et déduire l'identité de la session — jamais d'un argument.
+
+type SessionUser = {
+  id: string;
+  role: "ADMIN" | "BRAND" | "PARTICIPANT";
+  brandProfileId: string | null;
+  participantProfileId: string | null;
+};
+
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const dbUser = await prisma.user.findUnique({
+    where: { supabaseId: user.id },
+    select: {
+      id: true, role: true,
+      brandProfile: { select: { id: true } },
+      participantProfile: { select: { id: true } },
+    },
+  });
+  if (!dbUser) return null;
+  return {
+    id: dbUser.id,
+    role: dbUser.role,
+    brandProfileId: dbUser.brandProfile?.id ?? null,
+    participantProfileId: dbUser.participantProfile?.id ?? null,
+  };
+}
+
+/** Lève une erreur si l'appelant n'est pas admin. */
+export async function assertAdmin(): Promise<SessionUser> {
+  const u = await getSessionUser();
+  if (u?.role !== "ADMIN") throw new Error("forbidden");
+  return u;
+}
