@@ -16,13 +16,11 @@ export default function BrandAccountClient({
   isActivated,
   credits,
   companyName,
-  brandProfileId,
   transactions,
 }: {
   isActivated: boolean;
   credits: number;
   companyName: string;
-  brandProfileId: string;
   transactions: Transaction[];
 }) {
   const [tab, setTab] = useState<"credits" | "profile">("credits");
@@ -49,7 +47,7 @@ export default function BrandAccountClient({
   async function handleRedeemCode() {
     if (!inviteCode.trim()) return;
     setCodeStatus("loading");
-    const result = await redeemInviteCode(inviteCode, brandProfileId);
+    const result = await redeemInviteCode(inviteCode);
     if (result.ok) {
       setCodeStatus("success");
       setTimeout(() => router.refresh(), 1000);

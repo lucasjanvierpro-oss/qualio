@@ -38,8 +38,18 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const rawApp = await prisma.application.findUnique({ where: { id }, select: { proposedSlots: true } });
-  const slots = (rawApp?.proposedSlots as Array<{ startTime: string; note?: string }>) ?? [];
+  // Un créneau ne se confirme qu'une fois, et seulement après une invitation.
+  // Sans ce garde, un double clic créait une seconde salle Whereby puis
+  // échouait sur la contrainte d'unicité de l'entretien.
+  if (application.status !== "INVITED") {
+    return NextResponse.json({ error: "Cette invitation n'est plus en attente de confirmation." }, { status: 409 });
+  }
+  const existingInterview = await prisma.interview.findUnique({ where: { applicationId: id }, select: { id: true } });
+  if (existingInterview) {
+    return NextResponse.json({ error: "Ce créneau est déjà confirmé." }, { status: 409 });
+  }
+
+  const slots = (application.proposedSlots as Array<{ startTime: string; note?: string }> | null) ?? [];
   const chosenSlot = slots[slotIndex];
   if (!chosenSlot) return NextResponse.json({ error: "Créneau invalide" }, { status: 400 });
 
@@ -47,20 +57,20 @@ export async function POST(
   const durationMinutes = application.study.interviewDuration;
   const endDate = new Date(scheduledDate.getTime() + durationMinutes * 60 * 1000 + 60 * 60 * 1000);
 
-  // Create Whereby room (avec enregistrement cloud auto)
-  let videoLink = `https://qualio.whereby.com/interview-${id}`;
-  let hostRoomUrl = videoLink;
-  let wherebyMeetingId: string | null = null;
-  let wherebyRoomName: string | null = null;
+  // Salle Whereby (avec enregistrement cloud si activé). Pas de lien de
+  // secours inventé : un lien mort envoyé par email est pire qu'une erreur
+  // visible, que le participant peut signaler et réessayer.
+  let room;
   try {
-    const room = await createWherebyRoom(endDate);
-    videoLink = room.roomUrl;
-    hostRoomUrl = room.hostRoomUrl;
-    wherebyMeetingId = room.meetingId;
-    wherebyRoomName = room.roomName;
-  } catch {
-    // Fall back to placeholder if not configured
+    room = await createWherebyRoom(endDate);
+  } catch (err) {
+    console.error("[confirm-slot] création de la salle Whereby impossible", err);
+    return NextResponse.json({ error: "La salle de visio n'a pas pu être créée. Réessayez dans un instant." }, { status: 502 });
   }
+  const videoLink = room.roomUrl;
+  const hostRoomUrl = room.hostRoomUrl;
+  const wherebyMeetingId = room.meetingId;
+  const wherebyRoomName = room.roomName;
 
   const interview = await prisma.interview.create({
     data: {
@@ -72,7 +82,7 @@ export async function POST(
       hostRoomUrl,
       wherebyMeetingId,
       wherebyRoomName,
-      recordingStatus: wherebyMeetingId ? "pending" : null,
+      recordingStatus: process.env.WHEREBY_RECORDING_ENABLED === "true" ? "pending" : null,
       status: "scheduled",
     },
   });
