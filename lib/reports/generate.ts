@@ -2,13 +2,13 @@ import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/app/generated/prisma/client";
 import { sendReportReady } from "@/lib/resend/emails";
-import { textFromMessage } from "@/lib/anthropic/text";
+import { textFromMessage, extractJsonObject } from "@/lib/anthropic/text";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export const REPORT_MODEL = "claude-sonnet-5";
 
-export const SYSTEM_PROMPT = `Tu es un analyste senior en consumer insights et recherche qualitative, spécialisé dans les marques mode, luxe et lifestyle. Tu travailles pour Qualio.
+export const SYSTEM_PROMPT = `Tu es un analyste senior en consumer insights et recherche qualitative, spécialisé dans les marques mode, luxe et lifestyle. Tu travailles pour Rarelyst.
 
 Tu reçois les verbatims d'une série d'entretiens qualitatifs. Ta mission : produire un rapport de synthèse analytique STRUCTURÉ — pas une transcription, pas une liste plate de citations.
 
@@ -88,7 +88,7 @@ ${studyFormat}
 VERBATIMS ET CONTENUS DES ENTRETIENS :
 ${verbatims.map((v, i) => `--- ENTRETIEN ${i + 1} [${v.participantType}] ---\n${v.content}`).join("\n\n")}
 
-${additionalContext ? `NOTES ADDITIONNELLES DE L'ÉQUIPE QUALIO :\n${additionalContext}` : ""}
+${additionalContext ? `NOTES ADDITIONNELLES DE L'ÉQUIPE RARELYST :\n${additionalContext}` : ""}
 
 Génère maintenant le rapport de synthèse complet selon le format défini.`;
 }
@@ -108,8 +108,7 @@ export async function generateReport(userMessage: string): Promise<{
   const raw = textFromMessage(response);
   let structured: Record<string, unknown> | null = null;
   try {
-    const jsonStr = raw.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
-    structured = JSON.parse(jsonStr);
+    structured = JSON.parse(extractJsonObject(raw));
   } catch {
     structured = null;
   }
@@ -139,7 +138,9 @@ export async function generateAndStoreReportFromTranscripts(
   if (!process.env.ANTHROPIC_API_KEY) return { ok: false, reason: "no_key" };
 
   const interviews = await prisma.interview.findMany({
-    where: { studyId, status: { not: "cancelled" } },
+    // Les absents et les entretiens annulés ne produiront jamais de transcript :
+    // les compter bloquerait le rapport automatique pour toute l'étude.
+    where: { studyId, status: { notIn: ["cancelled", "no_show"] } },
     include: {
       application: {
         include: {

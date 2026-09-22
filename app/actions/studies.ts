@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { assertAdmin, getSessionUser } from "@/lib/auth/guards";
 import { sendStudySubmittedAdmin } from "@/lib/resend/emails";
 
 type StudyCreateData = {
@@ -86,53 +87,56 @@ export async function createStudy(data: StudyCreateData) {
 }
 
 export async function acceptApplication(applicationId: string) {
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) throw new Error("Not authenticated");
-
-  const dbUser = await prisma.user.findUnique({
-    where: { supabaseId: user.id },
-    include: { brandProfile: true },
-  });
-  if (!dbUser?.brandProfile) throw new Error("Brand profile not found");
-
-  // Check credits
-  if (dbUser.brandProfile.credits < 1) {
-    return { error: "not_enough_credits" };
-  }
+  const me = await getSessionUser();
+  if (!me?.brandProfileId) throw new Error("Not authenticated");
 
   const application = await prisma.application.findUnique({
     where: { id: applicationId },
-    select: { studyId: true },
+    select: { studyId: true, status: true, study: { select: { brandProfileId: true } } },
   });
+  if (!application || application.study.brandProfileId !== me.brandProfileId) {
+    return { error: "not_found" };
+  }
+  if (application.status !== "SHORTLISTED" && application.status !== "PENDING") {
+    return { error: "already_decided" };
+  }
 
-  // Deduct 1 credit + update application status + record transaction
-  await prisma.$transaction([
-    prisma.brandProfile.update({
-      where: { id: dbUser.brandProfile.id },
-      data: { credits: { decrement: 1 } },
-    }),
-    prisma.application.update({
-      where: { id: applicationId },
+  const brand = await prisma.brandProfile.findUnique({ where: { id: me.brandProfileId }, select: { credits: true } });
+  if (!brand || brand.credits < 1) return { error: "not_enough_credits" };
+
+  // Tout ou rien, et conditionné à l'état attendu : si deux clics arrivent en
+  // même temps, un seul passe la condition et un seul crédit est débité.
+  const done = await prisma.$transaction(async (tx) => {
+    const moved = await tx.application.updateMany({
+      where: { id: applicationId, status: { in: ["SHORTLISTED", "PENDING"] } },
       data: { brandAccepted: true, status: "INVITED" },
-    }),
-    prisma.creditTransaction.create({
+    });
+    if (moved.count === 0) return false;
+    const updated = await tx.brandProfile.update({
+      where: { id: me.brandProfileId! },
+      data: { credits: { decrement: 1 } },
+      select: { credits: true },
+    });
+    await tx.creditTransaction.create({
       data: {
-        brandProfileId: dbUser.brandProfile.id,
+        brandProfileId: me.brandProfileId!,
         type: "CONSUME",
         amount: -1,
-        balanceAfter: dbUser.brandProfile.credits - 1,
+        balanceAfter: updated.credits,
         description: "Participant accepté",
-        studyId: application?.studyId,
+        studyId: application.studyId,
       },
-    }),
-  ]);
+    });
+    return true;
+  });
+  if (!done) return { error: "already_decided" };
 
   revalidatePath("/brand/studies");
   return { ok: true };
 }
 
 export async function shortlistParticipant(studyId: string, participantProfileId: string, note?: string) {
+  await assertAdmin();
   await prisma.application.upsert({
     where: { studyId_participantProfileId: { studyId, participantProfileId } },
     create: { studyId, participantProfileId, status: "SHORTLISTED", adminMatchNote: note ?? null },
@@ -144,6 +148,7 @@ export async function shortlistParticipant(studyId: string, participantProfileId
 }
 
 export async function updateStudyStatus(studyId: string, status: string) {
+  await assertAdmin();
   await prisma.study.update({
     where: { id: studyId },
     data: { status: status as never },
@@ -154,6 +159,7 @@ export async function updateStudyStatus(studyId: string, status: string) {
 }
 
 export async function verifyParticipant(participantId: string, decision: "VERIFIED" | "REJECTED", reason?: string) {
+  await assertAdmin();
   await prisma.participantProfile.update({
     where: { id: participantId },
     data: {
@@ -168,6 +174,7 @@ export async function verifyParticipant(participantId: string, decision: "VERIFI
 }
 
 export async function blacklistParticipant(participantId: string, reason: string) {
+  await assertAdmin();
   await prisma.participantProfile.update({
     where: { id: participantId },
     data: { isBlacklisted: true, blacklistReason: reason },
@@ -178,6 +185,7 @@ export async function blacklistParticipant(participantId: string, reason: string
 }
 
 export async function unblacklistParticipant(participantId: string) {
+  await assertAdmin();
   await prisma.participantProfile.update({
     where: { id: participantId },
     data: { isBlacklisted: false, blacklistReason: null },
@@ -188,6 +196,7 @@ export async function unblacklistParticipant(participantId: string) {
 }
 
 export async function addAdminNote(participantId: string, note: string) {
+  await assertAdmin();
   await prisma.adminNote.create({
     data: { participantProfileId: participantId, note },
   });
@@ -196,9 +205,15 @@ export async function addAdminNote(participantId: string, note: string) {
 }
 
 export async function rejectApplication(applicationId: string, reason?: string) {
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) throw new Error("Not authenticated");
+  const me = await getSessionUser();
+  if (!me) throw new Error("Not authenticated");
+
+  const application = await prisma.application.findUnique({
+    where: { id: applicationId },
+    select: { study: { select: { brandProfileId: true } } },
+  });
+  const owns = me.role === "ADMIN" || (me.brandProfileId && application?.study.brandProfileId === me.brandProfileId);
+  if (!application || !owns) return { error: "not_found" };
 
   await prisma.application.update({
     where: { id: applicationId },

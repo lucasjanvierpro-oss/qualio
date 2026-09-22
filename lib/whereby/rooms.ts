@@ -85,3 +85,43 @@ export async function fetchWherebyRecordingLink(recordingId: string): Promise<st
     return null;
   }
 }
+
+// ─── Transcription autonome ───────────────────────────────────────────────
+// La transcription « en direct » ne démarre seule que si le compte Whereby est
+// réglé pour ça. Pour ne pas en dépendre : on retrouve une transcription par
+// salle, et à défaut on en demande une à partir de l'enregistrement.
+
+type WherebyTranscription = { transcriptionId: string; roomName: string; state: string; createdAt: string };
+
+/** Transcription la plus récente d'une salle, s'il y en a une. */
+export async function findTranscriptionForRoom(roomName: string): Promise<WherebyTranscription | null> {
+  try {
+    const r = await fetch(`${WHEREBY_BASE}/transcriptions?roomName=${encodeURIComponent(roomName)}`, { headers: wherebyHeaders() });
+    if (!r.ok) return null;
+    const { results } = (await r.json()) as { results?: WherebyTranscription[] };
+    const own = (results ?? []).filter((t) => t.roomName === roomName);
+    own.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return own[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Lance la transcription d'un enregistrement terminé. Renvoie son id. */
+export async function startRecordingTranscription(recordingId: string): Promise<string | null> {
+  try {
+    const r = await fetch(`${WHEREBY_BASE}/transcriptions`, {
+      method: "POST",
+      headers: { ...wherebyHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ recordingId }),
+    });
+    if (!r.ok) {
+      console.error("[whereby] transcription refusée", r.status, await r.text().catch(() => ""));
+      return null;
+    }
+    const j = (await r.json()) as { transcriptionId?: string };
+    return j.transcriptionId ?? null;
+  } catch {
+    return null;
+  }
+}
