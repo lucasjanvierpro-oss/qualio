@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { textFromMessage } from "@/lib/anthropic/text";
 
+// Synthèse vocale : un appel à Claude.
+// Sans cette ligne, Vercel coupe la fonction bien avant la réponse.
+export const maxDuration = 120;
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Nettoie une réponse vocale brute : supprime hésitations et répétitions,

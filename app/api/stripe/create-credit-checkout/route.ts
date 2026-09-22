@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         currency: "eur",
         unit_amount: pack.priceCents,
         product_data: {
-          name: `Pack ${pack.credits} crédits Qualio`,
+          name: `Pack ${pack.credits} crédits Rarelyst`,
           description: `${pack.credits} participants confirmés`,
         },
       },

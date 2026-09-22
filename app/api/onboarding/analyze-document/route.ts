@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
 import { textFromMessage } from "@/lib/anthropic/text";
 
+// Analyse de document : un appel à Claude.
+// Sans cette ligne, Vercel coupe la fonction bien avant la réponse.
+export const maxDuration = 120;
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Analyse un CV / portfolio uploadé → synthèse professionnelle stockée dans

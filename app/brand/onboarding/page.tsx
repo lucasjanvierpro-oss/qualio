@@ -11,7 +11,7 @@ export default function BrandOnboardingPage() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
       {/* Logo */}
-      <div style={{ fontFamily: "var(--font-display)", fontSize: "28px", color: "var(--color-text-primary)", marginBottom: "48px" }}>Qualio</div>
+      <div style={{ fontFamily: "var(--font-display)", fontSize: "28px", color: "var(--color-text-primary)", marginBottom: "48px" }}>Rarelyst</div>
 
       <div style={{ width: "100%", maxWidth: "520px" }}>
 
@@ -20,7 +20,7 @@ export default function BrandOnboardingPage() {
             <div style={{ textAlign: "center", marginBottom: "40px" }}>
               <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "var(--color-accent-light)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", margin: "0 auto 20px" }}>🎉</div>
               <h1 style={{ fontFamily: "var(--font-display)", fontSize: "30px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 10px" }}>
-                Bienvenue sur Qualio
+                Bienvenue sur Rarelyst
               </h1>
               <p style={{ fontSize: "15px", color: "var(--color-text-secondary)", margin: 0, lineHeight: 1.6 }}>
                 Recrutez les bons profils pour vos études qualitatives en 72h. Votre compte marque est prêt.

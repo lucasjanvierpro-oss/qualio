@@ -71,7 +71,7 @@ export default function Logo({
         letterSpacing: "-0.01em",
         lineHeight: 1,
       }}>
-        Qualio
+        Rarelyst
       </span>
     </span>
   );

@@ -439,7 +439,7 @@ export default function AdminParticipantDetailClient({ profile, ghostFile }: { p
               {/* Note de l'équipe (AI summary) */}
               {localGhost.aiProfileSummary && (
                 <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px", padding: "20px 24px" }}>
-                  <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>Note de l'équipe Qualio</div>
+                  <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>Note de l'équipe Rarelyst</div>
                   <p style={{ fontSize: "14px", color: "var(--color-text-primary)", lineHeight: 1.7, margin: 0 }}>{localGhost.aiProfileSummary}</p>
                 </div>
               )}

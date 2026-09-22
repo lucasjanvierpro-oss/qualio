@@ -5,7 +5,7 @@ export type WherebyRoom = {
   roomName: string; // ex "/470c1e94-..." — utilisé pour matcher les webhooks
 };
 
-// Crée une room Whereby (visio encastrée dans qualio).
+// Crée une salle Whereby (visio encastrée dans Rarelyst).
 //
 // L'enregistrement cloud + transcription est une fonction PAYANTE (plan Build).
 // Il n'est activé que si WHEREBY_RECORDING_ENABLED=true — sinon la création de

@@ -366,7 +366,7 @@ export default function AdminReportClient({ study }: { study: Study }) {
           <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px", padding: "36px 40px" }}>
             <div style={{ marginBottom: "24px", paddingBottom: "20px", borderBottom: "1px solid var(--color-border)" }}>
               <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>
-                Qualio · Synthèse qualitative
+                Rarelyst · Synthèse qualitative
               </div>
               <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 800, margin: "0 0 4px" }}>{study.title}</h1>
               <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>{study.brandName}</div>

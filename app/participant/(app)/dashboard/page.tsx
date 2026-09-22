@@ -200,7 +200,7 @@ export default async function ParticipantDashboard() {
             <div style={{ fontSize: "24px", marginBottom: "12px", opacity: 0.25 }}>◎</div>
             <p className="q-empty-title">Aucune étude pour le moment</p>
             <p className="q-empty-sub">
-              Complétez votre profil et l'équipe Qualio vous sélectionnera pour les études qui correspondent à votre profil.
+              Complétez votre profil et l'équipe Rarelyst vous sélectionnera pour les études qui correspondent à votre profil.
             </p>
             <Link href="/participant/profile" className="q-btn q-btn-outline" style={{ marginTop: "18px" }}>
               Compléter mon profil

@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               letterSpacing: "-0.01em",
               lineHeight: 1,
             }}>
-              Qualio
+              Rarelyst
             </span>
           </Link>
           <div style={{
@@ -81,7 +81,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <div style={{ padding: "20px", borderTop: "1px solid #252320" }}>
           <div style={{ fontSize: "12px", color: "#4A4845", lineHeight: 1.5 }}>
             <div style={{ fontWeight: 500, color: "#7A7875", marginBottom: "2px" }}>Lucas Janvier</div>
-            <div>Fondateur · Qualio</div>
+            <div>Fondateur · Rarelyst</div>
           </div>
         </div>
       </aside>

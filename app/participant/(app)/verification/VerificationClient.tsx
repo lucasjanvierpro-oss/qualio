@@ -17,7 +17,7 @@ const STATUS_CONFIG = {
     color: "var(--color-success)",
     icon: "✓",
     title: "Identité vérifiée",
-    body: "Votre identité a été confirmée. Vous pouvez maintenant participer à toutes les études Qualio.",
+    body: "Votre identité a été confirmée. Vous pouvez maintenant participer à toutes les études Rarelyst.",
   },
   REJECTED: {
     bg: "var(--color-error-light)",
@@ -192,7 +192,7 @@ export default function VerificationClient({
           />
 
           <p style={{ fontSize: "11px", color: "var(--color-text-tertiary)", lineHeight: 1.6 }}>
-            🔒 Votre document est chiffré et stocké de manière sécurisée. Il n'est jamais partagé avec les marques. Seule l'équipe Qualio y a accès pour vérification.
+            🔒 Votre document est chiffré et stocké de manière sécurisée. Il n'est jamais partagé avec les marques. Seule l'équipe Rarelyst y a accès pour vérification.
           </p>
         </div>
       )}
@@ -202,8 +202,8 @@ export default function VerificationClient({
         <div className="q-card" style={{ marginTop: "8px" }}>
           <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.7, margin: 0 }}>
             Votre identité est confirmée. Si vous souhaitez mettre à jour votre document (document expiré, changement de nom), contactez-nous à{" "}
-            <a href="mailto:support@qualio.io" style={{ color: "var(--color-accent)", textDecoration: "none" }}>
-              support@qualio.io
+            <a href="mailto:support@rarelyst.co" style={{ color: "var(--color-accent)", textDecoration: "none" }}>
+              support@rarelyst.co
             </a>.
           </p>
         </div>

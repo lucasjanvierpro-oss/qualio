@@ -3,6 +3,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { requireAdmin } from "@/lib/auth/guards";
 import { textFromMessage } from "@/lib/anthropic/text";
 
+// Un lot de profils enchaîne plusieurs appels à Claude.
+// Sans cette ligne, Vercel coupe la fonction bien avant la réponse.
+export const maxDuration = 300;
+
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
 type ParticipantInput = {

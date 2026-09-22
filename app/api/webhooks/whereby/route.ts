@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { fetchWherebyTranscript, fetchWherebyRecordingLink, findTranscriptionForRoom, startRecordingTranscription } from "@/lib/whereby/rooms";
 import { generateAndStoreReportFromTranscripts } from "@/lib/reports/generate";
 
+// Le webhook peut déclencher la génération du rapport.
+// Sans cette ligne, Vercel coupe la fonction bien avant la réponse.
+export const maxDuration = 300;
+
 // Webhook Whereby.
 //
 // Comportement réel (vérifié via l'API) :

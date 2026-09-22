@@ -7,6 +7,10 @@ import { requireBrand } from "@/lib/auth/guards";
 import { normalizeTag } from "@/lib/participants/ghostFile";
 import { textFromMessage } from "@/lib/anthropic/text";
 
+// Recherche sémantique : un appel à Claude.
+// Sans cette ligne, Vercel coupe la fonction bien avant la réponse.
+export const maxDuration = 120;
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 type Filters = {

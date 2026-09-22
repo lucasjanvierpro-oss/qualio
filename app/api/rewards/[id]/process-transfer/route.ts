@@ -42,7 +42,7 @@ export async function POST(
       amount: reward.amountCents,
       currency: "eur",
       destination: reward.participantProfile.stripeConnectId,
-      description: `Qualio reward — ${reward.participantProfile.firstName} ${reward.participantProfile.lastName}`,
+      description: `Rarelyst reward — ${reward.participantProfile.firstName} ${reward.participantProfile.lastName}`,
       metadata: { rewardId: reward.id },
     });
 

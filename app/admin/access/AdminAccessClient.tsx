@@ -104,7 +104,7 @@ return (
               </button>
               <button
                 onClick={() => {
-                  const msg = `Bonjour,\n\nVoici votre code d'accès Qualio : ${generatedCode}\n\nPour activer votre compte :\n1. Rendez-vous sur qualio.io/signup/brand\n2. Créez votre compte\n3. Entrez le code lors de l'onboarding\n\nBonne utilisation,\nLucas — Qualio`;
+                  const msg = `Bonjour,\n\nVoici votre code d'accès Rarelyst : ${generatedCode}\n\nPour activer votre compte :\n1. Rendez-vous sur rarelyst.co/signup/brand\n2. Créez votre compte\n3. Entrez le code lors de l'onboarding\n\nBonne utilisation,\nLucas — Rarelyst`;
                   navigator.clipboard.writeText(msg);
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);

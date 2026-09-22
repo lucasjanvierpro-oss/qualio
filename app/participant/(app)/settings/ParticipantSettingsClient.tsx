@@ -84,7 +84,7 @@ export default function ParticipantSettingsClient({ email }: { email: string }) 
             {email}
           </div>
           <p style={{ fontSize: "12px", color: "var(--color-text-tertiary)", margin: "8px 0 0" }}>
-            Pour changer d'adresse email, contactez support@qualio.io
+            Pour changer d'adresse email, contactez support@rarelyst.co
           </p>
         </section>
 
@@ -117,7 +117,7 @@ export default function ParticipantSettingsClient({ email }: { email: string }) 
               { key: "newStudies" as const, label: "Nouvelles études disponibles", desc: "Quand une étude correspond à votre profil" },
               { key: "interviewReminders" as const, label: "Rappels d'entretien", desc: "24h et 1h avant votre entretien" },
               { key: "rewardAvailable" as const, label: "Récompenses disponibles", desc: "Quand un paiement ou voucher est prêt" },
-              { key: "marketing" as const, label: "Actualités Qualio", desc: "Nouvelles fonctionnalités et annonces" },
+              { key: "marketing" as const, label: "Actualités Rarelyst", desc: "Nouvelles fonctionnalités et annonces" },
             ].map((n) => (
               <div key={n.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
                 <div>

@@ -182,7 +182,7 @@ function CashCard({ reward }: { reward: Reward }) {
         </div>
       ) : (
         <div style={{ padding: "10px 14px", background: "var(--color-surface-2)", borderRadius: "8px", fontSize: "13px", color: "var(--color-text-tertiary)" }}>
-          {reward.status === "PROCESSING" ? "Virement en cours de traitement" : "En attente de traitement par Qualio"}
+          {reward.status === "PROCESSING" ? "Virement en cours de traitement" : "En attente de traitement par Rarelyst"}
         </div>
       )}
     </div>
@@ -277,7 +277,7 @@ export default function ParticipantWalletClient({
         Mes récompenses
       </h1>
       <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: "0 0 32px" }}>
-        Vos gains des études Qualio
+        Vos gains des études Rarelyst
       </p>
 
       {/* Stats */}
@@ -386,7 +386,7 @@ export default function ParticipantWalletClient({
                   {connectingToStripe ? "Redirection vers Stripe…" : "Connecter mon compte bancaire →"}
                 </button>
                 <p style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "8px" }}>
-                  Sécurisé par Stripe · Vos données bancaires ne transitent pas par Qualio
+                  Sécurisé par Stripe · Vos données bancaires ne transitent pas par Rarelyst
                 </p>
               </div>
             )}

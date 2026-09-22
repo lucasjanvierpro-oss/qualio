@@ -96,7 +96,7 @@ function ProfileCard({ p, onClick }: { p: ProfileCard; onClick: () => void }) {
         {score !== null && (
           <div style={{ textAlign: "center", padding: "6px 10px", borderRadius: "8px", background: SCORE_BG(score) }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: "20px", fontWeight: 700, color: SCORE_COLOR(score), lineHeight: 1 }}>{score}</div>
-            <div style={{ fontSize: "9px", color: SCORE_COLOR(score), fontWeight: 600, marginTop: "2px" }}>QUALIO</div>
+            <div style={{ fontSize: "9px", color: SCORE_COLOR(score), fontWeight: 600, marginTop: "2px" }}>RARELYST</div>
           </div>
         )}
       </div>
@@ -257,7 +257,7 @@ export default function BrandProfilesClient() {
 
           {/* Score minimum */}
           <div>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>Score Qualio minimum</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>Score Rarelyst minimum</label>
             <select style={selectSel} value={filters.minScore} onChange={(e) => updateFilter("minScore", e.target.value)}>
               <option value="">Tous les scores</option>
               {[5, 6, 7, 8, 9].map((s) => <option key={s} value={String(s)}>{s}+/10</option>)}
@@ -400,7 +400,7 @@ export default function BrandProfilesClient() {
                   {selected.ghostFile?.overallQualityScore}
                 </div>
                 <div>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-text-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Score Qualio</div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-text-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Score Rarelyst</div>
                   <div style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginTop: "2px" }}>Évaluation qualitative de l'expertise</div>
                 </div>
               </div>

@@ -37,7 +37,7 @@ export default function LoginPage() {
           Connexion
         </h1>
         <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-          Accédez à votre espace Qualio
+          Accédez à votre espace Rarelyst
         </p>
       </div>
 

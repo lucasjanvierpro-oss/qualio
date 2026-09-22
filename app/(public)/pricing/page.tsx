@@ -9,7 +9,7 @@ const PACKS = [
     features: [
       "5 crédits offerts",
       "1 étude complète (5 participants)",
-      "Sélection manuelle par l'équipe Qualio",
+      "Sélection manuelle par l'équipe Rarelyst",
       "Profils vérifiés et screeners qualitatifs",
     ],
     cta: "Commencer gratuitement",
@@ -25,7 +25,7 @@ const PACKS = [
     features: [
       "12 crédits (sans expiration)",
       "~2 études complètes",
-      "Sélection manuelle par l'équipe Qualio",
+      "Sélection manuelle par l'équipe Rarelyst",
       "Profils vérifiés + Ghost File IA",
       "Rapport de synthèse IA post-étude",
       "Support prioritaire par email",
@@ -43,7 +43,7 @@ const PACKS = [
     features: [
       "25 crédits (sans expiration)",
       "~4–5 études complètes",
-      "Sélection manuelle par l'équipe Qualio",
+      "Sélection manuelle par l'équipe Rarelyst",
       "Profils vérifiés + Ghost File IA",
       "Rapport de synthèse IA post-étude",
       "Support dédié (appel de cadrage inclus)",
@@ -66,7 +66,7 @@ const FAQ = [
   },
   {
     q: "Combien de temps pour recevoir des participants ?",
-    a: "48 à 72h après votre brief pour les premiers profils confirmés. C'est la promesse centrale de Qualio.",
+    a: "48 à 72h après votre brief pour les premiers profils confirmés. C'est la promesse centrale de Rarelyst.",
   },
   {
     q: "Que se passe-t-il si un participant annule ?",
@@ -78,7 +78,7 @@ const FAQ = [
   },
   {
     q: "Quelle est la récompense pour les participants ?",
-    a: "Vous choisissez le montant (20€ à 100€) et le format (virement bancaire ou bon d'achat). C'est géré par Qualio, vous n'avez rien à traiter.",
+    a: "Vous choisissez le montant (20€ à 100€) et le format (virement bancaire ou bon d'achat). C'est géré par Rarelyst, vous n'avez rien à traiter.",
   },
 ];
 
@@ -90,7 +90,7 @@ export default function PricingPage() {
       <nav style={{ padding: "0 40px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--color-border-base)" }}>
         <Link href="/" style={{ textDecoration: "none" }}>
           <span style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontStyle: "normal", color: "var(--color-text-primary)" }}>
-            Qualio
+            Rarelyst
           </span>
         </Link>
         <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
@@ -164,7 +164,7 @@ export default function PricingPage() {
                 </div>
               ) : (
                 <div style={{ fontSize: "12px", color: p.highlight ? "rgba(255,255,255,0.5)" : "var(--color-text-tertiary)", marginBottom: "24px" }}>
-                  Pour découvrir Qualio
+                  Pour découvrir Rarelyst
                 </div>
               )}
 
@@ -241,11 +241,11 @@ export default function PricingPage() {
       {/* Footer */}
       <footer style={{ borderTop: "1px solid var(--color-border-base)", padding: "24px 40px" }}>
         <div style={{ maxWidth: "960px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: "16px", fontStyle: "normal", color: "var(--color-text-primary)" }}>Qualio</span>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: "16px", fontStyle: "normal", color: "var(--color-text-primary)" }}>Rarelyst</span>
           <div style={{ display: "flex", gap: "20px" }}>
             <Link href="/" style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textDecoration: "none" }}>Accueil</Link>
             <Link href="/login" style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textDecoration: "none" }}>Connexion</Link>
-            <span style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>© 2026 Qualio</span>
+            <span style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>© 2026 Rarelyst</span>
           </div>
         </div>
       </footer>

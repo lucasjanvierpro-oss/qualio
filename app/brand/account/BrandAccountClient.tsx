@@ -112,7 +112,7 @@ export default function BrandAccountClient({
             </button>
           </div>
           <p style={{ fontSize: "12px", color: "var(--color-warning)", margin: "12px 0 0" }}>
-            Pas encore de code ? <a href="mailto:lucas@qualio.io" style={{ color: "var(--color-warning)", fontWeight: 600 }}>Contactez-nous →</a>
+            Pas encore de code ? <a href="mailto:lucas@rarelyst.co" style={{ color: "var(--color-warning)", fontWeight: 600 }}>Contactez-nous →</a>
           </p>
         </div>
       )}

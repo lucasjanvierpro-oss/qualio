@@ -26,7 +26,10 @@ const HOST = (process.argv[2] ?? "http://localhost:3011").replace(/\/$/, "");
 const rest = (path) => fetch(`${SB}/rest/v1/${path}`, { headers: { apikey: SR, Authorization: `Bearer ${SR}` } }).then(r => r.json());
 
 async function cookieFor(email) {
-  const r = await fetch(`${SB}/auth/v1/token?grant_type=password`, { method: "POST", headers: { apikey: anon, "Content-Type": "application/json" }, body: JSON.stringify({ email, password: env.SEED_PASSWORD }) });
+  // Le compte admin de démonstration a son propre mot de passe.
+  const password = email === "admin@rarelyst-demo.com" ? env.ADMIN_DEMO_PASSWORD : env.SEED_PASSWORD;
+  if (!password) return null;
+  const r = await fetch(`${SB}/auth/v1/token?grant_type=password`, { method: "POST", headers: { apikey: anon, "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
   const s = await r.json();
   if (!s.access_token) return null;
   return `sb-${ref}-auth-token=base64-` + Buffer.from(JSON.stringify({ ...s, expires_at: Math.floor(Date.now()/1000) + 3600 })).toString("base64url");
@@ -35,6 +38,7 @@ async function cookieFor(email) {
 const users = await rest("users?select=email,role,brand_profiles(id),participant_profiles(id)&order=role");
 const studies = await rest("studies?select=id,title,brandProfileId");
 const apps = await rest("applications?select=id,studyId,participantProfileId");
+const participants = await rest("participant_profiles?select=id&limit=4");
 
 const results = [];
 async function hit(label, path, cookie) {
@@ -57,6 +61,10 @@ for (const u of users) {
     const mine = studies.filter(s => u.brand_profiles?.some(b => b.id === s.brandProfileId));
     for (const p of ["/brand/dashboard", "/brand/studies", "/brand/studies/new", "/brand/profiles", "/brand/messages", "/brand/account"]) await hit(u.email, p, c);
     for (const s of mine) { await hit(u.email, `/brand/studies/${s.id}`, c); await hit(u.email, `/brand/studies/${s.id}/report`, c); }
+  } else if (u.role === "ADMIN") {
+    for (const p of ["/admin", "/admin/access", "/admin/matching", "/admin/participants", "/admin/payments", "/admin/studies", "/admin/verifications"]) await hit(u.email, p, c);
+    for (const s of studies) { await hit(u.email, `/admin/studies/${s.id}`, c); await hit(u.email, `/admin/studies/${s.id}/report`, c); }
+    for (const pp of participants) await hit(u.email, `/admin/participants/${pp.id}`, c);
   } else if (u.role === "PARTICIPANT") {
     const pid = u.participant_profiles?.[0]?.id;
     const mine = apps.filter(a => a.participantProfileId === pid);

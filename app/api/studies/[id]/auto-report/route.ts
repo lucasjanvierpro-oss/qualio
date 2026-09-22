@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { generateAndStoreReportFromTranscripts } from "@/lib/reports/generate";
 
+// Le rapport complet demande plus de 100 s à Claude.
+// Sans cette ligne, Vercel coupe la fonction bien avant la réponse.
+export const maxDuration = 300;
+
 // Secours manuel (admin) : génère le rapport à partir des transcripts déjà
 // disponibles pour l'étude — utile si un webhook a été raté, ou pour forcer
 // la génération avant que tous les entretiens soient transcrits.

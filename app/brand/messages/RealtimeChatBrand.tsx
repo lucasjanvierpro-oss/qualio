@@ -50,7 +50,7 @@ function ChatThread({ studyId }: { studyId: string }) {
       <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "12px" }}>
         {messages.length === 0 && (
           <div style={{ textAlign: "center", padding: "40px", color: "var(--color-text-tertiary)", fontSize: "14px" }}>
-            Aucun message pour le moment. Posez une question à l'équipe Qualio.
+            Aucun message pour le moment. Posez une question à l'équipe Rarelyst.
           </div>
         )}
         {messages.map((m) => {
@@ -83,7 +83,7 @@ function ChatThread({ studyId }: { studyId: string }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleSend())}
-          placeholder="Écrire à l'équipe Qualio…"
+          placeholder="Écrire à l'équipe Rarelyst…"
           style={{ flex: 1, padding: "10px 14px", border: "1px solid var(--color-border)", borderRadius: "8px", fontSize: "14px", background: "var(--color-background)", color: "var(--color-text-primary)", outline: "none" }}
         />
         <button onClick={handleSend} style={{ padding: "10px 20px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
@@ -108,7 +108,7 @@ export default function RealtimeChatBrand({ threads }: { threads: Thread[] }) {
           <div style={{ fontSize: "40px" }}>💬</div>
           <div style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)" }}>Aucune conversation</div>
           <p style={{ fontSize: "14px", textAlign: "center", maxWidth: "320px", margin: 0 }}>
-            Vos conversations avec l'équipe Qualio apparaîtront ici, liées à chaque étude.
+            Vos conversations avec l'équipe Rarelyst apparaîtront ici, liées à chaque étude.
           </p>
         </div>
       </div>
@@ -153,7 +153,7 @@ export default function RealtimeChatBrand({ threads }: { threads: Thread[] }) {
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--color-border)", background: "var(--color-surface)", flexShrink: 0 }}>
               <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-primary)" }}>{activeThread.study}</div>
-              <div style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginTop: "2px" }}>Conversation avec l'équipe Qualio</div>
+              <div style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginTop: "2px" }}>Conversation avec l'équipe Rarelyst</div>
             </div>
             <ChatThread key={activeThreadId!} studyId={activeThreadId!} />
           </div>

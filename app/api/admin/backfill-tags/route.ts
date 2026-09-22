@@ -5,6 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { textFromMessage } from "@/lib/anthropic/text";
 
+// Retraite tout le panel, un appel par profil.
+// Sans cette ligne, Vercel coupe la fonction bien avant la réponse.
+export const maxDuration = 300;
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 function normalizeTags(tags: string[]): string[] {
