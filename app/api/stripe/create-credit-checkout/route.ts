@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe/client";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { appUrl } from "@/lib/appUrl";
 
 const CREDIT_PACKS = [
   { credits: 5,  priceCents: 7500 },
@@ -51,8 +52,8 @@ export async function POST(request: NextRequest) {
       },
       quantity: 1,
     }],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/brand/account?checkout=credits_success`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/brand/account`,
+    success_url: `${appUrl()}/brand/account?checkout=credits_success`,
+    cancel_url: `${appUrl()}/brand/account`,
     metadata: {
       brandProfileId: dbUser.brandProfile.id,
       type: "credit_pack",

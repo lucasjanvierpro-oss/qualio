@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod/v4";
+import { appUrl } from "@/lib/appUrl";
 
 // ─── Schemas ──────────────────────────────────────────────
 
@@ -47,7 +48,7 @@ export async function signupBrand(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      emailRedirectTo: `${appUrl()}/auth/callback`,
       data: { role: "BRAND" }, // stored in user_metadata — used by proxy for routing
     },
   });
@@ -111,7 +112,7 @@ export async function signupParticipant(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      emailRedirectTo: `${appUrl()}/auth/callback`,
       data: { role: "PARTICIPANT" }, // stored in user_metadata
     },
   });
@@ -197,7 +198,7 @@ export async function signInWithLinkedIn() {
     provider: "linkedin_oidc",
     options: {
       scopes: "r_liteprofile r_emailaddress",
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      redirectTo: `${appUrl()}/auth/callback`,
     },
   });
 

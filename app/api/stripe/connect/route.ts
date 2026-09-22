@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe/client";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { appUrl } from "@/lib/appUrl";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -32,8 +33,8 @@ export async function POST(request: NextRequest) {
 
   const accountLink = await stripe.accountLinks.create({
     account: connectId,
-    refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/participant/wallet?connect=refresh`,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/participant/wallet?connect=success`,
+    refresh_url: `${appUrl()}/participant/wallet?connect=refresh`,
+    return_url: `${appUrl()}/participant/wallet?connect=success`,
     type: "account_onboarding",
   });
 

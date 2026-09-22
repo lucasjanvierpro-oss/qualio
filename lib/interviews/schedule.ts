@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { createWherebyRoom } from "@/lib/whereby/rooms";
 import { sendInterviewConfirmed, scheduleInterviewReminders } from "@/lib/resend/emails";
+import { appUrl } from "@/lib/appUrl";
 
 // ── Planification d'un entretien individuel ───────────────────────────
 // Deux chemins mènent au même entretien confirmé :
@@ -25,10 +26,10 @@ export function schedulingStep(slots: Slot[]): "participant_to_propose" | "brand
 }
 
 export function joinUrls(interviewId: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.rarelyst.co";
+  const base = appUrl();
   return {
-    participant: `${appUrl}/participant/interview/${interviewId}`,
-    brand: `${appUrl}/brand/interview/${interviewId}`,
+    participant: `${base}/participant/interview/${interviewId}`,
+    brand: `${base}/brand/interview/${interviewId}`,
   };
 }
 

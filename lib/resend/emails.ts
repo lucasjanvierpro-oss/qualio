@@ -1,10 +1,11 @@
 import { Resend } from "resend";
+import { appUrl } from "@/lib/appUrl";
 
 // ── Réglages ──────────────────────────────────────────────────────────
 // L'expéditeur doit appartenir à un domaine vérifié dans Resend, sinon aucun
 // email ne part. Par défaut : rarelyst.co (à vérifier dans le tableau de bord).
 const FROM = process.env.EMAIL_FROM ?? "Rarelyst <noreply@rarelyst.co>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.rarelyst.co";
+const APP_URL = appUrl();
 // Les serveurs Vercel tournent en UTC : sans fuseau explicite, un entretien à
 // 10 h à Paris serait annoncé à 8 h.
 const TZ = "Europe/Paris";

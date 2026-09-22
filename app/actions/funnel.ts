@@ -8,6 +8,7 @@ import { computeScore, levelFromScore } from "@/lib/onboarding/scoring";
 import type { OnboardingState } from "@/lib/onboarding/types";
 import { FUNNEL_LAST_STEP } from "@/lib/onboarding/types";
 import { generateGhostFile } from "@/lib/participants/ghostFile";
+import { appUrl } from "@/lib/appUrl";
 
 type AccountInput = {
   firstName: string; lastName: string; email: string; password: string;
@@ -28,7 +29,7 @@ export async function createFunnelAccount(input: AccountInput): Promise<{ ok: tr
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email, password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      emailRedirectTo: `${appUrl()}/auth/callback`,
       data: { role: "PARTICIPANT" },
     },
   });
