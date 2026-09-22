@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import s from "./dashboard.module.css";
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   ACTIVE:      { label: "Actif",      color: "var(--color-success)" },
@@ -132,7 +133,7 @@ export default async function BrandDashboard() {
           alignItems: "center",
         }}>
           <div style={{ fontSize: "13px", color: "var(--color-warning)", fontWeight: 500 }}>
-            {pendingReview} profil{pendingReview > 1 ? "s" : ""} proposé{pendingReview > 1 ? "s" : ""} par l'équipe Qualio —{" "}
+            {pendingReview} profil{pendingReview > 1 ? "s" : ""} proposé{pendingReview > 1 ? "s" : ""} par l'équipe Rarelyst —{" "}
             <span style={{ fontWeight: 400 }}>{pendingStudy.title}</span>
           </div>
           <Link
@@ -175,6 +176,7 @@ export default async function BrandDashboard() {
                 <Link
                   key={study.id}
                   href={`/brand/studies/${study.id}`}
+                  className={s.studyRow}
                   style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 110px 60px 80px 40px",
@@ -183,10 +185,7 @@ export default async function BrandDashboard() {
                     alignItems: "center",
                     textDecoration: "none",
                     borderTop: i > 0 ? "1px solid var(--color-border-base)" : "none",
-                    transition: "background 0.1s",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-surface-2)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
                   {/* Title */}
                   <div>

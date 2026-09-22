@@ -1,0 +1,10 @@
+/* Le survol des lignes d'étude est en CSS et non en JavaScript : cette page est
+   un composant serveur, et React refuse d'y attacher un gestionnaire
+   d'événement — la page entière renvoie alors une erreur 500. */
+.studyRow {
+  transition: background 0.1s;
+}
+
+.studyRow:hover {
+  background: var(--color-surface-2);
+}
