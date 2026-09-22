@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
-import { createClient } from "@/lib/supabase/server";
+import { requireBrand } from "@/lib/auth/guards";
+// Même normalisation que celle appliquée aux tags stockés — sinon la recherche
+// ne retrouve jamais les tags générés.
+import { normalizeTag } from "@/lib/participants/ghostFile";
+import { textFromMessage } from "@/lib/anthropic/text";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -15,13 +19,6 @@ type Filters = {
   keywords?: string[];
   tags?: string[];
 };
-
-function normalizeTag(t: string): string {
-  return t.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 async function extractFilters(query: string): Promise<Filters> {
   const msg = await anthropic.messages.create({
@@ -54,7 +51,7 @@ Valeurs possibles :
 - tags : 5 à 12 tags de recherche normalisés déduits de la requête, y compris synonymes et notions implicites. Format : minuscules, sans accents, tirets (ex "quiet-luxury", "seconde-main", "gen-z", "sneakers", "lacoste", "early-adopter", "gros-budget"). Étends la requête : si la marque cherche "des acheteurs Lacoste jeunes", tags = ["lacoste", "gen-z", "tennis", "sportswear", "preppy", "polo"]` }],
   });
 
-  const text = msg.content[0].type === "text" ? msg.content[0].text.trim() : "{}";
+  const text = textFromMessage(msg) || "{}";
   try {
     return JSON.parse(text) as Filters;
   } catch {
@@ -63,9 +60,8 @@ Valeurs possibles :
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const denied = await requireBrand();
+  if (denied) return denied;
 
   const body = await request.json() as {
     query?: string;

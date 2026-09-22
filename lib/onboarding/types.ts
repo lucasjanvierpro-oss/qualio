@@ -69,3 +69,15 @@ export const EMPTY_ONBOARDING: OnboardingState = {
   availability: {}, preferredFormat: "", interviewLanguages: [], rewardPreference: "",
   agreedToCodeOfConduct: false,
 };
+
+// Écrans du tunnel, dans l'ordre. Source unique de vérité — la page et les
+// server actions s'y réfèrent plutôt que de compter les écrans à la main.
+export const FUNNEL_SCREENS = [
+  "account", "gain", "demographics", "universes", "profile_type",
+  "behavioral", "expert", "level", "badges", "logistics", "charter", "final",
+] as const;
+
+export type FunnelScreen = (typeof FUNNEL_SCREENS)[number];
+
+// Index du dernier écran atteint quand le profil est finalisé.
+export const FUNNEL_LAST_STEP = FUNNEL_SCREENS.indexOf("final");

@@ -151,7 +151,7 @@ export async function signupParticipant(formData: FormData) {
     // Profile already exists
   }
 
-  redirect("/participant/onboarding");
+  redirect("/signup/participant");
 }
 
 // ─── Login ─────────────────────────────────────────────────

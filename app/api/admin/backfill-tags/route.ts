@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { normalizeTag } from "@/lib/participants/ghostFile";
 import { createClient } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { textFromMessage } from "@/lib/anthropic/text";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 function normalizeTags(tags: string[]): string[] {
-  return [...new Set(tags.map((t) =>
-    t.toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-  ).filter(Boolean))];
+  return [...new Set(tags.map(normalizeTag).filter(Boolean))];
 }
 
 // Génère les tags manquants pour tous les profils ayant un ghost file "done"
@@ -67,7 +64,7 @@ Bio : ${p.professionalBio ?? p.bio ?? ""}
 Réponses libres : ${Object.values(answers).join(" | ").slice(0, 1200)}` }],
       });
 
-      const raw = msg.content[0].type === "text" ? msg.content[0].text.trim() : "[]";
+      const raw = textFromMessage(msg) || "[]";
       const tags = normalizeTags(JSON.parse(raw) as string[]);
 
       if (tags.length > 0) {

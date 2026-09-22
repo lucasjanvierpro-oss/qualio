@@ -4,7 +4,7 @@ import { useEffect, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/shared/Logo";
 import { detectLanguage, setLanguage, type Lang } from "@/lib/i18n/detect";
-import { EMPTY_ONBOARDING, type OnboardingState } from "@/lib/onboarding/types";
+import { EMPTY_ONBOARDING, FUNNEL_SCREENS, type OnboardingState } from "@/lib/onboarding/types";
 import { computeScore, levelFromScore, LEVEL_META } from "@/lib/onboarding/scoring";
 import { createFunnelAccount, saveFunnelStep, completeFunnel } from "@/app/actions/funnel";
 import VoiceInput from "@/components/onboarding/VoiceInput";
@@ -35,7 +35,7 @@ const T = {
     brandsTitle: "Quelles marques suivez-vous ou connaissez-vous bien ?", addBrand: "Ajouter une marque…",
     engageTitle: "Comment vous engagez-vous avec ces marques ?",
     engageOpts: ["Je suis leurs collections et défilés", "J'assiste à leurs événements", "J'achète régulièrement leurs produits", "Je fais de la veille (newsletters, Instagram…)", "Je travaille ou ai travaillé avec elles", "Je revends / collecte leurs pièces", "Je les recommande à mon entourage"],
-    profileLevel: "Niveau de profil", emailBanner: "Vérifiez votre email pour activer votre compte — vous pouvez continuer.",
+    profileLevel: "Niveau de profil", accountBanner: "Compte créé — votre progression est enregistrée au fur et à mesure.",
     min1: "Sélectionnez au moins un univers.",
     profileTitle: "Comment vous définiriez-vous principalement ?",
     behavioralTitle: "Cochez tout ce qui vous correspond — sans pression.",
@@ -49,8 +49,9 @@ const T = {
     formatLabel: "Format préféré", langsLabel: "Langue(s) d'entretien", rewardLabel: "Préférence de récompense",
     charterTitle: "Charte de participation", charterIntro: "Tout paiement en dehors de Rarelyst est strictement interdit.",
     accept: "J'accepte la charte et j'active mon profil", scrollToEnd: "Faites défiler jusqu'en bas",
-    finalTitle: "Dernière étape — vérifiez votre email",
-    resendEmail: "Renvoyer l'email", goDashboard: "Accéder à mes études",
+    finalTitle: "Votre profil est actif",
+    finalBody: "Nous analysons vos réponses pour vous proposer les études qui vous correspondent vraiment. Vous recevrez un email dès qu'une étude s'ouvre sur votre profil.",
+    goDashboard: "Accéder à mes études",
   },
   en: {
     createProfile: "Create your profile", firstName: "First name", lastName: "Last name", email: "Email",
@@ -73,7 +74,7 @@ const T = {
     brandsTitle: "Which brands do you follow or know well?", addBrand: "Add a brand…",
     engageTitle: "How do you engage with these brands?",
     engageOpts: ["I follow their collections and shows", "I attend their events", "I buy their products regularly", "I do active trend-watching", "I work or have worked with them", "I resell / collect their pieces", "I recommend them to my network"],
-    profileLevel: "Profile level", emailBanner: "Verify your email to activate your account — you can continue.",
+    profileLevel: "Profile level", accountBanner: "Account created — your progress is saved as you go.",
     min1: "Select at least one universe.",
     profileTitle: "How would you primarily define yourself?",
     behavioralTitle: "Check everything that applies — no pressure.",
@@ -87,8 +88,9 @@ const T = {
     formatLabel: "Preferred format", langsLabel: "Interview language(s)", rewardLabel: "Reward preference",
     charterTitle: "Participation Charter", charterIntro: "Any payment outside of Rarelyst is strictly prohibited.",
     accept: "I accept the charter and activate my profile", scrollToEnd: "Scroll to the bottom",
-    finalTitle: "Last step — verify your email",
-    resendEmail: "Resend email", goDashboard: "Access studies",
+    finalTitle: "Your profile is live",
+    finalBody: "We are analysing your answers to match you with studies that genuinely fit. You will get an email as soon as one opens up for your profile.",
+    goDashboard: "Access studies",
   },
 } as const;
 
@@ -203,7 +205,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
-const SCREENS = ["account", "gain", "demographics", "universes", "profile_type", "behavioral", "expert", "level", "badges", "logistics", "charter", "final"] as const;
+const SCREENS = FUNNEL_SCREENS;
 
 export default function ParticipantFunnel() {
   const router = useRouter();
@@ -244,6 +246,9 @@ export default function ParticipantFunnel() {
   const score = computeScore(data);
   const level = levelFromScore(score);
   const progress = Math.round(((screen + 1) / SCREENS.length) * 100);
+  // Le niveau n'apparaît qu'à partir de l'écran qui le révèle : avant, il
+  // annoncerait "Bronze" à quelqu'un qui n'a encore rien répondu.
+  const showLevel = screen >= SCREENS.indexOf("level");
 
   function up(patch: Partial<OnboardingState>) { setData((d) => ({ ...d, ...patch })); }
   function toggle<K extends keyof OnboardingState>(key: K, val: string) {
@@ -315,16 +320,18 @@ export default function ParticipantFunnel() {
       <div style={{ width: "100%", maxWidth: "640px", padding: "20px 24px 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
           <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--color-plum)" }}>{lang === "fr" ? "Profil complété à" : "Profile"} {progress}%</span>
-          <span style={{ fontSize: "12px", fontWeight: 700, color: LEVEL_META[level].color }}>{LEVEL_META[level].icon} {t.profileLevel}: {LEVEL_META[level].label}</span>
+          {showLevel && (
+            <span style={{ fontSize: "12px", fontWeight: 700, color: LEVEL_META[level].color }}>{LEVEL_META[level].icon} {t.profileLevel}: {LEVEL_META[level].label}</span>
+          )}
         </div>
         <div style={{ height: "6px", background: "var(--color-border-base)", borderRadius: "999px", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${progress}%`, background: `linear-gradient(90deg, #8765D7, ${LEVEL_META[level].color})`, borderRadius: "999px", transition: "width 0.4s ease" }} />
+          <div style={{ height: "100%", width: `${progress}%`, background: showLevel ? `linear-gradient(90deg, #8765D7, ${LEVEL_META[level].color})` : "var(--color-accent)", borderRadius: "999px", transition: "width 0.4s ease" }} />
         </div>
       </div>
 
       {accountCreated && (
-        <div style={{ maxWidth: "640px", margin: "12px 24px 0", padding: "8px 14px", borderRadius: "999px", background: "var(--color-warning-light)", border: "1px solid var(--color-warning)", fontSize: "12px", color: "var(--color-warning)" }}>
-          {t.emailBanner}
+        <div style={{ maxWidth: "640px", margin: "12px 24px 0", padding: "8px 14px", borderRadius: "999px", background: "var(--color-success-light)", border: "1px solid var(--color-success)", fontSize: "12px", color: "var(--color-success)" }}>
+          {t.accountBanner}
         </div>
       )}
 
@@ -583,10 +590,10 @@ export default function ParticipantFunnel() {
         {/* ── Écran final : vérification email ── */}
         {cur === "final" && (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
-            <div style={{ fontSize: "48px", marginBottom: "12px" }}>📬</div>
+            <div style={{ fontSize: "48px", marginBottom: "12px" }}>✓</div>
             <h1 style={{ fontSize: "24px", fontWeight: 800, color: "var(--color-plum-deep)", margin: "0 0 12px" }}>{t.finalTitle}</h1>
             <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", maxWidth: "400px", margin: "0 auto 24px", lineHeight: 1.6 }}>
-              {lang === "fr" ? `Un lien de confirmation a été envoyé à ${account.email || "votre email"}. Cliquez dessus pour candidater aux études.` : `A confirmation link was sent to ${account.email || "your email"}. Click it to apply to studies.`}
+              {t.finalBody}
             </p>
             <button onClick={() => { try { localStorage.removeItem(DRAFT); } catch {} router.push("/participant/dashboard"); }} className="q-btn q-btn-primary" style={{ fontSize: "14px" }}>{t.goDashboard} →</button>
           </div>

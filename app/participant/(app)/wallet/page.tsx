@@ -29,7 +29,7 @@ export default async function ParticipantWalletPage() {
   });
 
   const profile = dbUser?.participantProfile;
-  if (!profile) redirect("/participant/onboarding");
+  if (!profile) redirect("/signup/participant");
 
   const rewards = profile.rewards.map((r) => ({
     id: r.id,

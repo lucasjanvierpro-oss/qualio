@@ -24,7 +24,7 @@ export default async function ParticipantVerificationPage() {
   });
 
   const profile = dbUser?.participantProfile;
-  if (!profile) redirect("/participant/onboarding");
+  if (!profile) redirect("/signup/participant");
 
   return (
     <VerificationClient

@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/app/generated/prisma/client";
 import { sendReportReady } from "@/lib/resend/emails";
+import { textFromMessage } from "@/lib/anthropic/text";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -99,12 +100,12 @@ export async function generateReport(userMessage: string): Promise<{
 }> {
   const response = await anthropic.messages.create({
     model: REPORT_MODEL,
-    max_tokens: 4000,
+    max_tokens: 16000,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userMessage }],
   });
 
-  const raw = response.content[0].type === "text" ? response.content[0].text.trim() : "";
+  const raw = textFromMessage(response);
   let structured: Record<string, unknown> | null = null;
   try {
     const jsonStr = raw.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();

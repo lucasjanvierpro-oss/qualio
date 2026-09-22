@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { requireAdmin } from "@/lib/auth/guards";
+import { textFromMessage } from "@/lib/anthropic/text";
 
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
 export async function POST(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { study, participant } = await req.json();
 
@@ -42,7 +47,7 @@ Réponds UNIQUEMENT en JSON valide, exactement dans ce format :
       messages: [{ role: "user", content: prompt }],
     });
 
-    const text = message.content[0].type === "text" ? message.content[0].text.trim() : "";
+    const text = textFromMessage(message);
     const result = JSON.parse(text);
 
     return NextResponse.json({ score: result.score, reason: result.reason });

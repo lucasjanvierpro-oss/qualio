@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/app/generated/prisma/client";
 import { createClient } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { textFromMessage } from "@/lib/anthropic/text";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -136,12 +137,12 @@ Génère maintenant le rapport de synthèse complet selon le format défini.`;
 
   const response = await anthropic.messages.create({
     model: "claude-sonnet-5",
-    max_tokens: 4000,
+    max_tokens: 16000,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userMessage }],
   });
 
-  const raw = response.content[0].type === "text" ? response.content[0].text.trim() : "";
+  const raw = textFromMessage(response);
 
   // Extrait le JSON (au cas où le modèle enveloppe dans ```json … ```)
   let structured: Record<string, unknown> | null = null;

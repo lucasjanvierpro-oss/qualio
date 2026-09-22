@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { requireAdmin } from "@/lib/auth/guards";
+import { textFromMessage } from "@/lib/anthropic/text";
 
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -29,6 +31,9 @@ type StudyInput = {
 };
 
 export async function POST(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { study, participants }: { study: StudyInput; participants: ParticipantInput[] } = await req.json();
 
@@ -83,7 +88,7 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans texte autour :
       messages: [{ role: "user", content: prompt }],
     });
 
-    const raw = message.content[0].type === "text" ? message.content[0].text.trim() : "[]";
+    const raw = textFromMessage(message) || "[]";
     // Strip markdown code fences if present
     const cleaned = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
     const results = JSON.parse(cleaned);

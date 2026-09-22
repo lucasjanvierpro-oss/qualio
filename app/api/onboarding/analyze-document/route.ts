@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { prisma } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
+import { textFromMessage } from "@/lib/anthropic/text";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -48,10 +49,10 @@ export async function POST(req: NextRequest) {
 
     const msg = await anthropic.messages.create({
       model: "claude-sonnet-5",
-      max_tokens: 512,
+      max_tokens: 4000,
       messages: [{ role: "user", content }],
     });
-    const analysis = msg.content[0].type === "text" ? msg.content[0].text.trim() : "";
+    const analysis = textFromMessage(msg);
     if (analysis) {
       await prisma.participantProfile.update({ where: { id: dbUser.participantProfile.id }, data: { cvAnalysis: analysis } });
     }

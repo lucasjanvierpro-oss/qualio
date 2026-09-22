@@ -1,9 +1,13 @@
 "use server";
 
+import { after } from "next/server";
+
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { computeScore, levelFromScore } from "@/lib/onboarding/scoring";
 import type { OnboardingState } from "@/lib/onboarding/types";
+import { FUNNEL_LAST_STEP } from "@/lib/onboarding/types";
+import { generateGhostFile } from "@/lib/participants/ghostFile";
 
 type AccountInput = {
   firstName: string; lastName: string; email: string; password: string;
@@ -67,66 +71,72 @@ export async function createFunnelAccount(input: AccountInput): Promise<{ ok: tr
   return { ok: true };
 }
 
-// ── Sauvegarde progressive ───────────────────────────────────────────
-export async function saveFunnelStep(step: number, s: Partial<OnboardingState>): Promise<{ ok: true } | { error: string }> {
+// Champs du tunnel → colonnes du profil. Partagé par la sauvegarde progressive
+// et par la finalisation, pour qu'aucune réponse ne puisse être perdue.
+function profileDataFromState(s: Partial<OnboardingState>) {
+  return {
+    ...(s.employmentStatus !== undefined ? { employmentStatus: s.employmentStatus || null } : {}),
+    ...(s.educationLevel !== undefined ? { educationLevel: s.educationLevel || null } : {}),
+    ...(s.householdIncome !== undefined ? { householdIncome: s.householdIncome || null } : {}),
+    ...(s.ethnicity !== undefined ? { ethnicity: s.ethnicity || null } : {}),
+    ...(s.macroUniverses !== undefined ? { macroUniverses: s.macroUniverses } : {}),
+    ...(s.brandAffinities !== undefined ? { brandAffinities: s.brandAffinities } : {}),
+    ...(s.engagementTypes !== undefined ? { engagementTypes: s.engagementTypes } : {}),
+    ...(s.selfProfileType !== undefined ? { selfProfileType: s.selfProfileType || null } : {}),
+    ...(s.behavioralChecklist !== undefined ? { behavioralChecklist: s.behavioralChecklist } : {}),
+    ...(s.adaptiveAnswers !== undefined ? { adaptiveAnswers: s.adaptiveAnswers } : {}),
+    ...(s.expertAnswers !== undefined ? { expertAnswers: s.expertAnswers } : {}),
+    ...(s.linkedinUrl !== undefined ? { linkedinUrl: s.linkedinUrl || null } : {}),
+    ...(s.cvUrl !== undefined ? { cvUrl: s.cvUrl || null } : {}),
+    ...(s.portfolioUrl !== undefined ? { portfolioUrl: s.portfolioUrl || null } : {}),
+    ...(s.instagramUrl !== undefined ? { instagramUrl: s.instagramUrl || null } : {}),
+    ...(s.availability !== undefined ? { availability: s.availability } : {}),
+    ...(s.preferredFormat !== undefined ? { preferredFormat: s.preferredFormat || null } : {}),
+    ...(s.interviewLanguages !== undefined ? { interviewLanguages: s.interviewLanguages } : {}),
+    ...(s.rewardPreference !== undefined ? { rewardPreference: s.rewardPreference || null } : {}),
+  };
+}
+
+// Résout le profil participant de l'utilisateur connecté.
+async function currentProfileId(): Promise<string | null> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié." };
+  if (!user) return null;
 
   const dbUser = await prisma.user.findUnique({
     where: { supabaseId: user.id },
-    include: { participantProfile: { select: { id: true } } },
+    select: { participantProfile: { select: { id: true } } },
   });
-  if (!dbUser?.participantProfile) return { error: "Profil introuvable." };
+  return dbUser?.participantProfile?.id ?? null;
+}
+
+// ── Sauvegarde progressive ───────────────────────────────────────────
+export async function saveFunnelStep(step: number, s: Partial<OnboardingState>): Promise<{ ok: true } | { error: string }> {
+  const profileId = await currentProfileId();
+  if (!profileId) return { error: "Non authentifié." };
 
   await prisma.participantProfile.update({
-    where: { id: dbUser.participantProfile.id },
-    data: {
-      onboardingStep: step,
-      ...(s.employmentStatus !== undefined ? { employmentStatus: s.employmentStatus || null } : {}),
-      ...(s.educationLevel !== undefined ? { educationLevel: s.educationLevel || null } : {}),
-      ...(s.householdIncome !== undefined ? { householdIncome: s.householdIncome || null } : {}),
-      ...(s.ethnicity !== undefined ? { ethnicity: s.ethnicity || null } : {}),
-      ...(s.macroUniverses !== undefined ? { macroUniverses: s.macroUniverses } : {}),
-      ...(s.brandAffinities !== undefined ? { brandAffinities: s.brandAffinities } : {}),
-      ...(s.engagementTypes !== undefined ? { engagementTypes: s.engagementTypes } : {}),
-      ...(s.selfProfileType !== undefined ? { selfProfileType: s.selfProfileType || null } : {}),
-      ...(s.behavioralChecklist !== undefined ? { behavioralChecklist: s.behavioralChecklist } : {}),
-      ...(s.adaptiveAnswers !== undefined ? { adaptiveAnswers: s.adaptiveAnswers } : {}),
-      ...(s.expertAnswers !== undefined ? { expertAnswers: s.expertAnswers } : {}),
-      ...(s.linkedinUrl !== undefined ? { linkedinUrl: s.linkedinUrl || null } : {}),
-      ...(s.cvUrl !== undefined ? { cvUrl: s.cvUrl || null } : {}),
-      ...(s.portfolioUrl !== undefined ? { portfolioUrl: s.portfolioUrl || null } : {}),
-      ...(s.instagramUrl !== undefined ? { instagramUrl: s.instagramUrl || null } : {}),
-      ...(s.availability !== undefined ? { availability: s.availability } : {}),
-      ...(s.preferredFormat !== undefined ? { preferredFormat: s.preferredFormat || null } : {}),
-      ...(s.interviewLanguages !== undefined ? { interviewLanguages: s.interviewLanguages } : {}),
-      ...(s.rewardPreference !== undefined ? { rewardPreference: s.rewardPreference || null } : {}),
-    },
+    where: { id: profileId },
+    data: { onboardingStep: step, ...profileDataFromState(s) },
   });
   return { ok: true };
 }
 
-// ── Finalisation (Étape 8) ───────────────────────────────────────────
+// ── Finalisation ─────────────────────────────────────────────────────
 export async function completeFunnel(fullState: OnboardingState): Promise<{ ok: true } | { error: string }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié." };
+  const profileId = await currentProfileId();
+  if (!profileId) return { error: "Non authentifié." };
 
-  const dbUser = await prisma.user.findUnique({
-    where: { supabaseId: user.id },
-    include: { participantProfile: { select: { id: true } } },
-  });
-  if (!dbUser?.participantProfile) return { error: "Profil introuvable." };
-  const profileId = dbUser.participantProfile.id;
-
+  // Le score reste calculé côté serveur à partir de l'état complet : la valeur
+  // affichée dans le tunnel n'est qu'un indicateur, elle ne fait pas autorité.
   const score = computeScore(fullState);
   const level = levelFromScore(score);
 
   await prisma.participantProfile.update({
     where: { id: profileId },
     data: {
-      onboardingStep: 8,
+      ...profileDataFromState(fullState),
+      onboardingStep: FUNNEL_LAST_STEP,
       onboardingStatus: "complete",
       agreedToCodeOfConduct: fullState.agreedToCodeOfConduct,
       profileScore: score,
@@ -134,12 +144,12 @@ export async function completeFunnel(fullState: OnboardingState): Promise<{ ok: 
     },
   });
 
-  // Ghost file en arrière-plan (non bloquant)
-  try {
-    await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/participants/${profileId}/generate-ghost-file`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-    });
-  } catch { /* non bloquant */ }
+  // Ghost file : appel direct, après l'envoi de la réponse. Surtout PAS un fetch
+  // vers notre propre API — `proxy.ts` le redirigerait vers /login (aucun cookie
+  // sur un appel serveur→serveur) et le ghost file ne serait jamais généré.
+  after(async () => {
+    await generateGhostFile(profileId);
+  });
 
-  return { ok: true, };
+  return { ok: true };
 }

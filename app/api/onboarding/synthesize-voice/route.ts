@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { textFromMessage } from "@/lib/anthropic/text";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
       system,
       messages: [{ role: "user", content: transcript }],
     });
-    const cleaned = msg.content[0].type === "text" ? msg.content[0].text.trim() : transcript;
+    const cleaned = textFromMessage(msg) || transcript;
     return NextResponse.json({ cleaned });
   } catch {
     return NextResponse.json({ cleaned: transcript });

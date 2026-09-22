@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.redirect(new URL("/participant/onboarding", request.url));
+    return NextResponse.redirect(new URL("/signup/participant", request.url));
   }
 
   const destinations: Record<string, string> = {

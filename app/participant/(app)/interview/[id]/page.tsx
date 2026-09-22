@@ -16,7 +16,7 @@ export default async function ParticipantInterviewPage({ params }: { params: Pro
     where: { supabaseId: user.id },
     select: { participantProfile: { select: { id: true, firstName: true } } },
   });
-  if (!dbUser?.participantProfile) redirect("/participant/onboarding");
+  if (!dbUser?.participantProfile) redirect("/signup/participant");
 
   const interview = await prisma.interview.findUnique({
     where: { id },

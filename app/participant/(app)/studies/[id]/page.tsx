@@ -20,7 +20,7 @@ export default async function ParticipantStudyDetailPage({ params }: { params: P
     select: { participantProfile: { select: { id: true } } },
   });
 
-  if (!dbUser?.participantProfile) redirect("/participant/onboarding");
+  if (!dbUser?.participantProfile) redirect("/signup/participant");
 
   const application = await prisma.application.findUnique({
     where: { id },
