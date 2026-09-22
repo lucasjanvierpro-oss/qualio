@@ -30,7 +30,17 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
           include: {
             interview: { select: { id: true, scheduledAt: true, status: true, transcriptStatus: true } },
             participantProfile: {
-              select: { firstName: true, lastName: true, dateOfBirth: true, city: true, profession: true, brandSummary: true },
+              select: {
+                firstName: true, lastName: true, dateOfBirth: true, city: true,
+                profession: true, brandSummary: true,
+                ghostFile: {
+                  select: {
+                    profileType: true, primaryExpertise: true, secondaryExpertises: true,
+                    aiTags: true, aiStrengths: true, generationTag: true,
+                    expertiseScore: true, vocabularyScore: true, authenticityScore: true,
+                  },
+                },
+              },
             },
           },
         },
@@ -44,15 +54,39 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
   // de naissance ou les réponses brutes du participant.
   const candidates: Candidate[] = study.applications.map((a) => {
     const slots = readSlots(a.proposedSlots);
+    const p = a.participantProfile;
+    const g = p.ghostFile;
+
+    // Les repères sont ce qui situe la personne en un coup d'œil : ses marques,
+    // son vocabulaire. On retire ce qui est déjà affiché ailleurs sur la fiche
+    // pour ne pas répéter la ville, la génération ou l'expertise principale.
+    const shown = new Set(
+      [p.city, g?.generationTag, g?.primaryExpertise, ...(g?.secondaryExpertises ?? [])]
+        .filter(Boolean)
+        .map((s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-"))
+    );
+    const refs = (g?.aiTags ?? []).filter((tag) => !shown.has(tag.toLowerCase()));
+
     return {
       applicationId: a.id,
       status: a.status,
-      name: `${a.participantProfile.firstName} ${a.participantProfile.lastName.slice(0, 1)}.`,
-      age: age(a.participantProfile.dateOfBirth),
-      city: a.participantProfile.city,
-      profession: a.participantProfile.profession,
-      summary: a.participantProfile.brandSummary,
+      name: `${p.firstName} ${p.lastName.slice(0, 1)}.`,
+      age: age(p.dateOfBirth),
+      city: p.city,
+      profession: p.profession,
+      portrait: p.brandSummary,
       why: a.adminMatchNote,
+      kind: g?.profileType ?? null,
+      expertise: g?.primaryExpertise ?? null,
+      alsoKnows: g?.secondaryExpertises ?? [],
+      strengths: (g?.aiStrengths ?? []).slice(0, 3),
+      references: refs,
+      generation: g?.generationTag ?? null,
+      scores: {
+        expertise: g?.expertiseScore ?? null,
+        vocabulaire: g?.vocabularyScore ?? null,
+        authenticite: g?.authenticityScore ?? null,
+      },
       step: a.status === "INVITED" ? schedulingStep(slots) : null,
       proposals: slots.filter((sl) => sl.proposedBy === "participant").map((sl) => sl.startTime),
       interview: a.interview ? {

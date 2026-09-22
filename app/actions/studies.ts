@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { assertAdmin, getSessionUser } from "@/lib/auth/guards";
 import { sendAvailabilityRequested } from "@/lib/resend/emails";
 import { sendStudySubmittedAdmin } from "@/lib/resend/emails";
@@ -89,11 +90,21 @@ export async function createStudy(data: StudyCreateData) {
 
 export async function acceptApplication(applicationId: string) {
   const me = await getSessionUser();
-  if (!me?.brandProfileId) throw new Error("Not authenticated");
+  // Une session expire au bout d'une heure. Lever une exception ici ferait
+  // tomber la page entière sur un écran d'erreur, au lieu de proposer
+  // simplement de se reconnecter.
+  if (!me?.brandProfileId) return { error: "session_expired" as const };
 
+  // Une seule requête : la marque attend ce clic, chaque aller-retour vers la
+  // base se voit à l'écran.
   const application = await prisma.application.findUnique({
     where: { id: applicationId },
-    select: { studyId: true, status: true, study: { select: { brandProfileId: true } } },
+    select: {
+      studyId: true,
+      status: true,
+      study: { select: { brandProfileId: true, title: true } },
+      participantProfile: { select: { firstName: true, user: { select: { email: true } } } },
+    },
   });
   if (!application || application.study.brandProfileId !== me.brandProfileId) {
     return { error: "not_found" };
@@ -102,20 +113,25 @@ export async function acceptApplication(applicationId: string) {
     return { error: "already_decided" };
   }
 
-  const brand = await prisma.brandProfile.findUnique({ where: { id: me.brandProfileId }, select: { credits: true } });
-  if (!brand || brand.credits < 1) return { error: "not_enough_credits" };
-
   // Tout ou rien, et conditionné à l'état attendu : si deux clics arrivent en
   // même temps, un seul passe la condition et un seul crédit est débité.
-  const done = await prisma.$transaction(async (tx) => {
+  // Le solde est vérifié dans la même condition que le débit, pour qu'il ne
+  // puisse pas passer sous zéro entre la lecture et l'écriture.
+  const outcome = await prisma.$transaction(async (tx) => {
+    const debited = await tx.brandProfile.updateMany({
+      where: { id: me.brandProfileId!, credits: { gte: 1 } },
+      data: { credits: { decrement: 1 } },
+    });
+    if (debited.count === 0) return "not_enough_credits" as const;
+
     const moved = await tx.application.updateMany({
       where: { id: applicationId, status: { in: ["SHORTLISTED", "PENDING"] } },
       data: { brandAccepted: true, status: "INVITED" },
     });
-    if (moved.count === 0) return false;
-    const updated = await tx.brandProfile.update({
+    if (moved.count === 0) throw new Error("already_decided");
+
+    const brand = await tx.brandProfile.findUniqueOrThrow({
       where: { id: me.brandProfileId! },
-      data: { credits: { decrement: 1 } },
       select: { credits: true },
     });
     await tx.creditTransaction.create({
@@ -123,24 +139,27 @@ export async function acceptApplication(applicationId: string) {
         brandProfileId: me.brandProfileId!,
         type: "CONSUME",
         amount: -1,
-        balanceAfter: updated.credits,
+        balanceAfter: brand.credits,
         description: "Participant accepté",
         studyId: application.studyId,
       },
     });
-    return true;
-  });
-  if (!done) return { error: "already_decided" };
+    return "ok" as const;
+  }).catch((e: Error) => (e.message === "already_decided" ? ("already_decided" as const) : Promise.reject(e)));
+
+  if (outcome !== "ok") return { error: outcome };
 
   // Le participant est invité à proposer ses disponibilités : c'est à la marque
-  // de s'adapter à ces profils rares.
-  const invited = await prisma.application.findUnique({
-    where: { id: applicationId },
-    select: { study: { select: { title: true } }, participantProfile: { select: { firstName: true, user: { select: { email: true } } } } },
+  // de s'adapter à ces profils rares. L'email part après la réponse — il ne doit
+  // pas retarder l'affichage.
+  after(async () => {
+    await sendAvailabilityRequested(
+      application.participantProfile.user.email,
+      application.participantProfile.firstName,
+      application.study.title,
+      applicationId
+    ).catch(() => null);
   });
-  if (invited) {
-    await sendAvailabilityRequested(invited.participantProfile.user.email, invited.participantProfile.firstName, invited.study.title, applicationId).catch(() => null);
-  }
 
   revalidatePath("/brand/studies");
   return { ok: true };
@@ -217,7 +236,7 @@ export async function addAdminNote(participantId: string, note: string) {
 
 export async function rejectApplication(applicationId: string, reason?: string) {
   const me = await getSessionUser();
-  if (!me) throw new Error("Not authenticated");
+  if (!me) return { error: "session_expired" as const };
 
   const application = await prisma.application.findUnique({
     where: { id: applicationId },

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import s from "@/components/rl/rl.module.css";
+import p from "./profile.module.css";
 import { acceptApplication, rejectApplication } from "@/app/actions/studies";
 
 export type Candidate = {
@@ -13,8 +14,15 @@ export type Candidate = {
   age: number | null;
   city: string | null;
   profession: string | null;
-  summary: string | null;
+  portrait: string | null;
   why: string | null;
+  kind: string | null;
+  expertise: string | null;
+  alsoKnows: string[];
+  strengths: string[];
+  references: string[];
+  generation: string | null;
+  scores: { expertise: number | null; vocabulaire: number | null; authenticite: number | null };
   step: "participant_to_propose" | "brand_to_choose" | "participant_to_choose" | null;
   proposals: string[];
   interview: { id: string; scheduledAt: string; status: string; transcriptReady: boolean } | null;
@@ -57,13 +65,146 @@ function Person({ c }: { c: Candidate }) {
   );
 }
 
+
+const KIND_LABEL: Record<string, string> = {
+  insider: "Insider industrie",
+  expert: "Expert du sujet",
+  enthusiast: "Passionné",
+  consumer: "Consommateur averti",
+};
+
+/** Une jauge de 0 à 10, lisible d'un coup d'œil. */
+function Score({ label, value }: { label: string; value: number | null }) {
+  if (value === null) return null;
+  return (
+    <div className={p.score}>
+      <div className={p.scoreTop}><span>{label}</span><b>{value}</b></div>
+      <div className={p.gauge}><i style={{ width: `${value * 10}%` }} /></div>
+    </div>
+  );
+}
+
+/**
+ * La fiche que la marque lit pour décider si elle veut entendre quelqu'un.
+ * L'ordre suit la décision : qui c'est, pourquoi on le propose, ce qu'il
+ * apporte, ses repères. Le portrait rédigé est replié — il documente une fois
+ * la décision prise, il ne sert pas à la prendre.
+ */
+function ProfileCard({
+  c, credits, busy, error, onAccept, onReject,
+}: {
+  c: Candidate;
+  credits: number;
+  busy: boolean;
+  error: string | null;
+  onAccept: () => void;
+  onReject: () => void;
+}) {
+  const [openPortrait, setOpenPortrait] = useState(false);
+  const [allRefs, setAllRefs] = useState(false);
+
+  const facts = [c.profession, c.age ? `${c.age} ans` : null, c.city, c.generation]
+    .filter(Boolean).join(" · ");
+  const refs = allRefs ? c.references : c.references.slice(0, 7);
+  const hidden = c.references.length - refs.length;
+  const kind = c.kind ? (KIND_LABEL[c.kind] ?? c.kind) : null;
+  const hasScores = c.scores.expertise !== null || c.scores.vocabulaire !== null || c.scores.authenticite !== null;
+
+  return (
+    <article className={p.card} data-busy={busy}>
+      <div className={p.head}>
+        <span className={p.portraitInitial} aria-hidden="true">{c.name[0]}</span>
+        <div className={p.identity}>
+          <div className={p.name}>{c.name}</div>
+          {facts && <div className={p.facts}>{facts}</div>}
+        </div>
+        {kind && <span className={p.kind}>{kind}</span>}
+      </div>
+
+      {c.why && <p className={p.why}>{c.why}</p>}
+
+      {c.expertise && (
+        <div className={p.block}>
+          <div className={p.blockTitle}>Expertise</div>
+          <div className={p.expertise}>{c.expertise}</div>
+          {c.alsoKnows.length > 0 && <div className={p.also}>Aussi : {c.alsoKnows.join(", ")}</div>}
+        </div>
+      )}
+
+      {c.strengths.length > 0 && (
+        <div className={p.block}>
+          <div className={p.blockTitle}>Ce que {c.name.split(" ")[0]} apporte</div>
+          <ul className={p.strengths}>
+            {c.strengths.map((x) => <li key={x}>{x}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {c.references.length > 0 && (
+        <div className={p.block}>
+          <div className={p.blockTitle}>Ses repères</div>
+          <div className={p.refs}>
+            {refs.map((r) => <span key={r} className={p.ref}>{r.replace(/-/g, " ")}</span>)}
+            {hidden > 0 && (
+              <button type="button" className={p.refMore} onClick={() => setAllRefs(true)}>
+                +{hidden}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {hasScores && (
+        <div className={p.scores}>
+          <Score label="Expertise" value={c.scores.expertise} />
+          <Score label="Vocabulaire" value={c.scores.vocabulaire} />
+          <Score label="Authenticité" value={c.scores.authenticite} />
+        </div>
+      )}
+
+      {c.portrait && (
+        <div className={p.more}>
+          <button type="button" className={p.moreBtn} aria-expanded={openPortrait}
+            onClick={() => setOpenPortrait((v) => !v)}>
+            <span className={p.chev} aria-hidden="true">›</span>
+            {openPortrait ? "Masquer le portrait" : "Lire le portrait complet"}
+          </button>
+          {openPortrait && <p className={p.portrait}>{c.portrait}</p>}
+        </div>
+      )}
+
+      {error && <p className={s.error} style={{ margin: "0 20px 10px" }}>{error}</p>}
+
+      <div className={p.actions}>
+        <button type="button" className={s.btn} disabled={busy || credits < 1} onClick={onAccept}>
+          Je veux l&apos;entendre
+        </button>
+        <button type="button" className={`${s.btn} ${s.btnGhost}`} disabled={busy} onClick={onReject}>
+          Décliner
+        </button>
+        {credits >= 1
+          ? <span className={p.cost}>1 crédit</span>
+          : <Link href="/brand/account" className={p.cost} style={{ color: "var(--accent)" }}>Ajouter des crédits →</Link>}
+      </div>
+    </article>
+  );
+}
+
 export default function StudyDetailClient({ study, candidates, credits }: { study: Study; candidates: Candidate[]; credits: number }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
   const [error, setError] = useState<{ id: string; msg: string } | null>(null);
   const [showDeclined, setShowDeclined] = useState(false);
+  const [choosing, setChoosing] = useState<string | null>(null);
 
-  const toReview = candidates.filter((c) => c.status === "SHORTLISTED" || c.status === "PENDING");
+  // La décision part au serveur, mais la fiche quitte la liste tout de suite.
+  // Un aller-retour complet prenait plus d'une seconde : la marque cliquait
+  // deux fois, faute de retour visible.
+  const [decided, markDecided] = useOptimistic<string[], string>([], (seen, id) => [...seen, id]);
+
+  const toReview = candidates.filter(
+    (c) => (c.status === "SHORTLISTED" || c.status === "PENDING") && !decided.includes(c.applicationId)
+  );
   const scheduling = candidates.filter((c) => c.status === "INVITED");
   const interviews = candidates.filter((c) => ["CONFIRMED", "COMPLETED", "NO_SHOW"].includes(c.status))
     .sort((a, b) => (a.interview?.scheduledAt ?? "").localeCompare(b.interview?.scheduledAt ?? ""));
@@ -71,24 +212,26 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
   const confirmed = candidates.filter((c) => c.status === "CONFIRMED" || c.status === "COMPLETED").length;
   const meta = STUDY_STATUS[study.status] ?? STUDY_STATUS.ACTIVE;
 
-  async function run(id: string, fn: () => Promise<{ error?: string; ok?: boolean } | undefined>) {
-    setBusy(id); setError(null);
-    try {
+  function decide(id: string, fn: () => Promise<{ error?: string; ok?: boolean } | undefined>) {
+    setError(null);
+    startTransition(async () => {
+      markDecided(id);
       const r = await fn();
       if (r?.error) {
         const msg = r.error === "not_enough_credits" ? "Crédits insuffisants pour accepter ce profil."
           : r.error === "already_decided" ? "Ce profil a déjà été traité."
+          : r.error === "session_expired" ? "Votre session a expiré. Reconnectez-vous, votre choix n'a pas été enregistré."
           : "Action impossible. Réessayez.";
+        // La fiche revient d'elle-même : l'état optimiste retombe à la fin
+        // de la transition.
         setError({ id, msg });
       }
       router.refresh();
-    } finally {
-      setBusy(null);
-    }
+    });
   }
 
   async function choose(c: Candidate, index: number) {
-    setBusy(c.applicationId); setError(null);
+    setChoosing(c.applicationId); setError(null);
     try {
       const res = await fetch(`/api/applications/${c.applicationId}/choose-slot`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slotIndex: index }),
@@ -97,7 +240,7 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
       if (!res.ok) setError({ id: c.applicationId, msg: data.error ?? "Impossible de confirmer ce créneau." });
       router.refresh();
     } finally {
-      setBusy(null);
+      setChoosing(null);
     }
   }
 
@@ -133,28 +276,15 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
         ) : (
           <div className={s.grid2} style={{ marginTop: 12 }}>
             {toReview.map((c) => (
-              <article key={c.applicationId} className={s.card} style={{ display: "grid", gap: 14, alignContent: "start" }}>
-                <Person c={c} />
-                {c.why && (
-                  <div className={s.cardSoft} style={{ padding: "12px 14px" }}>
-                    <p className={s.eyebrow} style={{ fontSize: 13, margin: "0 0 4px" }}>Pourquoi ce profil</p>
-                    <p style={{ margin: 0, fontSize: 15 }}>{c.why}</p>
-                  </div>
-                )}
-                {c.summary && <p className={s.muted} style={{ margin: 0, fontSize: 15 }}>{c.summary}</p>}
-                {error?.id === c.applicationId && <p className={s.error}>{error.msg}</p>}
-                <div className={s.row}>
-                  <button type="button" className={s.btn} disabled={busy === c.applicationId || credits < 1}
-                    onClick={() => run(c.applicationId, () => acceptApplication(c.applicationId))}>
-                    {busy === c.applicationId ? "…" : "Je veux l'entendre"}
-                  </button>
-                  <button type="button" className={`${s.btn} ${s.btnGhost}`} disabled={busy === c.applicationId}
-                    onClick={() => run(c.applicationId, () => rejectApplication(c.applicationId))}>
-                    Décliner
-                  </button>
-                </div>
-                {credits < 1 && <Link href="/brand/account" className={s.small} style={{ color: "var(--accent)" }}>Ajouter des crédits pour accepter ce profil →</Link>}
-              </article>
+              <ProfileCard
+                key={c.applicationId}
+                c={c}
+                credits={credits}
+                busy={decided.includes(c.applicationId)}
+                error={error?.id === c.applicationId ? error.msg : null}
+                onAccept={() => decide(c.applicationId, () => acceptApplication(c.applicationId))}
+                onReject={() => decide(c.applicationId, () => rejectApplication(c.applicationId))}
+              />
             ))}
           </div>
         )}
@@ -180,7 +310,7 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
                     </p>
                     <div className={s.slots}>
                       {c.proposals.map((iso, i) => (
-                        <button key={iso} type="button" className={s.slot} disabled={busy === c.applicationId} onClick={() => choose(c, i)}>
+                        <button key={iso} type="button" className={s.slot} disabled={choosing === c.applicationId} onClick={() => choose(c, i)}>
                           <span style={{ textTransform: "capitalize", fontWeight: 600 }}>{fmtDay(iso)}</span>
                           <small>{fmtTime(iso)} · choisir</small>
                         </button>

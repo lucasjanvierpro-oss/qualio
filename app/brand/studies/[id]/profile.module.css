@@ -1,0 +1,272 @@
+/* ═══════════════════════════════════════════════════════════════
+   Fiche d'un profil proposé à la marque.
+
+   Une marque parcourt ces fiches pour décider qui elle veut entendre.
+   La décision se prend en quelques secondes : tout ce qui situe la
+   personne doit être lisible sans lire une phrase entière — le métier,
+   ses repères, ce qu'elle apporte. Le portrait rédigé reste disponible,
+   mais replié : il documente, il ne présente pas.
+   Les couleurs viennent de components/rl/rl.module.css.
+   ═══════════════════════════════════════════════════════════════ */
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.card:hover {
+  border-color: var(--accent-dim);
+  box-shadow: 0 1px 2px rgba(28, 22, 36, 0.04), 0 14px 32px -22px rgba(28, 22, 36, 0.4);
+}
+
+/* Pendant que la décision part au serveur, la fiche s'efface sans
+   bouger : la mise en page ne doit pas sauter sous le curseur. */
+.card[data-busy="true"] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ── En-tête : qui est cette personne ───────────────── */
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 18px 20px 16px;
+}
+
+.portraitInitial {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #fff;
+  background: linear-gradient(140deg, var(--g2), var(--g3));
+}
+
+.identity { min-width: 0; flex: 1; }
+
+.name {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.facts {
+  margin-top: 3px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.kind {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: var(--g2);
+  background: var(--accent-soft);
+  white-space: nowrap;
+}
+
+/* ── La raison du match, mise en avant ──────────────── */
+.why {
+  margin: 0 20px 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--soft);
+  border-left: 2px solid var(--accent-dim);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+/* ── Blocs d'information ────────────────────────────── */
+.block { padding: 0 20px 16px; }
+
+.blockTitle {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 7px;
+}
+
+.expertise {
+  font-size: 15px;
+  font-weight: 550;
+}
+
+.also {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+
+/* Points forts : une ligne chacun, jamais un paragraphe. */
+.strengths {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.strengths li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.strengths li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+}
+
+/* Repères : le vocabulaire et les marques de la personne. */
+.refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.ref {
+  font-size: 12.5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  background: var(--bg);
+}
+
+.refMore {
+  font-size: 12.5px;
+  padding: 3px 4px;
+  color: var(--ink-3);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.refMore:hover { color: var(--accent); }
+
+/* ── Scores : trois jauges compactes ────────────────── */
+.scores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--soft);
+}
+
+.score { min-width: 0; }
+
+.scoreTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-bottom: 5px;
+}
+
+.scoreTop b {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.gauge {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.gauge > i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--g2), var(--g3));
+}
+
+/* ── Portrait complet, replié ───────────────────────── */
+.more {
+  padding: 0 20px 4px;
+}
+
+.moreBtn {
+  background: none;
+  border: 0;
+  padding: 10px 0;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.moreBtn:hover { color: var(--accent); }
+
+.chev { transition: transform 0.18s; }
+.moreBtn[aria-expanded="true"] .chev { transform: rotate(90deg); }
+
+.portrait {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin: 0 0 14px;
+  white-space: pre-line;
+}
+
+/* ── Décision ───────────────────────────────────────── */
+.actions {
+  margin-top: auto;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cost {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .scores { grid-template-columns: 1fr; gap: 10px; }
+  .head { padding: 16px 16px 14px; }
+  .why { margin: 0 16px 14px; }
+  .block { padding: 0 16px 14px; }
+  .scores, .actions { padding-left: 16px; padding-right: 16px; }
+  .more { padding: 0 16px 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .chev { transition: none; }
+}
