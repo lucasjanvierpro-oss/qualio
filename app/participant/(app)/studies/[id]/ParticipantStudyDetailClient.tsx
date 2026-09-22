@@ -1,246 +1,295 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import s from "@/components/rl/rl.module.css";
+import type { Slot } from "@/lib/interviews/schedule";
 
-type Slot = { startTime: string; note?: string };
-type Interview = { id: string; scheduledAt: string; durationMinutes: number; videoLink: string | null; status: string };
-type Reward = { amountCents: number; type: string; status: string };
+type Step = "participant_to_propose" | "brand_to_choose" | "participant_to_choose" | null;
 
-const STATUS_INFO: Record<string, { label: string; bg: string; text: string; desc: string }> = {
-  SHORTLISTED: {
-    label: "Vous êtes sélectionné(e)",
-    bg: "var(--color-info-light)", text: "var(--color-info)",
-    desc: "Votre profil a été retenu. L'équipe Qualio va vous confirmer des créneaux disponibles prochainement.",
-  },
-  INVITED: {
-    label: "Choisissez votre créneau",
-    bg: "var(--color-warning-light)", text: "var(--color-warning)",
-    desc: "Des créneaux vous ont été proposés. Choisissez celui qui vous convient pour confirmer votre participation.",
-  },
-  CONFIRMED: {
-    label: "Entretien confirmé ✓",
-    bg: "var(--color-success-light)", text: "var(--color-success)",
-    desc: "Votre participation est confirmée. Le lien de la visio est disponible ci-dessous.",
-  },
-  COMPLETED: {
-    label: "Terminé — merci !",
-    bg: "var(--color-surface-2)", text: "var(--color-text-tertiary)",
-    desc: "Cette étude est terminée. Merci pour votre participation !",
-  },
-  REJECTED: {
-    label: "Non retenu(e)",
-    bg: "var(--color-error-light)", text: "var(--color-error)",
-    desc: "Votre profil n'a pas été retenu pour cette étude. D'autres opportunités arrivent bientôt.",
-  },
-};
-
-function fmt(iso: string, opts?: Intl.DateTimeFormatOptions) {
-  return new Intl.DateTimeFormat("fr-FR", opts ?? { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
-}
-
-export default function ParticipantStudyDetailClient({
-  applicationId,
-  status: initialStatus,
-  study,
-  proposedSlots,
-  interview: initialInterview,
-  reward,
-}: {
+type Props = {
   applicationId: string;
   status: string;
+  step: Step;
   study: {
-    id: string; title: string; objective: string; studyType: string;
-    interviewDuration: number; preferredLanguage: string;
-    rewardAmount: number; rewardType: string; deadlineAt: string | null;
+    title: string;
+    objective: string;
+    isFocusGroup: boolean;
+    interviewDuration: number;
+    rewardAmount: number;
+    rewardType: string;
+    deadlineAt: string | null;
   };
-  proposedSlots: Slot[];
-  interview: Interview | null;
-  reward: Reward | null;
-}) {
-  const [status, setStatus] = useState(initialStatus);
-  const [interview, setInterview] = useState<Interview | null>(initialInterview);
-  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
-  const [confirming, setConfirming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  slots: Slot[];
+  availability: Record<string, string[]> | null;
+  interview: { id: string; scheduledAt: string; durationMinutes: number; status: string } | null;
+  reward: { amountCents: number; type: string; status: string } | null;
+};
 
-  const statusInfo = STATUS_INFO[status] ?? STATUS_INFO.SHORTLISTED;
-  const isUpcoming = interview && new Date(interview.scheduledAt) > new Date();
+// ── Dates ─────────────────────────────────────────────────────────────
+const TZ = "Europe/Paris";
+const fmtDay = (iso: string) => new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(new Date(iso));
+const fmtTime = (iso: string) => new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+const fmtFull = (iso: string) => `${fmtDay(iso)} à ${fmtTime(iso)}`;
 
-  async function confirmSlot() {
-    if (selectedSlot === null) return;
-    setConfirming(true);
-    setError(null);
+// Heures de début proposées pour chaque moment de la journée déclaré à l'inscription.
+const MOMENTS: Record<string, [number, number]> = { morning: [10, 0], afternoon: [14, 30], evening: [18, 30] };
+
+// Créneaux suggérés d'après les disponibilités de l'inscription (lundi = "0"),
+// sur les deux semaines à venir, sans dépasser la date limite de l'étude.
+function suggestSlots(availability: Record<string, string[]> | null, deadlineAt: string | null): string[] {
+  const out: string[] = [];
+  const start = Date.now() + 24 * 3600_000;
+  const limit = deadlineAt ? new Date(deadlineAt).setHours(23, 59) : start + 14 * 24 * 3600_000;
+  for (let d = 0; d < 21 && out.length < 12; d++) {
+    const day = new Date(start + d * 24 * 3600_000);
+    const mondayIdx = (day.getDay() + 6) % 7; // 0 = lundi
+    const moments = availability
+      ? availability[String(mondayIdx)] ?? []
+      : mondayIdx < 5 ? ["morning", "afternoon", "evening"] : [];
+    for (const m of moments) {
+      const [h, min] = MOMENTS[m] ?? [];
+      if (h === undefined) continue;
+      const at = new Date(day);
+      at.setHours(h, min, 0, 0);
+      if (at.getTime() > start && at.getTime() <= limit) out.push(at.toISOString());
+    }
+  }
+  return out;
+}
+
+// Vrai seulement dans le navigateur : les suggestions dépendent de l'heure
+// courante, les calculer au rendu serveur provoquerait un décalage.
+const subscribeNoop = () => () => {};
+const useIsClient = () => useSyncExternalStore(subscribeNoop, () => true, () => false);
+
+// ── Frise ─────────────────────────────────────────────────────────────
+function Progress({ current }: { current: number }) {
+  const labels = ["Profil retenu", "Créneau", "Entretien", "Récompense"];
+  return (
+    <ol className={s.steps} aria-label="Avancement">
+      {labels.map((l, i) => (
+        <li key={l} className={`${s.step} ${i < current ? s.stepDone : ""} ${i === current ? s.stepNow : ""}`} aria-current={i === current ? "step" : undefined}>{l}</li>
+      ))}
+    </ol>
+  );
+}
+
+export default function ParticipantStudyDetailClient(p: Props) {
+  const router = useRouter();
+  const isClient = useIsClient();
+  const [selected, setSelected] = useState<string[]>([]);
+  const [custom, setCustom] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [pick, setPick] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [editing, setEditing] = useState(false);
+
+  const suggestions = useMemo(
+    () => (isClient ? suggestSlots(p.availability, p.study.deadlineAt) : []),
+    [isClient, p.availability, p.study.deadlineAt],
+  );
+  const choices = useMemo(() => [...new Set([...suggestions, ...selected])].sort(), [suggestions, selected]);
+
+  const reward = `${(p.study.rewardAmount / 100).toLocaleString("fr-FR")} €`;
+  const current =
+    p.status === "COMPLETED" ? 3 :
+    p.status === "CONFIRMED" ? 2 :
+    p.status === "INVITED" ? 1 : 0;
+
+  function toggle(iso: string) {
+    setError("");
+    setSelected((cur) => cur.includes(iso) ? cur.filter((x) => x !== iso) : cur.length >= 5 ? cur : [...cur, iso]);
+  }
+  function addCustom() {
+    if (!custom) return;
+    const d = new Date(custom);
+    if (Number.isNaN(d.getTime())) return;
+    if (d.getTime() < Date.now() + 12 * 3600_000) { setError("Choisissez un créneau au moins 12 heures à l'avance."); return; }
+    toggle(d.toISOString());
+    setCustom("");
+  }
+
+  async function post(url: string, body: unknown) {
+    setBusy(true); setError("");
     try {
-      const res = await fetch(`/api/applications/${applicationId}/confirm-slot`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slotIndex: selectedSlot }),
-      });
-      const data = await res.json() as { ok?: boolean; interview?: Interview; videoLink?: string; error?: string };
-      if (!res.ok || !data.ok) throw new Error(data.error ?? "Erreur");
-      setStatus("CONFIRMED");
-      setInterview(data.interview ?? null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur lors de la confirmation");
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data.error ?? "Une erreur est survenue. Réessayez."); return false; }
+      router.refresh();
+      return true;
     } finally {
-      setConfirming(false);
+      setBusy(false);
     }
   }
 
-  function fmtReward(cents: number, type: string) {
-    return type === "VOUCHER" ? `${(cents / 100).toFixed(0)}€ en bon d'achat` : `${(cents / 100).toFixed(0)}€ en virement`;
+  async function sendAvailability() {
+    if (await post(`/api/applications/${p.applicationId}/availability`, { slots: selected, consent })) {
+      setEditing(false); setSelected([]);
+    }
   }
 
+  const consentBox = (
+    <label className={s.check}>
+      <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+      <span>J&apos;accepte que l&apos;entretien soit enregistré et transcrit pour produire la synthèse de l&apos;étude. Ma pièce d&apos;identité et mes coordonnées ne sont jamais transmises à la marque.</span>
+    </label>
+  );
+
   return (
-    <div style={{ maxWidth: "680px", margin: "0 auto", padding: "40px 32px" }}>
-      {/* Breadcrumb */}
-      <div style={{ fontSize: "13px", color: "var(--color-text-tertiary)", marginBottom: "24px" }}>
-        <Link href="/participant/studies" style={{ color: "var(--color-text-tertiary)", textDecoration: "none" }}>Mes études</Link>
-        <span style={{ margin: "0 8px" }}>›</span>
-        <span>{study.title}</span>
-      </div>
+    <div className={s.page}>
+      <nav className={s.crumbs}><Link href="/participant/studies">Mes études</Link><span>›</span><span>{p.study.title}</span></nav>
 
-      {/* Status banner */}
-      <div style={{ padding: "16px 20px", background: statusInfo.bg, border: `1px solid ${statusInfo.text}33`, borderRadius: "12px", marginBottom: "28px" }}>
-        <div style={{ fontSize: "14px", fontWeight: 700, color: statusInfo.text, marginBottom: "4px" }}>{statusInfo.label}</div>
-        <div style={{ fontSize: "13px", color: statusInfo.text, opacity: 0.85 }}>{statusInfo.desc}</div>
-      </div>
-
-      {/* VIDEO LINK — CONFIRMED */}
-      {status === "CONFIRMED" && interview?.videoLink && (
-        <div style={{ padding: "22px 26px", background: "var(--color-accent)", borderRadius: "14px", marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
-          <div>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.65)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              {isUpcoming ? `${fmt(interview.scheduledAt, { weekday: "long", day: "numeric", month: "long" })} à ${fmt(interview.scheduledAt, { hour: "2-digit", minute: "2-digit" })}` : "Entretien"}
-            </div>
-            <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff" }}>Rejoindre votre entretien vidéo</div>
-            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginTop: "4px" }}>Durée : {interview.durationMinutes} minutes · directement ici</div>
-          </div>
-          <a
-            href={`/participant/interview/${interview.id}`}
-            style={{ padding: "13px 24px", background: "#fff", color: "var(--color-accent)", borderRadius: "9px", fontSize: "15px", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}
-          >
-            🎥 Rejoindre
-          </a>
+      <header>
+        <p className={s.eyebrow}>{p.study.isFocusGroup ? "Focus group" : "Entretien individuel"}</p>
+        <h1 className={s.h1}>{p.study.title}</h1>
+        <div className={s.meta}>
+          <span>{p.study.interviewDuration} min en visio</span>
+          <span>{reward} de récompense</span>
+          {p.study.deadlineAt && <span>Jusqu&apos;au {fmtDay(p.study.deadlineAt)}</span>}
         </div>
-      )}
+      </header>
 
-      {/* SLOT PICKER — INVITED */}
-      {status === "INVITED" && proposedSlots.length > 0 && (
-        <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-accent)", borderRadius: "14px", padding: "22px 24px", marginBottom: "28px" }}>
-          <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "16px" }}>
-            Choisissez votre créneau
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
-            {proposedSlots.map((slot, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedSlot(idx)}
-                style={{
-                  padding: "14px 18px", borderRadius: "10px", border: `2px solid ${selectedSlot === idx ? "var(--color-accent)" : "var(--color-border)"}`,
-                  background: selectedSlot === idx ? "var(--color-accent-light)" : "var(--color-background)",
-                  cursor: "pointer", textAlign: "left", transition: "all 0.15s",
-                  display: "flex", alignItems: "center", gap: "14px",
-                }}
-              >
-                <div style={{ width: "22px", height: "22px", borderRadius: "50%", border: `2px solid ${selectedSlot === idx ? "var(--color-accent)" : "var(--color-border)"}`, background: selectedSlot === idx ? "var(--color-accent)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {selectedSlot === idx && <span style={{ color: "#fff", fontSize: "12px", fontWeight: 700 }}>✓</span>}
+      <div className={s.sectionGap}><Progress current={current} /></div>
+
+      <div className={`${s.stack} ${s.sectionGap}`}>
+        {/* ── En attente de la marque ── */}
+        {(p.status === "SHORTLISTED" || p.status === "PENDING") && (
+          <section className={s.cardSoft}>
+            <h2 className={s.h2}>Votre profil a été présenté à la marque.</h2>
+            <p className={s.muted}>Elle choisit les personnes qu&apos;elle veut entendre. Vous recevrez un email dès qu&apos;elle vous retient.</p>
+          </section>
+        )}
+
+        {/* ── Proposer ses créneaux ── */}
+        {p.status === "INVITED" && (p.step === "participant_to_propose" || editing) && (
+          <section className={s.card}>
+            <span className={`${s.badge} ${s.badgeAccent}`}>À vous de jouer</span>
+            <h2 className={s.h2} style={{ marginTop: 12 }}>La marque veut vous entendre. Quand êtes-vous disponible ?</h2>
+            <p className={s.muted}>Choisissez jusqu&apos;à 5 créneaux, la marque retiendra celui qui lui convient. Nos suggestions viennent des disponibilités que vous avez indiquées.</p>
+
+            <div className={s.sectionGap}>
+              {!isClient ? <p className={s.faint}>Chargement des créneaux…</p> : choices.length === 0 ? (
+                <p className={s.faint}>Aucune suggestion pour le moment : ajoutez un créneau ci-dessous.</p>
+              ) : (
+                <div className={s.slots} role="group" aria-label="Créneaux proposés">
+                  {choices.map((iso) => {
+                    const on = selected.includes(iso);
+                    return (
+                      <button key={iso} type="button" className={`${s.slot} ${on ? s.slotOn : ""}`} aria-pressed={on} onClick={() => toggle(iso)}>
+                        <span style={{ textTransform: "capitalize", fontWeight: 600 }}>{fmtDay(iso)}</span>
+                        <small>{fmtTime(iso)}{on ? " · choisi" : ""}</small>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div>
-                  <div style={{ fontSize: "15px", fontWeight: selectedSlot === idx ? 700 : 500, color: "var(--color-text-primary)", textTransform: "capitalize" }}>
-                    {fmt(slot.startTime, { weekday: "long", day: "numeric", month: "long" })}
-                  </div>
-                  <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginTop: "2px" }}>
-                    {fmt(slot.startTime, { hour: "2-digit", minute: "2-digit" })} · {study.interviewDuration} minutes
-                  </div>
-                  {slot.note && <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginTop: "2px" }}>{slot.note}</div>}
-                </div>
+              )}
+            </div>
+
+            <div className={`${s.row} ${s.sectionGap}`}>
+              <div style={{ flex: "1 1 240px" }}>
+                <label className={s.label} htmlFor="custom-slot">Un autre moment ?</label>
+                <input id="custom-slot" className={s.input} type="datetime-local" value={custom} onChange={(e) => setCustom(e.target.value)} />
+              </div>
+              <button type="button" className={`${s.btn} ${s.btnGhost}`} style={{ alignSelf: "flex-end" }} onClick={addCustom} disabled={!custom}>Ajouter</button>
+            </div>
+
+            <hr className={s.divider} />
+            {consentBox}
+            {error && <p className={s.error}>{error}</p>}
+            <div className={`${s.row} ${s.sectionGap}`}>
+              <button type="button" className={s.btn} onClick={sendAvailability} disabled={busy || selected.length === 0 || !consent}>
+                {busy ? "Envoi…" : selected.length ? `Envoyer ${selected.length} créneau${selected.length > 1 ? "x" : ""}` : "Choisissez au moins un créneau"}
               </button>
-            ))}
-          </div>
-
-          {error && (
-            <div style={{ padding: "10px 14px", background: "var(--color-error-light)", borderRadius: "8px", fontSize: "13px", color: "var(--color-error)", marginBottom: "12px" }}>
-              {error}
+              {editing && <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => { setEditing(false); setSelected([]); }}>Annuler</button>}
             </div>
-          )}
+          </section>
+        )}
 
-          <button
-            onClick={confirmSlot}
-            disabled={selectedSlot === null || confirming}
-            style={{
-              width: "100%", padding: "14px", background: selectedSlot !== null && !confirming ? "var(--color-accent)" : "var(--color-border-strong)",
-              color: selectedSlot !== null && !confirming ? "#fff" : "var(--color-text-tertiary)",
-              border: "none", borderRadius: "9px", fontSize: "15px", fontWeight: 700,
-              cursor: selectedSlot !== null && !confirming ? "pointer" : "default",
-            }}
-          >
-            {confirming ? "Confirmation en cours…" : selectedSlot !== null ? `Confirmer ce créneau — ${fmt(proposedSlots[selectedSlot].startTime, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : "Sélectionnez un créneau"}
-          </button>
-          <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textAlign: "center", marginTop: "8px" }}>
-            Vous recevrez un email de confirmation avec le lien vidéo
-          </div>
-        </div>
-      )}
+        {/* ── Créneaux envoyés, la marque choisit ── */}
+        {p.status === "INVITED" && p.step === "brand_to_choose" && !editing && (
+          <section className={s.card}>
+            <span className={`${s.badge} ${s.badgeWait}`}>En attente de la marque</span>
+            <h2 className={s.h2} style={{ marginTop: 12 }}>Vos créneaux sont envoyés.</h2>
+            <p className={s.muted}>La marque en choisit un. Vous recevrez la confirmation et l&apos;invitation d&apos;agenda par email.</p>
+            <ul className={s.stack} style={{ listStyle: "none", padding: 0, margin: "16px 0 0", gap: 8 }}>
+              {p.slots.map((sl) => <li key={sl.startTime} className={s.cardSoft} style={{ padding: "12px 16px", textTransform: "capitalize" }}>{fmtFull(sl.startTime)}</li>)}
+            </ul>
+            <button type="button" className={`${s.btn} ${s.btnGhost} ${s.sectionGap}`} onClick={() => { setEditing(true); setSelected(p.slots.map((x) => x.startTime)); }}>Modifier mes créneaux</button>
+          </section>
+        )}
 
-      {/* Study details */}
-      <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px", padding: "24px", marginBottom: "20px" }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 20px" }}>
-          {study.title}
-        </h1>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "20px" }}>
-          {[
-            { label: "Format", value: study.studyType },
-            { label: "Durée", value: `${study.interviewDuration} minutes` },
-            { label: "Langue", value: study.preferredLanguage === "fr" ? "Français" : study.preferredLanguage === "en" ? "Anglais" : "Fr / En" },
-            { label: "Récompense", value: fmtReward(study.rewardAmount, study.rewardType) },
-          ].map(({ label, value }) => (
-            <div key={label}>
-              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>{label}</div>
-              <div style={{ fontSize: "14px", color: "var(--color-text-primary)", fontWeight: 500 }}>{value}</div>
+        {/* ── Créneaux proposés par l'équipe : le participant choisit ── */}
+        {p.status === "INVITED" && p.step === "participant_to_choose" && (
+          <section className={s.card}>
+            <span className={`${s.badge} ${s.badgeAccent}`}>À vous de jouer</span>
+            <h2 className={s.h2} style={{ marginTop: 12 }}>Choisissez votre créneau.</h2>
+            <div className={`${s.slots} ${s.sectionGap}`} role="radiogroup" aria-label="Créneaux disponibles">
+              {p.slots.map((sl, i) => (
+                <button key={sl.startTime} type="button" role="radio" aria-checked={pick === i} className={`${s.slot} ${pick === i ? s.slotOn : ""}`} onClick={() => setPick(i)}>
+                  <span style={{ textTransform: "capitalize", fontWeight: 600 }}>{fmtDay(sl.startTime)}</span>
+                  <small>{fmtTime(sl.startTime)}{sl.note ? ` · ${sl.note}` : ""}</small>
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
-        <div>
-          <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>Sujet</div>
-          <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", lineHeight: 1.7, margin: 0 }}>{study.objective}</p>
-        </div>
+            <hr className={s.divider} />
+            {consentBox}
+            {error && <p className={s.error}>{error}</p>}
+            <button type="button" className={`${s.btn} ${s.sectionGap}`} disabled={busy || pick === null || !consent}
+              onClick={() => post(`/api/applications/${p.applicationId}/confirm-slot`, { slotIndex: pick, consent })}>
+              {busy ? "Confirmation…" : "Confirmer ce créneau"}
+            </button>
+          </section>
+        )}
+
+        {/* ── Entretien confirmé ── */}
+        {p.status === "CONFIRMED" && p.interview && (
+          <section className={s.cardDark}>
+            <p className={s.eyebrow} style={{ color: "rgba(255,255,255,.7)" }}>Entretien confirmé</p>
+            <h2 className={s.h1} style={{ fontSize: 30, textTransform: "capitalize" }}>{fmtDay(p.interview.scheduledAt)}</h2>
+            <p className={s.muted} style={{ fontSize: 18, margin: "6px 0 0" }}>à {fmtTime(p.interview.scheduledAt)} · {p.interview.durationMinutes} min</p>
+            <div className={`${s.row} ${s.sectionGap}`}>
+              <Link href={`/participant/interview/${p.interview.id}`} className={`${s.btn} ${s.btnLight}`}>Ouvrir la salle d&apos;entretien →</Link>
+            </div>
+            <p className={`${s.small} ${s.muted}`} style={{ marginTop: 14 }}>La salle s&apos;ouvre 10 minutes avant. Un test de caméra et de micro vous y attend.</p>
+          </section>
+        )}
+
+        {/* ── Terminé ── */}
+        {p.status === "COMPLETED" && (
+          <section className={s.card}>
+            <span className={`${s.badge} ${s.badgeOk}`}>Entretien terminé</span>
+            <h2 className={s.h2} style={{ marginTop: 12 }}>Merci pour votre regard.</h2>
+            <p className={s.muted}>
+              {p.reward
+                ? `Votre récompense de ${(p.reward.amountCents / 100).toLocaleString("fr-FR")} € ${p.reward.status === "PAID" || p.reward.status === "REVEALED" ? "est disponible." : "est en cours de traitement."}`
+                : "Votre récompense sera créditée après validation de l'entretien."}
+            </p>
+            <Link href="/participant/wallet" className={`${s.btn} ${s.btnGhost} ${s.sectionGap}`}>Voir mes gains</Link>
+          </section>
+        )}
+
+        {p.status === "REJECTED" && (
+          <section className={s.cardSoft}>
+            <h2 className={s.h2}>La marque a retenu d&apos;autres profils pour cette étude.</h2>
+            <p className={s.muted}>Ça arrive souvent, et ça ne dit rien de la valeur de votre profil. D&apos;autres études vous seront proposées.</p>
+          </section>
+        )}
+
+        {p.status === "NO_SHOW" && (
+          <section className={s.cardSoft}>
+            <h2 className={s.h2}>Cet entretien n&apos;a pas eu lieu.</h2>
+            <p className={s.muted}>Si c&apos;est une erreur, écrivez-nous : nous regarderons avec vous.</p>
+          </section>
+        )}
+
+        <section className={s.cardSoft}>
+          <h3 className={s.h3}>Le sujet</h3>
+          <p className={s.muted} style={{ margin: 0, whiteSpace: "pre-line" }}>{p.study.objective}</p>
+        </section>
       </div>
-
-      {/* Confirmed interview info */}
-      {interview && status === "CONFIRMED" && (
-        <div style={{ background: "var(--color-success-light)", border: "1px solid var(--color-success)", borderRadius: "12px", padding: "16px 20px", marginBottom: "20px" }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--color-success)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Créneau confirmé</div>
-          <div style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)", textTransform: "capitalize" }}>
-            {fmt(interview.scheduledAt, { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
-          </div>
-        </div>
-      )}
-
-      {/* Reward */}
-      {reward && (
-        <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px", padding: "16px 20px", marginBottom: "20px" }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--color-text-tertiary)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Votre récompense</div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "20px", fontWeight: 700, color: "var(--color-accent)" }}>
-              {fmtReward(reward.amountCents, reward.type)}
-            </span>
-            <span style={{ fontSize: "12px", padding: "3px 10px", borderRadius: "999px", background: reward.status === "PAID" || reward.status === "REVEALED" ? "var(--color-success-light)" : "var(--color-warning-light)", color: reward.status === "PAID" || reward.status === "REVEALED" ? "var(--color-success)" : "var(--color-warning)", fontWeight: 600 }}>
-              {reward.status === "PAID" ? "Disponible" : reward.status === "REVEALED" ? "Révélé" : reward.status === "PROCESSING" ? "En cours" : "En attente"}
-            </span>
-          </div>
-          {(reward.status === "PAID" || reward.status === "REVEALED") && (
-            <Link href="/participant/wallet" style={{ display: "inline-block", marginTop: "10px", fontSize: "13px", fontWeight: 700, color: "var(--color-accent)", textDecoration: "none" }}>
-              Accéder à mon wallet →
-            </Link>
-          )}
-        </div>
-      )}
-
-      <Link href="/participant/studies" style={{ fontSize: "13px", color: "var(--color-text-secondary)", textDecoration: "none" }}>
-        ← Retour à mes études
-      </Link>
     </div>
   );
 }

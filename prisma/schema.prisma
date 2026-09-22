@@ -387,8 +387,13 @@ model Application {
   brandAccepted Boolean?
   brandNote     String?
 
-  // Créneaux proposés par l'admin (JSON: [{ startTime: ISO, note?: string }])
+  // Créneaux proposés (JSON: [{ startTime: ISO, note?: string, proposedBy?: "participant" | "admin" }]).
+  // Entretien individuel : le participant propose, la marque choisit.
+  // Sans `proposedBy`, un créneau vient de l'admin (ancien fonctionnement).
   proposedSlots Json?
+
+  // Consentement explicite du participant à l'enregistrement (RGPD).
+  recordingConsentAt DateTime?
 
   interview Interview?
   reward    Reward?
@@ -419,6 +424,8 @@ model Interview {
   // Enregistrement & transcription (pipeline auto)
   recordingStatus String?   // "pending" | "recording" | "ready" | "failed"
   recordingUrl    String?   @db.Text
+  // Les liens d'accès Whereby expirent : on garde l'id pour en générer un frais.
+  recordingId     String?
   transcriptStatus String?  // "pending" | "processing" | "done" | "failed"
   transcriptId    String?   // id du job AssemblyAI
   transcript      String?   @db.Text

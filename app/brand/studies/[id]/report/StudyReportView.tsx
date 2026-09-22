@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import s from "@/components/rl/rl.module.css";
+import r from "./report.module.css";
 
-// ─── Types du rapport structuré ──────────────────────────────
+// ─── Rapport structuré (généré par lib/reports/generate.ts) ─────────
 type Tonalite = "positif" | "neutre" | "negatif";
 type Point = { titre: string; detail: string; verbatim?: string; participant?: string };
 type Insight = { titre: string; observe: string; revele: string; verbatim?: string; participant?: string; implication: string };
@@ -28,333 +30,285 @@ export type StructuredReport = {
   methodologie?: string;
 };
 
-const TONE: Record<Tonalite, { bg: string; color: string; label: string }> = {
-  positif: { bg: "var(--color-success-light)", color: "var(--color-success)", label: "Positif" },
-  neutre:  { bg: "var(--color-surface-2)", color: "var(--color-text-secondary)", label: "Neutre" },
-  negatif: { bg: "var(--color-error-light)", color: "var(--color-error)", label: "Friction" },
+export type ReportInterview = {
+  id: string;
+  person: string;
+  profession: string | null;
+  scheduledAt: string;
+  status: string;
+  transcript: string | null;
+  hasVideo: boolean;
+  videoExpired: boolean;
 };
 
-// ─── Petits blocs réutilisables ──────────────────────────────
-function SectionTitle({ children, sub }: { children: React.ReactNode; sub?: string }) {
+const TZ = "Europe/Paris";
+const fmtDate = (iso: string) => new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
+const fmtShort = (iso: string) => new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+
+const TONE: Record<Tonalite, { label: string; cls: string }> = {
+  positif: { label: "Positif", cls: s.badgeOk },
+  neutre: { label: "Neutre", cls: "" },
+  negatif: { label: "Friction", cls: s.badgeBad },
+};
+
+function Quote({ text, who }: { text: string; who?: string }) {
   return (
-    <div style={{ marginBottom: "20px" }}>
-      <h2 style={{ fontSize: "20px", fontWeight: 800, color: "var(--color-plum-deep)", margin: 0, letterSpacing: "-0.02em" }}>{children}</h2>
-      {sub && <p style={{ fontSize: "13px", color: "var(--color-text-tertiary)", margin: "4px 0 0" }}>{sub}</p>}
-    </div>
+    <figure className={r.quote}>
+      <blockquote>« {text} »</blockquote>
+      {who && <figcaption>{who}</figcaption>}
+    </figure>
   );
 }
 
-function Verbatim({ content, participant, tone }: { content: string; participant?: string; tone?: Tonalite }) {
-  const t = tone ? TONE[tone] : null;
+// Une transcription Whereby : « [horodatage] Nom: texte » par ligne.
+function Transcript({ text }: { text: string }) {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
+    const m = l.match(/^\[(.+?)\]\s*([^:]{1,60}):\s*(.*)$/);
+    if (!m) return { time: "", who: "", said: l };
+    const d = new Date(m[1]);
+    const time = Number.isNaN(d.getTime()) ? "" : new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(d);
+    return { time, who: m[2], said: m[3] };
+  });
   return (
-    <div style={{ borderLeft: `3px solid ${t?.color ?? "var(--color-lavender)"}`, background: "var(--color-surface-2)", borderRadius: "0 12px 12px 0", padding: "12px 16px" }}>
-      <p style={{ margin: 0, fontSize: "13px", fontStyle: "italic", color: "var(--color-plum)", lineHeight: 1.6 }}>“{content}”</p>
-      {participant && <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "6px" }}>— {participant}</div>}
-    </div>
-  );
-}
-
-// ─── Onglets de contenu ──────────────────────────────────────
-function TabSynthese({ r }: { r: StructuredReport }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-      {r.problematique && (
-        <div style={{ background: "linear-gradient(160deg, #fff, #F6EFFC)", border: "1px solid var(--color-lavender)", borderRadius: "16px", padding: "24px 26px" }}>
-          <div className="q-label" style={{ color: "var(--color-accent)", marginBottom: "10px" }}>Problématique centrale</div>
-          <p style={{ margin: 0, fontSize: "15px", lineHeight: 1.7, color: "var(--color-plum-deep)" }}>{r.problematique}</p>
-        </div>
-      )}
-      {r.syntheseExecutive && (
-        <div>
-          <SectionTitle>Synthèse exécutive</SectionTitle>
-          <p style={{ margin: 0, fontSize: "14px", lineHeight: 1.7, color: "var(--color-text-primary)" }}>{r.syntheseExecutive}</p>
-        </div>
-      )}
-      {/* Forces / Vigilance */}
-      {(r.forces?.length || r.vigilance?.length) ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-              <span style={{ width: "24px", height: "24px", borderRadius: "8px", background: "var(--color-success-light)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--color-success)", fontSize: "13px" }}>✓</span>
-              <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-success)" }}>Forces</span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {(r.forces ?? []).map((p, i) => (
-                <div key={i} style={{ background: "var(--color-success-light)", borderRadius: "12px", padding: "14px 16px" }}>
-                  <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-plum-deep)", marginBottom: "5px" }}>{i + 1}. {p.titre}</div>
-                  <p style={{ margin: "0 0 8px", fontSize: "12.5px", color: "var(--color-text-secondary)", lineHeight: 1.55 }}>{p.detail}</p>
-                  {p.verbatim && <Verbatim content={p.verbatim} participant={p.participant} tone="positif" />}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-              <span style={{ width: "24px", height: "24px", borderRadius: "8px", background: "var(--color-error-light)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--color-error)", fontSize: "13px" }}>!</span>
-              <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-error)" }}>Points de vigilance</span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {(r.vigilance ?? []).map((p, i) => (
-                <div key={i} style={{ background: "var(--color-error-light)", borderRadius: "12px", padding: "14px 16px" }}>
-                  <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-plum-deep)", marginBottom: "5px" }}>{i + 1}. {p.titre}</div>
-                  <p style={{ margin: "0 0 8px", fontSize: "12.5px", color: "var(--color-text-secondary)", lineHeight: 1.55 }}>{p.detail}</p>
-                  {p.verbatim && <Verbatim content={p.verbatim} participant={p.participant} tone="negatif" />}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function TabInsights({ r }: { r: StructuredReport }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      {(r.insights ?? []).map((ins, i) => (
-        <div key={i} className="q-card" style={{ padding: "22px 24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-            <span style={{ width: "28px", height: "28px", borderRadius: "9px", background: "linear-gradient(140deg, #E9DEFA, #C7B4EC)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-mono-base)", fontSize: "12px", fontWeight: 700, color: "var(--color-accent)" }}>{i + 1}</span>
-            <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 800, color: "var(--color-plum-deep)", letterSpacing: "-0.01em" }}>{ins.titre}</h3>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: ins.verbatim ? "14px" : 0 }}>
-            <div>
-              <div className="q-label" style={{ marginBottom: "6px" }}>Ce qui a été observé</div>
-              <p style={{ margin: 0, fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.6 }}>{ins.observe}</p>
-            </div>
-            <div>
-              <div className="q-label" style={{ marginBottom: "6px", color: "var(--color-accent)" }}>Ce que ça révèle</div>
-              <p style={{ margin: 0, fontSize: "13px", color: "var(--color-plum)", lineHeight: 1.6, fontWeight: 500 }}>{ins.revele}</p>
-            </div>
-          </div>
-          {ins.verbatim && <Verbatim content={ins.verbatim} participant={ins.participant} />}
-          <div style={{ marginTop: "14px", padding: "10px 14px", borderRadius: "10px", background: "var(--color-accent-light)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
-            <span style={{ color: "var(--color-accent)", fontWeight: 700, flexShrink: 0 }}>→</span>
-            <span style={{ fontSize: "13px", color: "var(--color-plum-deep)", fontWeight: 500 }}>{ins.implication}</span>
-          </div>
-        </div>
+    <div className={r.transcript}>
+      {lines.map((l, i) => (
+        <p key={i}>{l.time && <time>{l.time}</time>}{l.who && <strong>{l.who}</strong>}<span>{l.said}</span></p>
       ))}
     </div>
   );
 }
 
-function TabThemes({ r }: { r: StructuredReport }) {
+const TABS = [
+  { id: "synthese", label: "Synthèse" },
+  { id: "enseignements", label: "Enseignements" },
+  { id: "verbatims", label: "Verbatims" },
+  { id: "profils", label: "Profils types" },
+  { id: "entretiens", label: "Entretiens" },
+  { id: "methode", label: "Méthodologie" },
+] as const;
+type TabId = (typeof TABS)[number]["id"];
+
+export default function StudyReportView({
+  studyId, studyTitle, brandName, generatedAt, report, legacyText, interviews,
+}: {
+  studyId: string;
+  studyTitle: string;
+  brandName: string;
+  generatedAt: string | null;
+  report: StructuredReport | null;
+  legacyText: string | null;
+  interviews: ReportInterview[];
+}) {
+  const [tab, setTab] = useState<TabId>(report ? "synthese" : "entretiens");
+  const [theme, setTheme] = useState<string>("");
+  const [tone, setTone] = useState<Tonalite | "">("");
+  const [open, setOpen] = useState<string | null>(null);
+
+  const transcribed = interviews.filter((i) => i.transcript).length;
+  const expected = interviews.filter((i) => i.status !== "no_show").length;
+  const verbatims = useMemo(
+    () => (report?.verbatims ?? []).filter((v) => (!theme || v.theme === theme) && (!tone || v.tonalite === tone)),
+    [report, theme, tone],
+  );
+  const themeNames = [...new Set((report?.verbatims ?? []).map((v) => v.theme).filter(Boolean))] as string[];
+  const show = (id: TabId) => tab === id;
+
   return (
-    <div>
-      <SectionTitle sub="Les grands sujets qui ont structuré les entretiens, par intensité.">Analyse thématique</SectionTitle>
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {(r.themes ?? []).map((t, i) => {
-          const tone = t.tonalite ? TONE[t.tonalite] : TONE.neutre;
-          return (
-            <div key={i} className="q-card" style={{ padding: "18px 20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-plum-deep)" }}>{t.nom}</span>
-                  {t.tonalite && <span className="q-tag" style={{ color: tone.color, background: tone.bg, border: "none" }}>{tone.label}</span>}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div style={{ display: "flex", gap: "3px" }}>
-                    {[1,2,3,4,5].map((n) => (
-                      <span key={n} style={{ width: "16px", height: "6px", borderRadius: "999px", background: n <= t.intensite ? "var(--color-accent)" : "var(--color-border-base)" }} />
-                    ))}
+    <div className={`${s.page} ${s.pageWide}`}>
+      <nav className={`${s.crumbs} ${r.noPrint}`}>
+        <Link href="/brand/studies">Mes études</Link><span>›</span>
+        <Link href={`/brand/studies/${studyId}`}>{studyTitle}</Link><span>›</span><span>Synthèse</span>
+      </nav>
+
+      <header className={s.spread} style={{ alignItems: "flex-end" }}>
+        <div>
+          <p className={s.eyebrow}>{brandName} · Synthèse qualitative{generatedAt ? ` · ${fmtDate(generatedAt)}` : ""}</p>
+          <h1 className={s.h1}>{report?.titre ?? studyTitle}</h1>
+          {report?.titre && <p className={s.lead} style={{ marginTop: 6 }}>{studyTitle}</p>}
+          <div className={s.meta}>
+            <span>{interviews.length} entretien{interviews.length > 1 ? "s" : ""}</span>
+            <span>{transcribed} transcrit{transcribed > 1 ? "s" : ""}</span>
+          </div>
+        </div>
+        {(report || legacyText) && (
+          <button type="button" className={`${s.btn} ${s.btnGhost} ${r.noPrint}`} onClick={() => window.print()}>Exporter en PDF</button>
+        )}
+      </header>
+
+      {!report && !legacyText && (
+        <section className={`${s.cardDark} ${s.sectionGap}`}>
+          <h2 className={s.h1} style={{ fontSize: 28 }}>La synthèse arrive.</h2>
+          <p className={s.muted} style={{ margin: "8px 0 0", maxWidth: "56ch" }}>
+            Elle est générée automatiquement dès que tous les entretiens sont transcrits. Pour l&apos;instant : {transcribed} sur {expected}.
+            Vous recevrez un email. En attendant, les transcriptions disponibles sont ci-dessous.
+          </p>
+          <div className={r.meter} aria-hidden="true"><i style={{ width: `${expected ? (transcribed / expected) * 100 : 0}%` }} /></div>
+        </section>
+      )}
+
+      {legacyText && (
+        <section className={`${s.card} ${s.sectionGap}`} style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{legacyText}</section>
+      )}
+
+      <div className={`${r.tabs} ${r.noPrint}`} role="tablist" aria-label="Sections de la synthèse">
+        {TABS.filter((t) => report || t.id === "entretiens").map((t) => (
+          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? r.tabOn : ""} onClick={() => setTab(t.id)}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* ── Synthèse ── */}
+      {report && (
+        <section className={r.panel} data-show={show("synthese")} aria-label="Synthèse">
+          <h2 className={r.printTitle}>Synthèse</h2>
+          {report.syntheseExecutive && <p className={r.exec}>{report.syntheseExecutive}</p>}
+          {report.problematique && (
+            <div className={s.cardSoft}><h3 className={s.h3}>La vraie question</h3><p className={s.muted} style={{ margin: 0 }}>{report.problematique}</p></div>
+          )}
+          <div className={s.grid2}>
+            {[{ title: "Ce qui porte", items: report.forces, cls: s.badgeOk }, { title: "Points de vigilance", items: report.vigilance, cls: s.badgeBad }].map((col) => (
+              <div key={col.title} className={s.card} style={{ display: "grid", gap: 16, alignContent: "start" }}>
+                <span className={`${s.badge} ${col.cls}`} style={{ justifySelf: "start" }}>{col.title}</span>
+                {(col.items ?? []).map((pt) => (
+                  <div key={pt.titre}>
+                    <h3 className={s.h3}>{pt.titre}</h3>
+                    <p className={s.muted} style={{ margin: "0 0 8px" }}>{pt.detail}</p>
+                    {pt.verbatim && <Quote text={pt.verbatim} who={pt.participant} />}
                   </div>
-                  <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", fontFamily: "var(--font-mono-base)" }}>{t.intensite}/5</span>
+                ))}
+              </div>
+            ))}
+          </div>
+          {(report.recommandations ?? []).length > 0 && (
+            <div className={s.card}>
+              <h3 className={s.h3}>Pistes de réflexion</h3>
+              <ol className={r.recos}>
+                {report.recommandations!.map((rc) => <li key={rc.titre}><strong>{rc.titre}</strong><span className={s.muted}>{rc.detail}</span></li>)}
+              </ol>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ── Enseignements ── */}
+      {report && (
+        <section className={r.panel} data-show={show("enseignements")} aria-label="Enseignements">
+          <h2 className={r.printTitle}>Enseignements</h2>
+          {(report.insights ?? []).map((ins, i) => (
+            <article key={ins.titre} className={s.card} style={{ display: "grid", gap: 12 }}>
+              <p className={s.eyebrow} style={{ margin: 0 }}>Enseignement {i + 1}</p>
+              <h3 className={s.h2} style={{ margin: 0, textTransform: "none" }}>{ins.titre.charAt(0) + ins.titre.slice(1).toLowerCase()}</h3>
+              <div className={s.grid2}>
+                <div><p className={`${s.small} ${s.faint}`} style={{ margin: "0 0 4px" }}>Ce qu&apos;on observe</p><p style={{ margin: 0 }}>{ins.observe}</p></div>
+                <div><p className={`${s.small} ${s.faint}`} style={{ margin: "0 0 4px" }}>Ce que ça révèle</p><p style={{ margin: 0 }}>{ins.revele}</p></div>
+              </div>
+              {ins.verbatim && <Quote text={ins.verbatim} who={ins.participant} />}
+              <p className={r.implication}><strong>Pour la marque</strong> {ins.implication}</p>
+            </article>
+          ))}
+          {(report.themes ?? []).length > 0 && (
+            <div className={s.card}>
+              <h3 className={s.h3}>Thèmes, par intensité</h3>
+              <div className={r.themes}>
+                {[...report.themes!].sort((a, b) => b.intensite - a.intensite).map((t) => (
+                  <div key={t.nom} className={r.theme}>
+                    <div className={s.spread}><strong>{t.nom}</strong>{t.tonalite && <span className={`${s.badge} ${TONE[t.tonalite].cls}`}>{TONE[t.tonalite].label}</span>}</div>
+                    <div className={r.meter}><i style={{ width: `${Math.max(1, Math.min(5, t.intensite)) * 20}%` }} /></div>
+                    <p className={`${s.small} ${s.muted}`} style={{ margin: 0 }}>{t.resume}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className={s.grid2}>
+            {(report.signauxFaibles ?? []).length > 0 && (
+              <div className={s.cardSoft}><h3 className={s.h3}>Signaux faibles</h3><ul className={r.list}>{report.signauxFaibles!.map((x) => <li key={x}>{x}</li>)}</ul></div>
+            )}
+            {(report.questionsOuvertes ?? []).length > 0 && (
+              <div className={s.cardSoft}><h3 className={s.h3}>Questions ouvertes</h3><ul className={r.list}>{report.questionsOuvertes!.map((x) => <li key={x}>{x}</li>)}</ul></div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── Verbatims ── */}
+      {report && (
+        <section className={r.panel} data-show={show("verbatims")} aria-label="Verbatims">
+          <h2 className={r.printTitle}>Verbatims</h2>
+          <div className={`${s.row} ${r.noPrint}`}>
+            <select className={s.input} style={{ width: "auto" }} value={theme} onChange={(e) => setTheme(e.target.value)} aria-label="Filtrer par thème">
+              <option value="">Tous les thèmes</option>
+              {themeNames.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <select className={s.input} style={{ width: "auto" }} value={tone} onChange={(e) => setTone(e.target.value as Tonalite | "")} aria-label="Filtrer par tonalité">
+              <option value="">Toutes les tonalités</option>
+              <option value="positif">Positif</option><option value="neutre">Neutre</option><option value="negatif">Friction</option>
+            </select>
+            <span className={`${s.small} ${s.faint}`}>{verbatims.length} citation{verbatims.length > 1 ? "s" : ""}</span>
+          </div>
+          <div className={r.masonry}>
+            {verbatims.map((v, i) => (
+              <div key={i} className={s.card} style={{ display: "grid", gap: 10 }}>
+                <Quote text={v.content} who={v.participant} />
+                <div className={s.row}>{v.theme && <span className={`${s.badge} ${s.badgePlain}`}>{v.theme}</span>}{v.tonalite && <span className={`${s.badge} ${TONE[v.tonalite].cls}`}>{TONE[v.tonalite].label}</span>}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Profils types ── */}
+      {report && (
+        <section className={r.panel} data-show={show("profils")} aria-label="Profils types">
+          <h2 className={r.printTitle}>Profils types</h2>
+          <div className={s.grid2}>
+            {(report.personas ?? []).map((p) => (
+              <article key={p.nom} className={s.card} style={{ display: "grid", gap: 10, alignContent: "start" }}>
+                <h3 className={s.h2} style={{ margin: 0 }}>{p.nom}</h3>
+                <p className={s.muted} style={{ margin: 0 }}>{p.portrait}</p>
+                <p className={r.implication}><strong>Sa posture</strong> {p.posture}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Entretiens ── */}
+      <section className={r.panel} data-show={show("entretiens")} aria-label="Entretiens">
+        <h2 className={r.printTitle}>Entretiens</h2>
+        {interviews.length === 0 && <p className={s.muted}>Aucun entretien pour le moment.</p>}
+        <div className={s.card} style={{ padding: 0 }}>
+          {interviews.map((iv, i) => (
+            <div key={iv.id} style={{ borderTop: i ? "1px solid var(--line)" : 0 }}>
+              <div className={s.spread} style={{ padding: "16px 20px" }}>
+                <div>
+                  <strong>{iv.person}</strong>
+                  <span className={`${s.small} ${s.muted}`} style={{ display: "block", textTransform: "capitalize" }}>{[iv.profession, fmtShort(iv.scheduledAt)].filter(Boolean).join(" · ")}</span>
+                </div>
+                <div className={`${s.row} ${r.noPrint}`}>
+                  {iv.status === "no_show" ? <span className={`${s.badge} ${s.badgeBad}`}>Absent</span> : !iv.transcript && <span className={`${s.badge} ${s.badgeWait}`}>Transcription en cours</span>}
+                  {iv.transcript && (
+                    <button type="button" className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} aria-expanded={open === iv.id} onClick={() => setOpen(open === iv.id ? null : iv.id)}>
+                      {open === iv.id ? "Masquer la transcription" : "Lire la transcription"}
+                    </button>
+                  )}
+                  {iv.hasVideo && <a className={`${s.btn} ${s.btnSm}`} href={`/api/interviews/${iv.id}/recording`} target="_blank" rel="noopener noreferrer">Voir la vidéo</a>}
+                  {iv.videoExpired && <span className={`${s.small} ${s.faint}`}>Vidéo retirée après 90 jours</span>}
                 </div>
               </div>
-              <p style={{ margin: 0, fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.6 }}>{t.resume}</p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function TabVerbatims({ r }: { r: StructuredReport }) {
-  const [filter, setFilter] = useState<Tonalite | "all">("all");
-  const all = r.verbatims ?? [];
-  const shown = filter === "all" ? all : all.filter((v) => (v.tonalite ?? "neutre") === filter);
-  return (
-    <div>
-      <SectionTitle sub={`${all.length} verbatims sélectionnés dans le corpus.`}>Verbatims</SectionTitle>
-      <div style={{ display: "flex", gap: "6px", marginBottom: "18px", flexWrap: "wrap" }}>
-        {([["all","Tous"],["positif","Positifs"],["neutre","Neutres"],["negatif","Frictions"]] as [Tonalite | "all", string][]).map(([k, lbl]) => (
-          <button key={k} onClick={() => setFilter(k)} style={{
-            padding: "6px 14px", borderRadius: "999px", fontSize: "12px", fontWeight: 600, cursor: "pointer",
-            border: `1px solid ${filter === k ? "var(--color-accent)" : "var(--color-border-base)"}`,
-            background: filter === k ? "var(--color-accent)" : "var(--color-surface)",
-            color: filter === k ? "#fff" : "var(--color-text-secondary)",
-          }}>{lbl}</button>
-        ))}
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-        {shown.map((v, i) => (
-          <div key={i} className="q-card" style={{ padding: "16px 18px" }}>
-            <p style={{ margin: "0 0 10px", fontSize: "13px", fontStyle: "italic", color: "var(--color-plum)", lineHeight: 1.6 }}>“{v.content}”</p>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)" }}>— {v.participant}</span>
-              {v.theme && <span className="q-tag" style={{ color: "var(--color-accent)", background: "var(--color-accent-light)", border: "none" }}>{v.theme}</span>}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function TabPersonas({ r }: { r: StructuredReport }) {
-  return (
-    <div>
-      <SectionTitle sub="Les figures récurrentes qui émergent du corpus d'entretiens.">Personas</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-        {(r.personas ?? []).map((p, i) => (
-          <div key={i} className="q-card hover-glow" style={{ padding: "22px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
-              <div style={{ width: "44px", height: "44px", borderRadius: "13px", background: `linear-gradient(140deg, ${["#C7B4EC","#B9C0FF","#EBCBF7"][i % 3]}, #8765D7)`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: "18px" }}>{p.nom[0]}</div>
-              <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 800, color: "var(--color-plum-deep)" }}>{p.nom}</h3>
-            </div>
-            <p style={{ margin: "0 0 12px", fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.6 }}>{p.portrait}</p>
-            <div style={{ padding: "10px 14px", borderRadius: "10px", background: "var(--color-surface-2)", fontSize: "12px", color: "var(--color-plum)", fontWeight: 500 }}>
-              <span style={{ color: "var(--color-text-tertiary)", fontWeight: 600 }}>Posture · </span>{p.posture}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function TabReco({ r }: { r: StructuredReport }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-      <div>
-        <SectionTitle sub="Des orientations de réflexion, pas des décisions toutes faites.">Recommandations</SectionTitle>
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {(r.recommandations ?? []).map((rec, i) => (
-            <div key={i} style={{ display: "flex", gap: "14px", padding: "16px 18px", borderRadius: "12px", background: "var(--color-accent-light)", border: "1px solid var(--color-lavender)" }}>
-              <span style={{ fontFamily: "var(--font-mono-base)", fontSize: "13px", fontWeight: 700, color: "var(--color-accent)", flexShrink: 0 }}>0{i + 1}</span>
-              <div>
-                <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-plum-deep)", marginBottom: "4px" }}>{rec.titre}</div>
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.6 }}>{rec.detail}</p>
-              </div>
+              {iv.transcript && open === iv.id && <div style={{ padding: "0 20px 20px" }}><Transcript text={iv.transcript} /></div>}
             </div>
           ))}
         </div>
-      </div>
-      {r.signauxFaibles?.length ? (
-        <div>
-          <div className="q-label" style={{ marginBottom: "10px" }}>Signaux faibles</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {r.signauxFaibles.map((s, i) => (
-              <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "var(--color-text-secondary)" }}>
-                <span style={{ color: "var(--color-lavender)" }}>◦</span>{s}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-      {r.questionsOuvertes?.length ? (
-        <div>
-          <div className="q-label" style={{ marginBottom: "10px" }}>Questions ouvertes</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {r.questionsOuvertes.map((q, i) => (
-              <div key={i} style={{ padding: "12px 16px", borderRadius: "10px", border: "1px solid var(--color-border-base)", fontSize: "13px", color: "var(--color-plum)", fontStyle: "italic" }}>{q}</div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-      {r.methodologie && (
-        <div style={{ paddingTop: "20px", borderTop: "1px solid var(--color-border-base)" }}>
-          <div className="q-label" style={{ marginBottom: "8px" }}>Note méthodologique</div>
-          <p style={{ margin: 0, fontSize: "12.5px", color: "var(--color-text-tertiary)", lineHeight: 1.7 }}>{r.methodologie}</p>
-        </div>
+      </section>
+
+      {/* ── Méthodologie ── */}
+      {report?.methodologie && (
+        <section className={r.panel} data-show={show("methode")} aria-label="Méthodologie">
+          <h2 className={r.printTitle}>Méthodologie</h2>
+          <div className={s.cardSoft}><p className={s.muted} style={{ margin: 0 }}>{report.methodologie}</p></div>
+          <p className={`${s.small} ${s.faint}`}>Synthèse produite à partir des transcriptions des entretiens, avec l&apos;aide d&apos;une IA. Document confidentiel.</p>
+        </section>
       )}
-    </div>
-  );
-}
-
-// ─── Vue principale ──────────────────────────────────────────
-const TABS = [
-  { key: "synthese", label: "Synthèse", icon: "◫" },
-  { key: "insights", label: "Insights clés", icon: "✦" },
-  { key: "themes", label: "Analyse thématique", icon: "◧" },
-  { key: "verbatims", label: "Verbatims", icon: "❝" },
-  { key: "personas", label: "Personas", icon: "◕" },
-  { key: "reco", label: "Recommandations", icon: "→" },
-] as const;
-
-export default function StudyReportView({
-  report, studyTitle, brandName, generatedAt, studyId, count,
-}: {
-  report: StructuredReport;
-  studyTitle: string;
-  brandName: string;
-  generatedAt: string;
-  studyId: string;
-  count?: number;
-}) {
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("synthese");
-
-  return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "28px 32px 64px" }}>
-      {/* Breadcrumb */}
-      <div style={{ fontSize: "13px", color: "var(--color-text-tertiary)", marginBottom: "20px", display: "flex", gap: "8px", alignItems: "center" }}>
-        <Link href="/brand/studies" style={{ color: "var(--color-text-tertiary)", textDecoration: "none" }}>Mes études</Link>
-        <span>›</span>
-        <Link href={`/brand/studies/${studyId}`} style={{ color: "var(--color-text-tertiary)", textDecoration: "none" }}>{studyTitle}</Link>
-        <span>›</span>
-        <span style={{ color: "var(--color-plum)" }}>Rapport</span>
-      </div>
-
-      {/* Header */}
-      <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "18px", padding: "26px 30px", marginBottom: "12px", boxShadow: "0 4px 18px var(--color-glow-soft)" }}>
-        <div className="q-label" style={{ color: "var(--color-accent)", marginBottom: "10px" }}>
-          Qualio · Synthèse qualitative · {generatedAt}{count ? ` · ${count} entretiens` : ""}
-        </div>
-        <h1 style={{ fontSize: "26px", fontWeight: 800, margin: "0 0 4px", color: "var(--color-plum-deep)", letterSpacing: "-0.025em" }}>
-          {report.titre || studyTitle}
-        </h1>
-        <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>{brandName}</div>
-      </div>
-
-      {/* Barre d'onglets */}
-      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--color-bg)", padding: "10px 0", marginBottom: "16px" }}>
-        <div style={{ display: "flex", gap: "4px", background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "14px", padding: "6px", overflowX: "auto" }}>
-          {TABS.map((t) => {
-            const active = tab === t.key;
-            return (
-              <button key={t.key} onClick={() => setTab(t.key)} style={{
-                display: "flex", alignItems: "center", gap: "7px", whiteSpace: "nowrap",
-                padding: "9px 16px", borderRadius: "10px", border: "none", cursor: "pointer",
-                fontSize: "13px", fontWeight: active ? 700 : 500,
-                background: active ? "var(--color-accent)" : "transparent",
-                color: active ? "#fff" : "var(--color-text-secondary)",
-                transition: "background 0.18s",
-              }}>
-                <span style={{ opacity: active ? 1 : 0.6 }}>{t.icon}</span>
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Contenu */}
-      <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "18px", padding: "32px 34px", minHeight: "400px" }}>
-        {tab === "synthese" && <TabSynthese r={report} />}
-        {tab === "insights" && <TabInsights r={report} />}
-        {tab === "themes" && <TabThemes r={report} />}
-        {tab === "verbatims" && <TabVerbatims r={report} />}
-        {tab === "personas" && <TabPersonas r={report} />}
-        {tab === "reco" && <TabReco r={report} />}
-      </div>
-
-      {/* Footer */}
-      <div style={{ marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", color: "var(--color-text-tertiary)" }}>
-        <span>Rapport généré par Qualio · Analyse qualitative assistée par IA · Confidentiel</span>
-        <Link href={`/brand/studies/${studyId}`} style={{ color: "var(--color-accent)", textDecoration: "none", fontWeight: 600 }}>← Retour à l'étude</Link>
-      </div>
     </div>
   );
 }

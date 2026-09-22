@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { assertAdmin, getSessionUser } from "@/lib/auth/guards";
+import { sendAvailabilityRequested } from "@/lib/resend/emails";
 import { sendStudySubmittedAdmin } from "@/lib/resend/emails";
 
 type StudyCreateData = {
@@ -130,6 +131,16 @@ export async function acceptApplication(applicationId: string) {
     return true;
   });
   if (!done) return { error: "already_decided" };
+
+  // Le participant est invité à proposer ses disponibilités : c'est à la marque
+  // de s'adapter à ces profils rares.
+  const invited = await prisma.application.findUnique({
+    where: { id: applicationId },
+    select: { study: { select: { title: true } }, participantProfile: { select: { firstName: true, user: { select: { email: true } } } } },
+  });
+  if (invited) {
+    await sendAvailabilityRequested(invited.participantProfile.user.email, invited.participantProfile.firstName, invited.study.title, applicationId).catch(() => null);
+  }
 
   revalidatePath("/brand/studies");
   return { ok: true };

@@ -200,3 +200,21 @@ export async function sendRewardAvailable(to: string, firstName: string, amount:
     cta: { label: "Récupérer ma récompense", href: `${APP_URL}/participant/wallet` },
   }));
 }
+
+export async function sendAvailabilityProposed(to: string, contactFirstName: string, participantFirstName: string, studyTitle: string, studyId: string, slots: Date[]) {
+  const list = slots.map((d) => `<li style="margin:4px 0;text-transform:capitalize">${esc(fmtDateTime(d))}</li>`).join("");
+  return send(to, `${participantFirstName} propose ses disponibilités`, layout({
+    title: `${esc(participantFirstName)} propose ${slots.length} créneau${slots.length > 1 ? "x" : ""}.`,
+    body: `${contactFirstName ? `Bonjour ${esc(contactFirstName)}, p` : "P"}our l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong>, choisissez celui qui vous convient : l'entretien est confirmé immédiatement.`,
+    aside: `<ul style="margin:0;padding-left:18px">${list}</ul>`,
+    cta: { label: "Choisir un créneau", href: `${APP_URL}/brand/studies/${studyId}` },
+  }));
+}
+
+export async function sendAvailabilityRequested(to: string, firstName: string, studyTitle: string, applicationId: string) {
+  return send(to, "Une marque veut vous entendre", layout({
+    title: `Bonne nouvelle, ${esc(firstName)}.`,
+    body: `Une marque a retenu votre profil pour l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong>. Indiquez quand vous êtes disponible : elle s'adapte à vous.`,
+    cta: { label: "Proposer mes créneaux", href: `${APP_URL}/participant/studies/${applicationId}` },
+  }));
+}

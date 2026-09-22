@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     const link = recordingId ? await fetchWherebyRecordingLink(recordingId) : null;
     await prisma.interview.update({
       where: { id: interview.id },
-      data: { recordingStatus: "ready", recordingUrl: link },
+      data: { recordingStatus: "ready", recordingUrl: link, recordingId: recordingId || null },
     });
     let outcome = await tryTranscriptAndReport(interview.id);
     // Aucune transcription pour cette salle : on la demande nous-mêmes à partir

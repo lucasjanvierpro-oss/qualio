@@ -2,447 +2,243 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import s from "@/components/rl/rl.module.css";
 import { acceptApplication, rejectApplication } from "@/app/actions/studies";
 
-type Participant = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: Date | null;
+export type Candidate = {
+  applicationId: string;
+  status: string;
+  name: string;
+  age: number | null;
   city: string | null;
   profession: string | null;
-  interests: string[];
-  bio: string | null;
-  screenerAnswers: unknown;
-};
-
-type Application = {
-  id: string;
-  status: string;
-  adminScore: number | null;
-  brandAccepted: boolean | null;
-  applicationNote: string | null;
-  participantProfile: Participant;
+  summary: string | null;
+  why: string | null;
+  step: "participant_to_propose" | "brand_to_choose" | "participant_to_choose" | null;
+  proposals: string[];
+  interview: { id: string; scheduledAt: string; status: string; transcriptReady: boolean } | null;
 };
 
 type Study = {
   id: string;
   title: string;
   status: string;
-  studyType: string;
-  targetParticipantCount: number;
-  confirmedCount: number;
-  deadlineAt: Date | null;
-  applications: Application[];
+  isFocusGroup: boolean;
+  target: number;
+  duration: number;
+  deadlineAt: string | null;
+  hasReport: boolean;
 };
 
-type CandidateRow = {
-  id: string;
-  applicationId: string;
-  name: string;
-  age: number;
-  city: string;
-  profession: string;
-  interests: string[];
-  bio: string;
-  brandSummary?: string;
-  score: number;
-  status: string;
+const TZ = "Europe/Paris";
+const fmtDay = (iso: string) => new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(new Date(iso));
+const fmtTime = (iso: string) => new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+
+const STUDY_STATUS: Record<string, { label: string; tone: string }> = {
+  DRAFT: { label: "Brouillon", tone: "" },
+  ACTIVE: { label: "Recrutement en cours", tone: s.badgeAccent },
+  MATCHING: { label: "Recrutement en cours", tone: s.badgeAccent },
+  IN_PROGRESS: { label: "Entretiens en cours", tone: s.badgeWait },
+  COMPLETED: { label: "Terminée", tone: s.badgeOk },
+  CANCELLED: { label: "Annulée", tone: s.badgeBad },
 };
 
-function getAge(dob: Date | null): number {
-  if (!dob) return 0;
-  return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000));
+function Person({ c }: { c: Candidate }) {
+  const facts = [c.profession, c.age ? `${c.age} ans` : null, c.city].filter(Boolean).join(" · ");
+  return (
+    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+      <span className={s.avatar} style={{ width: 42, height: 42, fontSize: 17 }}>{c.name[0]}</span>
+      <span>
+        <strong style={{ fontSize: 17, letterSpacing: "-0.02em" }}>{c.name}</strong>
+        {facts && <span className={`${s.small} ${s.muted}`} style={{ display: "block" }}>{facts}</span>}
+      </span>
+    </div>
+  );
 }
 
-function mapApplications(apps: Application[]): CandidateRow[] {
-  return apps.map((a) => ({
-    id: a.participantProfile.id,
-    applicationId: a.id,
-    name: `${a.participantProfile.firstName} ${a.participantProfile.lastName[0]}.`,
-    age: getAge(a.participantProfile.dateOfBirth),
-    city: a.participantProfile.city ?? "",
-    profession: a.participantProfile.profession ?? "",
-    interests: a.participantProfile.interests,
-    bio: a.participantProfile.bio ?? "",
-    brandSummary: (a.participantProfile as { brandSummary?: string | null }).brandSummary ?? "",
-    score: a.adminScore ?? 3,
-    status: a.status,
-  }));
-}
+export default function StudyDetailClient({ study, candidates, credits }: { study: Study; candidates: Candidate[]; credits: number }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<{ id: string; msg: string } | null>(null);
+  const [showDeclined, setShowDeclined] = useState(false);
 
-const STATUS_META: Record<string, { label: string; color: string }> = {
-  ACTIVE:      { label: "Actif",      color: "var(--color-success)" },
-  MATCHING:    { label: "Matching",   color: "var(--color-warning)" },
-  IN_PROGRESS: { label: "En cours",   color: "var(--color-info)" },
-  COMPLETED:   { label: "Terminé",    color: "var(--color-text-secondary)" },
-  DRAFT:       { label: "Brouillon",  color: "var(--color-text-tertiary)" },
-  CANCELLED:   { label: "Annulé",     color: "var(--color-error)" },
-};
+  const toReview = candidates.filter((c) => c.status === "SHORTLISTED" || c.status === "PENDING");
+  const scheduling = candidates.filter((c) => c.status === "INVITED");
+  const interviews = candidates.filter((c) => ["CONFIRMED", "COMPLETED", "NO_SHOW"].includes(c.status))
+    .sort((a, b) => (a.interview?.scheduledAt ?? "").localeCompare(b.interview?.scheduledAt ?? ""));
+  const declined = candidates.filter((c) => c.status === "REJECTED");
+  const confirmed = candidates.filter((c) => c.status === "CONFIRMED" || c.status === "COMPLETED").length;
+  const meta = STUDY_STATUS[study.status] ?? STUDY_STATUS.ACTIVE;
 
-export default function StudyDetailClient({
-  study,
-  studyId,
-  credits,
-}: {
-  study: Study;
-  studyId: string;
-  credits: number;
-}) {
-  const candidates: CandidateRow[] = mapApplications(study.applications);
-
-  const [rows, setRows]             = useState(candidates);
-  const [tab, setTab]               = useState<"pending" | "accepted" | "confirmed" | "rejected">("pending");
-  const [loading, setLoading]       = useState<string | null>(null);
-  const [noCreditsModal, setNoCreditsModal] = useState(false);
-  const [localCredits, setLocalCredits]     = useState(credits);
-  const [expanded, setExpanded]     = useState<string | null>(null);
-
-  const pending   = rows.filter((c) => c.status === "SHORTLISTED" || c.status === "PENDING");
-  const accepted  = rows.filter((c) => c.status === "INVITED");
-  const confirmed = rows.filter((c) => c.status === "CONFIRMED");
-  const rejected  = rows.filter((c) => c.status === "REJECTED");
-
-  const tabs = [
-    { key: "pending"   as const, label: "À valider",  count: pending.length },
-    { key: "accepted"  as const, label: "Acceptés",   count: accepted.length },
-    { key: "confirmed" as const, label: "Confirmés",  count: confirmed.length },
-    { key: "rejected"  as const, label: "Refusés",    count: rejected.length },
-  ];
-
-  const shown = { pending, accepted, confirmed, rejected }[tab];
-
-  const title          = study?.title ?? "Perceptions Lacoste Heritage";
-  const status         = study?.status ?? "MATCHING";
-  const target         = study?.targetParticipantCount ?? 6;
-  const confirmedCount = confirmed.length;
-  const deadline       = study?.deadlineAt
-    ? new Date(study.deadlineAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })
-    : "à définir";
-  const studyType      = study?.studyType === "FOCUS_GROUP" ? "Focus group" : "Entretien 1:1";
-  const meta           = STATUS_META[status] ?? STATUS_META.ACTIVE;
-  const progress       = Math.min((confirmedCount / target) * 100, 100);
-
-  async function handleAccept(row: CandidateRow) {
-    if (localCredits < 1) { setNoCreditsModal(true); return; }
-    setLoading(row.applicationId);
-    const result = await acceptApplication(row.applicationId);
-    if (result?.error === "not_enough_credits") {
-      setNoCreditsModal(true);
-      setLoading(null);
-      return;
+  async function run(id: string, fn: () => Promise<{ error?: string; ok?: boolean } | undefined>) {
+    setBusy(id); setError(null);
+    try {
+      const r = await fn();
+      if (r?.error) {
+        const msg = r.error === "not_enough_credits" ? "Crédits insuffisants pour accepter ce profil."
+          : r.error === "already_decided" ? "Ce profil a déjà été traité."
+          : "Action impossible. Réessayez.";
+        setError({ id, msg });
+      }
+      router.refresh();
+    } finally {
+      setBusy(null);
     }
-    // Déjà décidé (double clic, autre onglet) : l'état affiché suit, sans débit.
-    setRows((prev) => prev.map((r) => r.applicationId === row.applicationId ? { ...r, status: "INVITED" } : r));
-    if (!result?.error) setLocalCredits((c) => c - 1);
-    setLoading(null);
   }
 
-  async function handleReject(row: CandidateRow) {
-    setLoading(row.applicationId);
-    await rejectApplication(row.applicationId);
-    setRows((prev) => prev.map((r) => r.applicationId === row.applicationId ? { ...r, status: "REJECTED" } : r));
-    setLoading(null);
+  async function choose(c: Candidate, index: number) {
+    setBusy(c.applicationId); setError(null);
+    try {
+      const res = await fetch(`/api/applications/${c.applicationId}/choose-slot`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slotIndex: index }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) setError({ id: c.applicationId, msg: data.error ?? "Impossible de confirmer ce créneau." });
+      router.refresh();
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (
-    <div style={{ maxWidth: "var(--content-max)", margin: "0 auto", padding: "44px 40px" }}>
+    <div className={`${s.page} ${s.pageWide}`}>
+      <nav className={s.crumbs}><Link href="/brand/studies">Mes études</Link><span>›</span><span>{study.title}</span></nav>
 
-      {/* No credits modal */}
-      {noCreditsModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(20,18,14,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, backdropFilter: "blur(4px)" }}>
-          <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "4px", padding: "36px", maxWidth: "400px", width: "90%" }}>
-            <h2 style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "24px",
-              fontWeight: 400,
-              fontStyle: "normal",
-              letterSpacing: "-0.02em",
-              color: "var(--color-text-primary)",
-              margin: "0 0 10px",
-            }}>
-              Crédits insuffisants
-            </h2>
-            <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: "0 0 24px", lineHeight: 1.65 }}>
-              Il vous faut au moins 1 crédit pour confirmer un participant. Rechargez votre compte pour continuer.
-            </p>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={() => setNoCreditsModal(false)} className="q-btn q-btn-outline" style={{ fontSize: "13px" }}>
-                Annuler
-              </button>
-              <a href="/brand/account?tab=credits" className="q-btn q-btn-primary" style={{ fontSize: "13px", textDecoration: "none" }}>
-                Acheter des crédits →
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Breadcrumb */}
-      <Link href="/brand/studies" style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px", marginBottom: "20px" }}>
-        ← Mes études
-      </Link>
-
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
+      <header className={s.spread} style={{ alignItems: "flex-end" }}>
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
-            <h1 style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "28px",
-              fontWeight: 400,
-              fontStyle: "normal",
-              letterSpacing: "-0.025em",
-              color: "var(--color-text-primary)",
-              margin: 0,
-              lineHeight: 1.1,
-            }}>
-              {title}
-            </h1>
-            <span className="q-tag" style={{ color: meta.color, borderColor: meta.color, fontSize: "10px" }}>
-              {meta.label}
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "var(--color-text-tertiary)" }}>
-            <span>{studyType}</span>
-            <span>·</span>
-            <span>{target} participants</span>
-            <span>·</span>
-            <span>Deadline {deadline}</span>
+          <p className={s.eyebrow}>{study.isFocusGroup ? "Focus group" : "Entretiens individuels"} · {study.duration} min</p>
+          <h1 className={s.h1}>{study.title}</h1>
+          <div className={s.meta}>
+            <span className={`${s.badge} ${meta.tone}`}>{meta.label}</span>
+            <span>{confirmed} / {study.target} entretiens planifiés</span>
+            {study.deadlineAt && <span>Jusqu&apos;au {fmtDay(study.deadlineAt)}</span>}
           </div>
         </div>
+        {study.hasReport && <Link href={`/brand/studies/${study.id}/report`} className={s.btn}>Lire la synthèse →</Link>}
+      </header>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
-          {status === "COMPLETED" && (
-            <Link href={`/brand/studies/${study?.id ?? studyId}/report`} className="q-btn q-btn-outline" style={{ fontSize: "12px" }}>
-              Voir le rapport ✨
-            </Link>
-          )}
-          <div style={{ textAlign: "right" }}>
-            <p className="q-label" style={{ marginBottom: "4px" }}>Crédits</p>
-            <span style={{
-              fontFamily: "var(--font-mono-base)",
-              fontSize: "24px",
-              fontWeight: 700,
-              letterSpacing: "-0.03em",
-              color: localCredits < 3 ? "var(--color-warning)" : "var(--color-text-primary)",
-            }}>
-              {localCredits}
-            </span>
-          </div>
+      {/* ── Profils à valider ── */}
+      <section className={s.sectionGap}>
+        <div className={s.spread}>
+          <h2 className={s.h2}>Profils proposés <span className={s.faint}>({toReview.length})</span></h2>
+          <span className={`${s.small} ${s.muted}`}>1 crédit par profil accepté · {credits} disponible{credits > 1 ? "s" : ""}</span>
         </div>
-      </div>
-
-      {/* Progress */}
-      <div style={{ marginBottom: "32px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "8px" }}>
-          <span style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>Participants confirmés</span>
-          <span style={{ fontFamily: "var(--font-mono-base)", fontSize: "13px", fontWeight: 700, color: "var(--color-text-primary)" }}>
-            {confirmedCount}<span style={{ color: "var(--color-text-tertiary)", fontWeight: 400 }}>/{target}</span>
-          </span>
-        </div>
-        <div style={{ height: "2px", background: "var(--color-border-base)" }}>
-          <div style={{ height: "100%", width: `${progress}%`, background: "var(--color-accent)", transition: "width 0.4s" }} />
-        </div>
-      </div>
-
-      {localCredits < 3 && (
-        <div style={{ padding: "12px 16px", background: "var(--color-warning-light)", border: "1px solid var(--color-warning)", borderRadius: "2px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--color-warning)" }}>
-            {localCredits} crédit{localCredits !== 1 ? "s" : ""} restant{localCredits !== 1 ? "s" : ""} — rechargez pour continuer à valider des profils
-          </span>
-          <Link href="/brand/account" style={{ fontSize: "11px", fontWeight: 700, color: "var(--color-warning)", textDecoration: "none", marginLeft: "16px" }}>
-            Recharger →
-          </Link>
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div style={{ display: "flex", borderBottom: "1px solid var(--color-border-base)", marginBottom: "24px", gap: "0" }}>
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            style={{
-              padding: "9px 16px",
-              fontSize: "13px",
-              fontWeight: tab === t.key ? 600 : 400,
-              color: tab === t.key ? "var(--color-text-primary)" : "var(--color-text-tertiary)",
-              background: "none",
-              border: "none",
-              borderBottom: tab === t.key ? "2px solid var(--color-text-primary)" : "2px solid transparent",
-              marginBottom: "-1px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            {t.label}
-            {t.count > 0 && (
-              <span style={{
-                fontSize: "10px",
-                fontFamily: "var(--font-mono-base)",
-                fontWeight: 700,
-                padding: "1px 5px",
-                background: tab === t.key ? "var(--color-text-primary)" : "var(--color-surface-2)",
-                color: tab === t.key ? "#fff" : "var(--color-text-secondary)",
-                borderRadius: "2px",
-              }}>
-                {t.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Candidates */}
-      {shown.length === 0 ? (
-        <div className="q-empty">
-          <div style={{ fontSize: "20px", opacity: 0.2, marginBottom: "12px" }}>◎</div>
-          <p className="q-empty-title" style={{ fontSize: "18px" }}>Aucun profil ici</p>
-          <p className="q-empty-sub">
-            {tab === "pending"
-              ? "L'équipe Qualio prépare des profils qui correspondent à vos critères."
-              : "Pas de profils dans cette catégorie pour le moment."}
+        {toReview.length === 0 ? (
+          <p className={`${s.cardSoft} ${s.muted}`} style={{ marginTop: 12 }}>
+            {candidates.length === 0
+              ? "Nous sélectionnons vos premiers profils. Ils apparaîtront ici, avec la raison de chaque choix."
+              : "Aucun profil en attente de votre avis."}
           </p>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {shown.map((c) => {
-            const isOpen = expanded === c.applicationId;
-            const screener = c.bio;
-
-            return (
-              <div
-                key={c.id}
-                className="q-card"
-                style={{ padding: "0", overflow: "hidden", borderColor: tab === "pending" && c.score >= 4 ? "var(--color-accent-light)" : undefined }}
-              >
-                {/* Card header */}
-                <div style={{ padding: "18px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
-                    {/* Avatar */}
-                    <div style={{
-                      width: "38px",
-                      height: "38px",
-                      background: "var(--color-accent-light)",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontFamily: "var(--font-display)",
-                      fontSize: "17px",
-                      fontStyle: "normal",
-                      color: "var(--color-accent)",
-                      flexShrink: 0,
-                    }}>
-                      {c.name[0]}
-                    </div>
-
-                    <div>
-                      <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "3px" }}>
-                        {c.name}
-                      </div>
-                      <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>
-                        {[c.age > 0 ? `${c.age} ans` : null, c.city, c.profession].filter(Boolean).join(" · ")}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
-                    {/* Score dots */}
-                    <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
-                      {[1,2,3,4,5].map((n) => (
-                        <div key={n} style={{
-                          width: "6px", height: "6px", borderRadius: "50%",
-                          background: n <= c.score ? "var(--color-accent)" : "var(--color-border-base)",
-                        }} />
-                      ))}
-                    </div>
-
-                    {/* Actions */}
-                    {tab === "pending" && (
-                      <div style={{ display: "flex", gap: "6px" }}>
-                        <button
-                          onClick={() => handleAccept(c)}
-                          disabled={!!loading}
-                          className="q-btn q-btn-primary"
-                          style={{ fontSize: "12px", padding: "6px 14px" }}
-                        >
-                          {loading === c.applicationId ? "…" : "Accepter"}
-                          <span style={{ opacity: 0.7, fontWeight: 400 }}> −1cr</span>
-                        </button>
-                        <button
-                          onClick={() => handleReject(c)}
-                          disabled={!!loading}
-                          className="q-btn q-btn-ghost"
-                          style={{ fontSize: "12px", padding: "6px 12px" }}
-                        >
-                          Refuser
-                        </button>
-                      </div>
-                    )}
-
-                    {tab === "accepted" && (
-                      <span style={{ fontSize: "12px", color: "var(--color-info)", fontWeight: 500 }}>
-                        Invitation envoyée
-                      </span>
-                    )}
-                    {tab === "confirmed" && (
-                      <span style={{ fontSize: "12px", color: "var(--color-success)", fontWeight: 600 }}>
-                        ✓ Confirmé
-                      </span>
-                    )}
-
-                    {/* Expand toggle */}
-                    <button
-                      onClick={() => setExpanded(isOpen ? null : c.applicationId)}
-                      style={{
-                        width: "28px", height: "28px",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        background: "none", border: "1px solid var(--color-border-base)",
-                        borderRadius: "2px", cursor: "pointer",
-                        fontSize: "12px", color: "var(--color-text-tertiary)",
-                        transform: isOpen ? "rotate(180deg)" : "none",
-                        transition: "transform 0.2s",
-                      }}
-                    >
-                      ↓
-                    </button>
-                  </div>
-                </div>
-
-                {/* Interests */}
-                <div style={{ padding: "0 20px 14px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                  {c.interests.map((interest) => (
-                    <span key={interest} className="q-tag" style={{ color: "var(--color-text-tertiary)", borderColor: "var(--color-border-base)", fontSize: "10px" }}>
-                      {interest}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Expanded : résumé marque (IA) en priorité, sinon bio */}
-                {isOpen && (c.brandSummary || screener) && (
-                  <div style={{
-                    padding: "16px 20px",
-                    background: "var(--color-surface-2)",
-                    borderTop: "1px solid var(--color-border-base)",
-                  }}>
-                    <p className="q-label" style={{ marginBottom: "8px", color: c.brandSummary ? "var(--color-accent)" : undefined }}>
-                      {c.brandSummary ? "✦ Synthèse du profil" : "Profil"}
-                    </p>
-                    <p style={{ fontSize: "13px", color: "var(--color-text-primary)", margin: 0, lineHeight: 1.65 }}>
-                      {c.brandSummary || screener}
-                    </p>
+        ) : (
+          <div className={s.grid2} style={{ marginTop: 12 }}>
+            {toReview.map((c) => (
+              <article key={c.applicationId} className={s.card} style={{ display: "grid", gap: 14, alignContent: "start" }}>
+                <Person c={c} />
+                {c.why && (
+                  <div className={s.cardSoft} style={{ padding: "12px 14px" }}>
+                    <p className={s.eyebrow} style={{ fontSize: 13, margin: "0 0 4px" }}>Pourquoi ce profil</p>
+                    <p style={{ margin: 0, fontSize: 15 }}>{c.why}</p>
                   </div>
                 )}
-              </div>
-            );
-          })}
-        </div>
+                {c.summary && <p className={s.muted} style={{ margin: 0, fontSize: 15 }}>{c.summary}</p>}
+                {error?.id === c.applicationId && <p className={s.error}>{error.msg}</p>}
+                <div className={s.row}>
+                  <button type="button" className={s.btn} disabled={busy === c.applicationId || credits < 1}
+                    onClick={() => run(c.applicationId, () => acceptApplication(c.applicationId))}>
+                    {busy === c.applicationId ? "…" : "Je veux l'entendre"}
+                  </button>
+                  <button type="button" className={`${s.btn} ${s.btnGhost}`} disabled={busy === c.applicationId}
+                    onClick={() => run(c.applicationId, () => rejectApplication(c.applicationId))}>
+                    Décliner
+                  </button>
+                </div>
+                {credits < 1 && <Link href="/brand/account" className={s.small} style={{ color: "var(--accent)" }}>Ajouter des crédits pour accepter ce profil →</Link>}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── Planification ── */}
+      {scheduling.length > 0 && (
+        <section className={s.sectionGap}>
+          <h2 className={s.h2}>Planification <span className={s.faint}>({scheduling.length})</span></h2>
+          <div className={s.stack} style={{ marginTop: 12 }}>
+            {scheduling.map((c) => (
+              <article key={c.applicationId} className={s.card}>
+                <div className={s.spread}>
+                  <Person c={c} />
+                  {c.step === "brand_to_choose"
+                    ? <span className={`${s.badge} ${s.badgeAccent}`}>À vous de choisir</span>
+                    : <span className={`${s.badge} ${s.badgeWait}`}>{c.step === "participant_to_choose" ? "Confirmation en attente" : "Disponibilités en attente"}</span>}
+                </div>
+                {c.step === "brand_to_choose" ? (
+                  <>
+                    <p className={s.muted} style={{ margin: "14px 0 10px" }}>
+                      {c.name.split(" ")[0]} propose ces créneaux. Choisissez-en un : l&apos;entretien est confirmé immédiatement, pour vous deux.
+                    </p>
+                    <div className={s.slots}>
+                      {c.proposals.map((iso, i) => (
+                        <button key={iso} type="button" className={s.slot} disabled={busy === c.applicationId} onClick={() => choose(c, i)}>
+                          <span style={{ textTransform: "capitalize", fontWeight: 600 }}>{fmtDay(iso)}</span>
+                          <small>{fmtTime(iso)} · choisir</small>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className={s.muted} style={{ margin: "14px 0 0" }}>
+                    {c.step === "participant_to_choose"
+                      ? "Des créneaux lui ont été proposés. Vous serez prévenu dès qu'il en choisit un."
+                      : "Nous lui avons demandé ses disponibilités. Vous recevrez un email dès qu'il en propose."}
+                  </p>
+                )}
+                {error?.id === c.applicationId && <p className={s.error}>{error.msg}</p>}
+              </article>
+            ))}
+          </div>
+        </section>
       )}
 
+      {/* ── Entretiens ── */}
+      {interviews.length > 0 && (
+        <section className={s.sectionGap}>
+          <h2 className={s.h2}>Entretiens <span className={s.faint}>({interviews.length})</span></h2>
+          <div className={s.card} style={{ marginTop: 12, padding: 0 }}>
+            {interviews.map((c, i) => (
+              <div key={c.applicationId} className={s.spread} style={{ padding: "16px 20px", borderTop: i ? "1px solid var(--line)" : 0 }}>
+                <Person c={c} />
+                <div className={s.row}>
+                  {c.interview && <span className={s.small} style={{ textTransform: "capitalize" }}>{fmtDay(c.interview.scheduledAt)} · {fmtTime(c.interview.scheduledAt)}</span>}
+                  {c.status === "NO_SHOW" && <span className={`${s.badge} ${s.badgeBad}`}>Absent</span>}
+                  {c.status === "COMPLETED" && (
+                    <span className={`${s.badge} ${c.interview?.transcriptReady ? s.badgeOk : s.badgeWait}`}>
+                      {c.interview?.transcriptReady ? "Transcription prête" : "Transcription en cours"}
+                    </span>
+                  )}
+                  {c.status === "CONFIRMED" && c.interview && (
+                    <Link href={`/brand/interview/${c.interview.id}`} className={`${s.btn} ${s.btnSm}`}>Ouvrir la salle</Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {declined.length > 0 && (
+        <section className={s.sectionGap}>
+          <button type="button" className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} onClick={() => setShowDeclined((v) => !v)} aria-expanded={showDeclined}>
+            {showDeclined ? "Masquer" : "Voir"} les profils déclinés ({declined.length})
+          </button>
+          {showDeclined && (
+            <div className={s.grid2} style={{ marginTop: 12 }}>
+              {declined.map((c) => <div key={c.applicationId} className={s.cardSoft}><Person c={c} /></div>)}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
