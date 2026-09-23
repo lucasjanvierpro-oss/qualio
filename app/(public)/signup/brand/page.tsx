@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { signupBrand } from "@/app/actions/auth";
+import SocialSignIn from "@/components/auth/SocialSignIn";
 
 type BrandForm = {
   companyName: string;
@@ -172,6 +173,8 @@ export default function BrandSignupPage() {
           {loading ? "Création du compte…" : "Créer mon compte"}
         </button>
       </form>
+
+      <SocialSignIn role="BRAND" label="ou créer un compte avec" />
 
       <p className="text-sm text-center" style={{ color: "var(--color-text-secondary)" }}>
         Déjà un compte ?{" "}

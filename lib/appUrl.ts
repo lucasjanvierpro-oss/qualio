@@ -14,8 +14,13 @@ const PUBLIC_DOMAIN = "https://www.rarelyst.co";
 const isLocal = (url: string) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(url);
 
 export function appUrl(): string {
+  // On ne refuse une adresse locale que sur Vercel, où elle est forcément
+  // fausse. En local, « next start » tourne aussi avec NODE_ENV=production :
+  // s'y fier couperait la connexion Google et LinkedIn pendant les tests, en
+  // renvoyant vers le site en ligne.
+  const onVercel = !!process.env.VERCEL;
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, "");
-  if (configured && !(process.env.NODE_ENV === "production" && isLocal(configured))) {
+  if (configured && !(onVercel && isLocal(configured))) {
     return configured;
   }
 

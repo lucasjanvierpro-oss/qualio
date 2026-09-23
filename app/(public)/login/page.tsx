@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { login } from "@/app/actions/auth";
+import SocialSignIn from "@/components/auth/SocialSignIn";
+import EmailCodeSignIn from "@/components/auth/EmailCodeSignIn";
 
 type LoginForm = { email: string; password: string };
 
@@ -100,6 +102,12 @@ export default function LoginPage() {
           {loading ? "Connexion…" : "Se connecter"}
         </button>
       </form>
+
+      <SocialSignIn />
+
+      <div className="text-center">
+        <EmailCodeSignIn />
+      </div>
 
       <p className="text-sm text-center" style={{ color: "var(--color-text-secondary)" }}>
         Pas encore de compte ?{" "}

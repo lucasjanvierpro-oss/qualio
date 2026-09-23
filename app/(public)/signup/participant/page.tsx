@@ -9,6 +9,7 @@ import { computeScore, levelFromScore, LEVEL_META } from "@/lib/onboarding/scori
 import { createFunnelAccount, saveFunnelStep, completeFunnel } from "@/app/actions/funnel";
 import VoiceInput from "@/components/onboarding/VoiceInput";
 import BadgeUpload from "@/components/onboarding/BadgeUpload";
+import SocialSignIn from "@/components/auth/SocialSignIn";
 
 const DRAFT = "rarelyst_funnel_draft";
 
@@ -341,6 +342,9 @@ export default function ParticipantFunnel() {
         {cur === "account" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <h1 style={{ fontSize: "26px", fontWeight: 800, color: "var(--color-plum-deep)", margin: 0 }}>{t.createProfile}</h1>
+            {/* LinkedIn remplit d'emblée le parcours professionnel, qui est
+                exactement ce qu'on cherche à qualifier chez un participant. */}
+            <SocialSignIn role="PARTICIPANT" label={lang === "fr" ? "ou remplir à la main" : "or fill in manually"} />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
               <div><label style={lbl}>{t.firstName}</label><input style={inp} value={data.firstName} onChange={(e) => up({ firstName: e.target.value })} /></div>
               <div><label style={lbl}>{t.lastName}</label><input style={inp} value={data.lastName} onChange={(e) => up({ lastName: e.target.value })} /></div>

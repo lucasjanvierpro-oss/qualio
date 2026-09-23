@@ -6,6 +6,13 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod/v4";
 import { appUrl } from "@/lib/appUrl";
 
+/** Où atterrit chaque rôle après connexion, quelle que soit la méthode. */
+const DESTINATIONS: Record<string, string> = {
+  BRAND: "/brand/dashboard",
+  PARTICIPANT: "/participant/dashboard",
+  ADMIN: "/admin",
+};
+
 // ─── Schemas ──────────────────────────────────────────────
 
 const BrandSignupSchema = z.object({
@@ -180,33 +187,102 @@ export async function login(formData: FormData) {
   // Role is stored in Supabase user_metadata — no DB query needed
   const role = (data.user?.user_metadata?.role as string) ?? "";
 
-  const destinations: Record<string, string> = {
-    BRAND: "/brand/dashboard",
-    PARTICIPANT: "/participant/dashboard",
-    ADMIN: "/admin",
-  };
-
-  redirect(destinations[role] ?? "/");
+  redirect(DESTINATIONS[role] ?? "/");
 }
 
 // ─── LinkedIn OAuth ────────────────────────────────────────
 
-export async function signInWithLinkedIn() {
+export type OAuthProvider = "google" | "linkedin_oidc";
+
+const PROVIDER_LABEL: Record<OAuthProvider, string> = {
+  google: "Google",
+  linkedin_oidc: "LinkedIn",
+};
+
+/**
+ * Connexion par Google ou LinkedIn.
+ *
+ * Le rôle voulu voyage dans l'URL de retour : sans lui, quelqu'un qui s'inscrit
+ * comme marque via Google serait créé comme participant, puisque le fournisseur
+ * ne transmet que l'identité, jamais l'intention.
+ *
+ * Les scopes ne sont pas précisés : Supabase envoie déjà « openid profile
+ * email » pour les deux. Les anciens scopes LinkedIn (r_liteprofile,
+ * r_emailaddress) appartiennent à une API abandonnée et font échouer l'appel.
+ */
+export async function signInWithProvider(provider: OAuthProvider, role?: "BRAND" | "PARTICIPANT") {
   const supabase = await createClient();
 
+  const callback = new URL(`${appUrl()}/auth/callback`);
+  if (role) callback.searchParams.set("role", role);
+
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "linkedin_oidc",
+    provider,
     options: {
-      scopes: "r_liteprofile r_emailaddress",
-      redirectTo: `${appUrl()}/auth/callback`,
+      redirectTo: callback.toString(),
+      // Sans « select_account », Google reconnecte en silence le dernier compte
+      // utilisé : impossible d'en changer sur un ordinateur partagé.
+      queryParams: provider === "google" ? { prompt: "select_account" } : undefined,
     },
   });
 
   if (error || !data.url) {
-    return { error: "Impossible de se connecter avec LinkedIn" };
+    return { error: `Connexion ${PROVIDER_LABEL[provider]} indisponible. Réessayez ou utilisez votre mot de passe.` };
   }
 
   redirect(data.url);
+}
+
+// ─── Code de vérification par email ────────────────────────
+
+/**
+ * Envoie un code à six chiffres pour se connecter sans mot de passe.
+ *
+ * Ne crée aucun compte : on ne veut pas qu'une faute de frappe dans l'adresse
+ * fabrique un compte vide. Le modèle d'email correspondant doit contenir
+ * {{ .Token }} dans Supabase, sinon c'est un lien magique qui part, pas un code.
+ */
+export async function sendEmailCode(email: string) {
+  const clean = email.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean)) {
+    return { error: "Adresse email invalide." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithOtp({
+    email: clean,
+    options: { shouldCreateUser: false },
+  });
+
+  if (error) {
+    // On ne dit jamais si l'adresse existe : ce serait un moyen de vérifier
+    // qui est inscrit sur Rarelyst.
+    if (error.status === 429) {
+      return { error: "Trop de demandes. Patientez quelques minutes." };
+    }
+    return { ok: true as const };
+  }
+  return { ok: true as const };
+}
+
+/** Vérifie le code reçu et ouvre la session. */
+export async function verifyEmailCode(email: string, code: string) {
+  const token = code.replace(/\D/g, "");
+  if (token.length !== 6) return { error: "Le code comporte six chiffres." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: email.trim().toLowerCase(),
+    token,
+    type: "email",
+  });
+
+  if (error || !data.user) {
+    return { error: "Code invalide ou expiré. Demandez-en un nouveau." };
+  }
+
+  const role = String(data.user.user_metadata?.role ?? "").toUpperCase();
+  redirect(DESTINATIONS[role] ?? "/");
 }
 
 // ─── Logout ────────────────────────────────────────────────
