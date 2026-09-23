@@ -41,6 +41,10 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Rarelyst" }],
   robots: { index: true, follow: true },
+  // Preuve à Google que le domaine nous appartient. Exigée pour faire vérifier
+  // la marque : sans elle, l'écran de connexion Google affiche l'identifiant du
+  // projet Supabase à la place de « Rarelyst ».
+  verification: { google: "GD1b47z_YZR2ABVvnmCosy9frwfHlJak0KZ69zfUokc" },
   alternates: { canonical: SITE_URL },
   openGraph: {
     title: "Rarelyst — Participants experts pour vos études qualitatives",
