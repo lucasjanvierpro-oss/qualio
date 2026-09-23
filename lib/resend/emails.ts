@@ -110,6 +110,21 @@ export async function sendStudySubmittedAdmin(studyTitle: string, brandName: str
   }));
 }
 
+/**
+ * Une marque demande l'accès à un profil « sur demande ».
+ * Ces profils ne s'achètent pas : la demande arrive chez Lucas, qui décide.
+ */
+export async function sendProfileRequested(participantName: string, brandProfileId: string) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return null;
+  return send(adminEmail, `Demande d'accès : ${participantName}`, layout({
+    title: "Demande d'accès à un profil",
+    body: `Une marque souhaite rencontrer <strong style="color:${INK}">${esc(participantName)}</strong>. Aucun crédit n'a été débité : c'est à vous d'accepter, de refuser, ou de proposer un tarif.`,
+    aside: `Marque : <strong>${esc(brandProfileId)}</strong>`,
+    cta: { label: "Voir les demandes", href: `${APP_URL}/admin` },
+  }));
+}
+
 export async function sendParticipantInvited(to: string, firstName: string, studyDescription: string, deadline: string) {
   return send(to, "Une marque veut vous entendre", layout({
     title: `Bonne nouvelle, ${esc(firstName)}.`,

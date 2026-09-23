@@ -58,6 +58,15 @@ enum RewardStatus {
   FAILED
 }
 
+/// Niveau d'accès d'un participant.
+/// STANDARD : la marque l'accepte elle-même, un crédit est débité.
+/// ON_REQUEST : profil exceptionnel. Aucun crédit ne peut l'acheter — la marque
+/// dépose une demande et le prix se négocie. Ces profils arrivent par Lucas.
+enum AccessTier {
+  STANDARD
+  ON_REQUEST
+}
+
 enum CreditTransactionType {
   PURCHASE
   CONSUME
@@ -107,6 +116,7 @@ model BrandProfile {
   creditTransactions CreditTransaction[]
   studies            Study[]
   messages           Message[]
+  profileRequests    ProfileRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -207,6 +217,11 @@ model ParticipantProfile {
   // Qualité
   participationCount Int     @default(0)
   averageRating      Float?
+  accessTier         AccessTier @default(STANDARD)
+  /// Ce que la marque lit à la place du prix, ex. « Sur demande · 48 h de délai ».
+  accessNote         String?
+  profileRequests    ProfileRequest[]
+
   isBlacklisted      Boolean @default(false)
   blacklistReason    String?
 
@@ -324,6 +339,7 @@ model Study {
 
   timeSlots          StudyTimeSlot[]
   applications       Application[]
+  profileRequests    ProfileRequest[]
   messages           Message[]
   creditTransactions CreditTransaction[]
   report             StudyReport?
@@ -512,4 +528,30 @@ model InviteCode {
   createdAt            DateTime  @default(now())
 
   @@map("invite_codes")
+}
+
+
+/// Demande d'accès à un profil « sur demande ».
+/// Elle ne débite aucun crédit et ne crée pas de candidature : elle ouvre une
+/// conversation entre la marque et Rarelyst.
+model ProfileRequest {
+  id                   String @id @default(cuid())
+  brandProfileId       String
+  participantProfileId String
+  studyId              String?
+
+  message    String?
+  status     String  @default("pending") // pending | accepted | declined
+  adminReply String?
+
+  brandProfile       BrandProfile       @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
+  participantProfile ParticipantProfile @relation(fields: [participantProfileId], references: [id], onDelete: Cascade)
+  study              Study?             @relation(fields: [studyId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([brandProfileId])
+  @@index([status])
+  @@map("profile_requests")
 }

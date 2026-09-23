@@ -270,3 +270,148 @@
 @media (prefers-reduced-motion: reduce) {
   .card, .chev { transition: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Pastilles de certification
+   Trois au maximum : des pastilles qui ne veulent rien dire
+   dévaluent celles qui comptent. Le nombre d'entretiens déjà menés
+   convainc souvent plus une marque que la pièce d'identité.
+   ═══════════════════════════════════════════════════════════════ */
+
+.seals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 550;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  background: var(--bg);
+  white-space: nowrap;
+}
+
+.sealOk {
+  border-color: color-mix(in srgb, var(--ok) 32%, transparent);
+  color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.sealDot {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Profil sur demande
+   Aucun crédit ne peut l'acheter. La carte doit se distinguer au
+   premier coup d'œil dans une grille, sans clinquant : fond sombre,
+   filet dégradé en haut, et « sur demande » là où les autres
+   affichent un prix.
+   ═══════════════════════════════════════════════════════════════ */
+
+.card[data-tier="ON_REQUEST"] {
+  background: var(--g1);
+  border-color: transparent;
+  color: #fff;
+  position: relative;
+}
+
+.card[data-tier="ON_REQUEST"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, var(--g2), var(--g3), var(--accent-dim));
+}
+
+.card[data-tier="ON_REQUEST"]:hover {
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 18px 40px -24px rgba(107, 67, 219, 0.7);
+}
+
+.card[data-tier="ON_REQUEST"] .facts,
+.card[data-tier="ON_REQUEST"] .also,
+.card[data-tier="ON_REQUEST"] .portrait,
+.card[data-tier="ON_REQUEST"] .scoreTop { color: #c3b8d4; }
+
+.card[data-tier="ON_REQUEST"] .blockTitle { color: #8d80a3; }
+
+.card[data-tier="ON_REQUEST"] .why {
+  background: rgba(255, 255, 255, 0.06);
+  border-left-color: var(--g3);
+}
+
+.card[data-tier="ON_REQUEST"] .ref,
+.card[data-tier="ON_REQUEST"] .seal {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #d7cee6;
+}
+
+.card[data-tier="ON_REQUEST"] .sealOk {
+  color: #86e0ae;
+  border-color: rgba(134, 224, 174, 0.3);
+}
+
+.card[data-tier="ON_REQUEST"] .scores {
+  background: rgba(255, 255, 255, 0.04);
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.card[data-tier="ON_REQUEST"] .scoreTop b { color: #fff; }
+.card[data-tier="ON_REQUEST"] .gauge { background: rgba(255, 255, 255, 0.14); }
+
+.card[data-tier="ON_REQUEST"] .actions { border-top-color: rgba(255, 255, 255, 0.1); }
+.card[data-tier="ON_REQUEST"] .moreBtn { color: #c3b8d4; }
+.card[data-tier="ON_REQUEST"] .moreBtn:hover { color: #fff; }
+.card[data-tier="ON_REQUEST"] .refMore { color: #8d80a3; }
+
+.tierMark {
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--g1);
+  background: linear-gradient(120deg, #e7dcff, #fff);
+  white-space: nowrap;
+}
+
+.onRequest {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: #c3b8d4;
+  white-space: nowrap;
+}
+
+/* Le bouton clair sur fond sombre : c'est l'action principale de la carte. */
+.askBtn {
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--g1);
+  background: #fff;
+}
+
+.askBtn:hover { background: #ece5fb; }
+.askBtn:disabled { opacity: 0.5; cursor: default; }
+
+.askDone {
+  font-size: 13.5px;
+  color: #b9a9e8;
+}

@@ -31,8 +31,12 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
             interview: { select: { id: true, scheduledAt: true, status: true, transcriptStatus: true } },
             participantProfile: {
               select: {
+                id: true,
                 firstName: true, lastName: true, dateOfBirth: true, city: true,
                 profession: true, brandSummary: true,
+                accessTier: true, accessNote: true,
+                linkedinVerified: true, idVerificationStatus: true,
+                _count: { select: { applications: { where: { status: "COMPLETED" } } } },
                 ghostFile: {
                   select: {
                     profileType: true, primaryExpertise: true, secondaryExpertises: true,
@@ -74,8 +78,14 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
       age: age(p.dateOfBirth),
       city: p.city,
       profession: p.profession,
+      participantProfileId: p.id,
       portrait: p.brandSummary,
       why: a.adminMatchNote,
+      tier: p.accessTier,
+      accessNote: p.accessNote,
+      idVerified: p.idVerificationStatus === "VERIFIED",
+      linkedinVerified: p.linkedinVerified,
+      interviewsDone: p._count.applications,
       kind: g?.profileType ?? null,
       expertise: g?.primaryExpertise ?? null,
       alsoKnows: g?.secondaryExpertises ?? [],

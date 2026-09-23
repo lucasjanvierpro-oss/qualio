@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import s from "@/components/rl/rl.module.css";
 import p from "./profile.module.css";
 import { acceptApplication, rejectApplication } from "@/app/actions/studies";
+import { requestProfile } from "@/app/actions/profileRequests";
 
 export type Candidate = {
   applicationId: string;
@@ -14,8 +15,14 @@ export type Candidate = {
   age: number | null;
   city: string | null;
   profession: string | null;
+  participantProfileId: string;
   portrait: string | null;
   why: string | null;
+  tier: "STANDARD" | "ON_REQUEST";
+  accessNote: string | null;
+  idVerified: boolean;
+  linkedinVerified: boolean;
+  interviewsDone: number;
   kind: string | null;
   expertise: string | null;
   alsoKnows: string[];
@@ -66,6 +73,39 @@ function Person({ c }: { c: Candidate }) {
 }
 
 
+
+const TICK = (
+  <svg className={p.sealDot} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <circle cx="8" cy="8" r="7" fill="currentColor" opacity=".18" />
+    <path d="M4.6 8.3l2.2 2.1L11.4 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+/**
+ * Trois pastilles au maximum. Le nombre d'entretiens déjà menés convainc
+ * souvent plus une marque que la pièce d'identité : c'est un historique, pas
+ * une déclaration.
+ */
+function Seals({ c }: { c: Candidate }) {
+  const items: { key: string; label: string; strong: boolean }[] = [];
+  if (c.idVerified) items.push({ key: "id", label: "Identité vérifiée", strong: true });
+  if (c.linkedinVerified) items.push({ key: "li", label: "LinkedIn vérifié", strong: true });
+  if (c.interviewsDone > 0) {
+    items.push({ key: "xp", label: `${c.interviewsDone} entretien${c.interviewsDone > 1 ? "s" : ""}`, strong: false });
+  }
+  if (!items.length) return null;
+  return (
+    <div className={p.seals}>
+      {items.map((i) => (
+        <span key={i.key} className={`${p.seal} ${i.strong ? p.sealOk : ""}`}>
+          {i.strong && TICK}
+          {i.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 const KIND_LABEL: Record<string, string> = {
   insider: "Insider industrie",
   expert: "Expert du sujet",
@@ -91,7 +131,7 @@ function Score({ label, value }: { label: string; value: number | null }) {
  * la décision prise, il ne sert pas à la prendre.
  */
 function ProfileCard({
-  c, credits, busy, error, onAccept, onReject,
+  c, credits, busy, error, onAccept, onReject, onRequest, requested,
 }: {
   c: Candidate;
   credits: number;
@@ -99,9 +139,12 @@ function ProfileCard({
   error: string | null;
   onAccept: () => void;
   onReject: () => void;
+  onRequest: () => void;
+  requested: boolean;
 }) {
   const [openPortrait, setOpenPortrait] = useState(false);
   const [allRefs, setAllRefs] = useState(false);
+  const onRequestOnly = c.tier === "ON_REQUEST";
 
   const facts = [c.profession, c.age ? `${c.age} ans` : null, c.city, c.generation]
     .filter(Boolean).join(" · ");
@@ -111,14 +154,17 @@ function ProfileCard({
   const hasScores = c.scores.expertise !== null || c.scores.vocabulaire !== null || c.scores.authenticite !== null;
 
   return (
-    <article className={p.card} data-busy={busy}>
+    <article className={p.card} data-busy={busy} data-tier={c.tier}>
       <div className={p.head}>
         <span className={p.portraitInitial} aria-hidden="true">{c.name[0]}</span>
         <div className={p.identity}>
           <div className={p.name}>{c.name}</div>
           {facts && <div className={p.facts}>{facts}</div>}
+          <Seals c={c} />
         </div>
-        {kind && <span className={p.kind}>{kind}</span>}
+        {onRequestOnly
+          ? <span className={p.tierMark}>Sur demande</span>
+          : kind && <span className={p.kind}>{kind}</span>}
       </div>
 
       {c.why && <p className={p.why}>{c.why}</p>}
@@ -176,15 +222,30 @@ function ProfileCard({
       {error && <p className={s.error} style={{ margin: "0 20px 10px" }}>{error}</p>}
 
       <div className={p.actions}>
-        <button type="button" className={s.btn} disabled={busy || credits < 1} onClick={onAccept}>
-          Je veux l&apos;entendre
-        </button>
-        <button type="button" className={`${s.btn} ${s.btnGhost}`} disabled={busy} onClick={onReject}>
-          Décliner
-        </button>
-        {credits >= 1
-          ? <span className={p.cost}>1 crédit</span>
-          : <Link href="/brand/account" className={p.cost} style={{ color: "var(--accent)" }}>Ajouter des crédits →</Link>}
+        {onRequestOnly ? (
+          <>
+            {requested ? (
+              <span className={p.askDone}>Demande envoyée. Nous revenons vers vous sous 48 h.</span>
+            ) : (
+              <button type="button" className={p.askBtn} disabled={busy} onClick={onRequest}>
+                Demander ce profil
+              </button>
+            )}
+            <span className={p.onRequest}>{c.accessNote ?? "Aucun crédit débité"}</span>
+          </>
+        ) : (
+          <>
+            <button type="button" className={s.btn} disabled={busy || credits < 1} onClick={onAccept}>
+              Je veux l&apos;entendre
+            </button>
+            <button type="button" className={`${s.btn} ${s.btnGhost}`} disabled={busy} onClick={onReject}>
+              Décliner
+            </button>
+            {credits >= 1
+              ? <span className={p.cost}>1 crédit</span>
+              : <Link href="/brand/account" className={p.cost} style={{ color: "var(--accent)" }}>Ajouter des crédits →</Link>}
+          </>
+        )}
       </div>
     </article>
   );
@@ -196,6 +257,9 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
   const [error, setError] = useState<{ id: string; msg: string } | null>(null);
   const [showDeclined, setShowDeclined] = useState(false);
   const [choosing, setChoosing] = useState<string | null>(null);
+  // Un profil sur demande ne quitte pas la liste : la marque doit continuer à
+  // le voir pendant que Rarelyst traite la demande.
+  const [requested, setRequested] = useState<string[]>([]);
 
   // La décision part au serveur, mais la fiche quitte la liste tout de suite.
   // Un aller-retour complet prenait plus d'une seconde : la marque cliquait
@@ -225,6 +289,22 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
         // La fiche revient d'elle-même : l'état optimiste retombe à la fin
         // de la transition.
         setError({ id, msg });
+      }
+      router.refresh();
+    });
+  }
+
+  function ask(c: Candidate) {
+    setError(null);
+    startTransition(async () => {
+      const r = await requestProfile(c.participantProfileId, study.id);
+      if (r?.error) {
+        const msg = r.error === "already_requested" ? "Vous avez déjà demandé ce profil."
+          : r.error === "session_expired" ? "Votre session a expiré. Reconnectez-vous."
+          : "Demande impossible pour le moment.";
+        setError({ id: c.applicationId, msg });
+      } else {
+        setRequested((v) => [...v, c.applicationId]);
       }
       router.refresh();
     });
@@ -280,10 +360,12 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
                 key={c.applicationId}
                 c={c}
                 credits={credits}
-                busy={decided.includes(c.applicationId)}
+                busy={c.tier === "STANDARD" && decided.includes(c.applicationId)}
                 error={error?.id === c.applicationId ? error.msg : null}
                 onAccept={() => decide(c.applicationId, () => acceptApplication(c.applicationId))}
                 onReject={() => decide(c.applicationId, () => rejectApplication(c.applicationId))}
+                onRequest={() => ask(c)}
+                requested={requested.includes(c.applicationId)}
               />
             ))}
           </div>
