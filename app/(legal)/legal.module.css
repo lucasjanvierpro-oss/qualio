@@ -1,0 +1,206 @@
+/* ═══════════════════════════════════════════════════════════════
+   Pages légales : mentions, confidentialité, conditions.
+
+   Un texte juridique se lit mal quand il est trop large ou trop
+   serré. Colonne étroite, interligne généreux, titres qui ancrent
+   le regard. Même police et mêmes couleurs que le reste du site.
+   ═══════════════════════════════════════════════════════════════ */
+
+.root {
+  --bg: #ffffff;
+  --ink: #1c1624;
+  --ink-2: #5f5868;
+  --ink-3: #9c95a4;
+  --line: #eae6ee;
+  --soft: #f6f4f8;
+  --accent: #6a43db;
+  --accent-soft: #efeafd;
+  --wait: #8a5d12;
+  --wait-soft: #fbf1de;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.root a { color: inherit; }
+.root :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* ── En-tête ───────────────────────────────────────── */
+.top {
+  border-bottom: 1px solid var(--line);
+  padding: 18px 24px;
+}
+
+.topInner {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wordmark {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+/* ── Navigation entre les trois pages ──────────────── */
+.tabs {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  font-size: 13.5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  color: var(--ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tab:hover { background: var(--soft); color: var(--ink); }
+
+.tabOn {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 550;
+}
+
+/* ── Corps ─────────────────────────────────────────── */
+.page {
+  flex: 1;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 48px 24px 96px;
+}
+
+.h1 {
+  font-size: clamp(28px, 5vw, 38px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  margin: 0 0 10px;
+}
+
+.updated {
+  font-size: 13.5px;
+  color: var(--ink-3);
+  margin: 0 0 8px;
+}
+
+.lead {
+  font-size: 17.5px;
+  color: var(--ink-2);
+  margin: 0 0 40px;
+}
+
+.h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 40px 0 12px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.h3 {
+  font-size: 16.5px;
+  font-weight: 600;
+  margin: 24px 0 8px;
+}
+
+.page p { margin: 0 0 14px; }
+.page ul { margin: 0 0 14px; padding-left: 22px; }
+.page li { margin: 5px 0; }
+.page strong { font-weight: 600; }
+
+/* ── Tableau des sous-traitants et des durées ──────── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.5px;
+  margin: 8px 0 18px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.table th {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-bottom-color: var(--ink-3);
+}
+
+.table td:first-child { font-weight: 550; white-space: nowrap; }
+
+/* ── Encadrés ──────────────────────────────────────── */
+.note {
+  background: var(--soft);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 15px;
+}
+
+.note p:last-child { margin-bottom: 0; }
+
+.todo {
+  background: var(--wait-soft);
+  border: 1px dashed var(--wait);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 15px;
+  color: var(--wait);
+}
+
+.todo p:last-child { margin-bottom: 0; }
+
+/* ── Pied de page ──────────────────────────────────── */
+.foot {
+  border-top: 1px solid var(--line);
+  padding: 22px 24px 40px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.footInner {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.footInner a { color: var(--ink-2); text-decoration: none; }
+.footInner a:hover { color: var(--accent); }
+.spacer { margin-left: auto; }
+
+@media (max-width: 560px) {
+  .topInner { flex-wrap: wrap; }
+  .tabs { margin-left: 0; width: 100%; }
+  .page { padding: 32px 20px 72px; }
+  .spacer { margin-left: 0; }
+}

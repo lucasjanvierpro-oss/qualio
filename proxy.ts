@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_ROUTES = ["/", "/login", "/signup/brand", "/signup/participant", "/pricing"];
+// Les pages légales doivent être lisibles sans compte : un participant les
+// consulte avant de s'inscrire, et Google les vérifie pour publier
+// l'application de connexion. Sans cette ligne, elles redirigent vers /login.
+const PUBLIC_ROUTES = [
+  "/", "/login", "/signup/brand", "/signup/participant", "/pricing",
+  "/mentions-legales", "/confidentialite", "/conditions",
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

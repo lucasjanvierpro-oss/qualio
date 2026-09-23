@@ -187,7 +187,7 @@ export default function Landing() {
           </div>
           <div className={styles.footBottom}>
             <span className={styles.brand}><Logo size={24} />Rarelyst</span>
-            <nav><Link href="/login">Connexion</Link><a href="mailto:contact@rarelyst.co">Contact</a></nav>
+            <nav><Link href="/login">Connexion</Link><a href="mailto:contact@rarelyst.co">Contact</a><Link href="/confidentialite">Confidentialité</Link><Link href="/conditions">Conditions</Link><Link href="/mentions-legales">Mentions légales</Link></nav>
             <span>© 2026</span>
           </div>
         </div>
