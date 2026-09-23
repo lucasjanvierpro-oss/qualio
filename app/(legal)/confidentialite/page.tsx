@@ -106,7 +106,32 @@ export default function Confidentialite() {
         accède ensuite à l&apos;enregistrement et à la transcription de cet entretien.
       </p>
 
-      <h2 className={s.h2}>5. Avec qui nous partageons</h2>
+      <h2 className={s.h2}>5. Qui décide quoi : responsable et sous-traitant</h2>
+      <p>
+        Deux situations coexistent et n&apos;obéissent pas aux mêmes règles.
+      </p>
+      <ul>
+        <li>
+          <strong>Pour le panel</strong> — votre profil, vos disponibilités, votre vérification
+          d&apos;identité, votre rémunération — Rarelyst est{" "}
+          <strong>responsable de traitement</strong> : c&apos;est nous qui décidons pourquoi et
+          comment ces données sont utilisées, et c&apos;est à nous que vous adressez vos demandes.
+        </li>
+        <li>
+          <strong>Pour le contenu d&apos;un entretien</strong> — ce que vous dites,
+          l&apos;enregistrement, la transcription — la marque commanditaire devient{" "}
+          <strong>responsable de traitement</strong>{" "}pour ses propres finalités de recherche, et
+          Rarelyst agit comme <strong>sous-traitant</strong>{" "}pour son compte.
+        </li>
+      </ul>
+      <p>
+        Concrètement : si vous voulez faire supprimer votre profil, écrivez-nous. Si vous voulez
+        faire supprimer ce que vous avez dit à une marque, écrivez-nous aussi — nous relayons la
+        demande et supprimons notre copie. Les engagements qui lient la marque figurent dans
+        notre addendum de sous-traitance, que nous lui faisons signer.
+      </p>
+
+      <h2 className={s.h2}>6. Avec qui nous partageons</h2>
       <p>
         Nous faisons appel à des prestataires techniques qui agissent sur nos instructions.
         Aucun d&apos;eux n&apos;a le droit d&apos;utiliser vos données pour son propre compte.
@@ -141,7 +166,25 @@ export default function Confidentialite() {
         UE–États-Unis.
       </p>
 
-      <h2 className={s.h2}>6. Combien de temps nous conservons</h2>
+      <h2 className={s.h2}>7. Profilage et décisions automatisées</h2>
+      <p>
+        Nous utilisons des modèles de langage pour analyser les profils du panel et proposer ceux
+        qui correspondent au brief d&apos;une marque. Cette analyse produit un résumé, des
+        étiquettes de domaine et des indicateurs d&apos;expertise. Il s&apos;agit d&apos;un{" "}
+        <strong>profilage</strong>{" "}au sens du règlement européen.
+      </p>
+      <div className={s.note}>
+        <p>
+          <strong>Aucune décision vous concernant n&apos;est prise par la seule machine.</strong>{" "}
+          Le modèle réduit une longue liste à une sélection ; c&apos;est ensuite une personne de
+          l&apos;équipe Rarelyst qui choisit les profils proposés et rédige la justification de
+          chaque choix. Vous pouvez demander une explication, exprimer votre point de vue, ou
+          contester une sélection en écrivant à{" "}
+          <a href="mailto:contact@rarelyst.co">contact@rarelyst.co</a>.
+        </p>
+      </div>
+
+      <h2 className={s.h2}>8. Combien de temps nous conservons</h2>
       <table className={s.table}>
         <thead>
           <tr><th>Donnée</th><th>Durée</th></tr>
@@ -156,7 +199,7 @@ export default function Confidentialite() {
         </tbody>
       </table>
 
-      <h2 className={s.h2}>7. Vos droits</h2>
+      <h2 className={s.h2}>9. Vos droits</h2>
       <p>Vous pouvez à tout moment :</p>
       <ul>
         <li>accéder aux données que nous détenons sur vous et en obtenir une copie ;</li>
@@ -174,7 +217,7 @@ export default function Confidentialite() {
         <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">cnil.fr</a>.
       </p>
 
-      <h2 className={s.h2}>8. Sécurité</h2>
+      <h2 className={s.h2}>10. Sécurité</h2>
       <p>
         Les échanges avec le site sont chiffrés. Les mots de passe ne sont jamais stockés en
         clair. L&apos;accès aux données des participants est réservé aux personnes qui en ont
@@ -186,21 +229,55 @@ export default function Confidentialite() {
         informerions et préviendrions la CNIL dans les délais prévus par le règlement européen.
       </p>
 
-      <h2 className={s.h2}>9. Cookies</h2>
+      <h2 className={s.h2}>11. Cookies</h2>
       <p>
-        Nous déposons uniquement les cookies nécessaires à votre connexion et à la sécurité du
-        site. Ils ne servent à aucun suivi publicitaire et ne demandent donc pas votre
-        consentement préalable. Aucun cookie de mesure d&apos;audience tiers n&apos;est utilisé.
+        Nous déposons uniquement des cookies <strong>strictement nécessaires</strong>{" "}au
+        fonctionnement du service. Ils sont exemptés de consentement préalable au titre de
+        l&apos;article 82 de la loi Informatique et Libertés, ce qui explique l&apos;absence de
+        bandeau sur le site.
+      </p>
+      <table className={s.table}>
+        <thead>
+          <tr><th>Cookie</th><th>Rôle</th><th>Durée</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>sb-…-auth-token</td>
+            <td>Maintient votre session ouverte après connexion</td>
+            <td>1 heure, renouvelé tant que vous restez connecté</td>
+          </tr>
+          <tr>
+            <td>Jetons de sécurité</td>
+            <td>Protègent les formulaires contre les envois frauduleux</td>
+            <td>Le temps de la visite</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>Aucun cookie publicitaire, aucun traceur de réseau social, aucune mesure
+        d&apos;audience tierce</strong>{" "}n&apos;est utilisé. Nous ne revendons aucune donnée et ne
+        pratiquons aucun ciblage.
+      </p>
+      <p>
+        Vous pouvez supprimer ces cookies depuis les réglages de votre navigateur ; vous serez
+        alors déconnecté.
       </p>
 
-      <h2 className={s.h2}>10. Mineurs</h2>
+      <h2 className={s.h2}>12. Mineurs</h2>
       <p>
         Le service est réservé aux personnes majeures. Nous ne collectons pas sciemment de
         données concernant des mineurs. Si vous constatez qu&apos;un mineur s&apos;est inscrit,
         écrivez-nous et nous supprimerons le compte.
       </p>
 
-      <h2 className={s.h2}>11. Modifications</h2>
+      <h2 className={s.h2}>13. Changement de prestataire</h2>
+      <p>
+        Nous pouvons changer de prestataire technique. Dans ce cas, le tableau de la section 6 est
+        mis à jour et les utilisateurs inscrits sont prévenus par email au moins trente jours
+        avant, afin de pouvoir s&apos;y opposer en fermant leur compte s&apos;ils le souhaitent.
+      </p>
+
+      <h2 className={s.h2}>14. Modifications</h2>
       <p>
         Cette politique peut évoluer. En cas de changement important, nous en informerons les
         utilisateurs inscrits par email avant son entrée en vigueur. La date de dernière mise à

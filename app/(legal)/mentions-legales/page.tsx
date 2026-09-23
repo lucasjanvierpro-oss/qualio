@@ -87,6 +87,15 @@ export default function MentionsLegales() {
         droits d&apos;accès, de rectification et de suppression.
       </p>
 
+      <h2 className={s.h2}>Accessibilité</h2>
+      <p>
+        Nous cherchons à rendre le site utilisable par tous : contrastes suffisants, navigation au
+        clavier, textes redimensionnables, respect du réglage système « animations réduites ».
+        Aucun audit de conformité n&apos;a encore été mené. Si une page vous pose une difficulté,
+        écrivez-nous : nous la corrigeons en priorité et vous transmettons l&apos;information
+        recherchée par un autre moyen.
+      </p>
+
       <h2 className={s.h2}>Médiation de la consommation</h2>
       <p>
         Conformément au code de la consommation, un consommateur peut recourir gratuitement à un
