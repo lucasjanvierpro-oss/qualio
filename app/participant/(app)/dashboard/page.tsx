@@ -246,7 +246,10 @@ export default async function ParticipantDashboard() {
                     <div style={{ fontSize: "10px", color: "var(--color-text-tertiary)", marginTop: "3px" }}>récompense</div>
                   </div>
                   <Link
-                    href={`/participant/studies/${app.study.id}`}
+                    // La page attend l'identifiant de la CANDIDATURE, pas celui de l'étude :
+                    // un participant peut candidater à plusieurs études, et c'est sa
+                    // candidature qui porte ses créneaux et son entretien.
+                    href={`/participant/studies/${app.id}`}
                     className="q-btn q-btn-primary"
                     style={{ fontSize: "12px", padding: "8px 16px" }}
                   >
