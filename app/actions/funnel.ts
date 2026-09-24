@@ -11,20 +11,14 @@ import { generateGhostFile } from "@/lib/participants/ghostFile";
 import { analyzeLinks, type LinkInput } from "@/lib/participants/links";
 import { appUrl } from "@/lib/appUrl";
 
-type AccountInput = {
-  firstName: string; lastName: string; email: string; password: string;
-  dateOfBirth: string; gender: string; city: string; country: string;
-};
-
-// ── Étape 0 : création du compte + profil ────────────────────────────
-export async function createFunnelAccount(input: AccountInput): Promise<{ ok: true } | { error: string }> {
-  const { email, password, firstName, lastName, dateOfBirth, gender, city, country } = input;
-  if (!email || !password || password.length < 8) return { error: "Email et mot de passe (8 caractères min) requis." };
-  if (!firstName.trim() || !lastName.trim() || !dateOfBirth) return { error: "Prénom, nom et date de naissance requis." };
-
-  // Validation 18+
-  const age = Math.floor((Date.now() - new Date(dateOfBirth).getTime()) / (365.25 * 24 * 3600 * 1000));
-  if (age < 18) return { error: "Vous devez avoir 18 ans ou plus." };
+// ── Étape 0 : le compte, et rien d'autre ─────────────────────────────
+// Même chemin qu'une connexion Google ou LinkedIn : on crée d'abord le compte,
+// le profil se remplit ensuite. Google et LinkedIn ne transmettent que le nom,
+// l'email et la photo — jamais la date de naissance, le genre ou la ville.
+export async function createFunnelAccount(input: { email: string; password: string }): Promise<{ ok: true } | { error: string }> {
+  const email = input.email.trim().toLowerCase();
+  const { password } = input;
+  if (!email.includes("@") || !password || password.length < 8) return { error: "Email et mot de passe (8 caractères min) requis." };
 
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -40,7 +34,7 @@ export async function createFunnelAccount(input: AccountInput): Promise<{ ok: tr
   }
   if (!authData.user) return { error: "Erreur lors de la création du compte." };
 
-  // Auto-confirm (V1) puis session
+  // Le tunnel continue sans attendre l'email : on confirme d'office.
   const service = await createServiceClient();
   await service.auth.admin.updateUserById(authData.user.id, { email_confirm: true });
 
@@ -50,18 +44,7 @@ export async function createFunnelAccount(input: AccountInput): Promise<{ ok: tr
         email,
         role: "PARTICIPANT",
         supabaseId: authData.user.id,
-        participantProfile: {
-          create: {
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            dateOfBirth: new Date(dateOfBirth),
-            gender: gender || null,
-            city: city.trim() || null,
-            country: country || "FR",
-            onboardingStep: 1,
-            onboardingStatus: "incomplete",
-          },
-        },
+        participantProfile: { create: { firstName: "", lastName: "", onboardingStep: 1, onboardingStatus: "incomplete" } },
       },
     });
   } catch {
@@ -185,6 +168,13 @@ export async function funnelSession(): Promise<
 export async function saveFunnelStep(step: number, s: Partial<OnboardingState>): Promise<{ ok: true } | { error: string }> {
   const profileId = await currentProfileId();
   if (!profileId) return { error: "Non authentifié." };
+
+  // La date de naissance arrive désormais après la création du compte :
+  // le contrôle d'âge se fait ici.
+  if (s.dateOfBirth) {
+    const age = Math.floor((Date.now() - new Date(s.dateOfBirth).getTime()) / (365.25 * 24 * 3600 * 1000));
+    if (!(age >= 18)) return { error: "Vous devez avoir 18 ans ou plus." };
+  }
 
   await prisma.participantProfile.update({
     where: { id: profileId },

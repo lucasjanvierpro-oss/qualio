@@ -89,9 +89,11 @@ export const EMPTY_ONBOARDING: OnboardingState = {
 
 // Écrans du tunnel, dans l'ordre. Source unique de vérité — la page et les
 // server actions s'y réfèrent plutôt que de compter les écrans à la main.
-// `pro` n'est montré qu'aux segments pro et hybride.
+// `account` ne crée que le compte (Google, LinkedIn ou email) ; `identity`
+// demande ensuite ce qu'aucun fournisseur ne transmet (naissance, genre,
+// ville). `pro` n'est montré qu'aux segments pro et hybride.
 export const FUNNEL_SCREENS = [
-  "account", "segment", "pro", "universes", "traits", "facts",
+  "account", "identity", "segment", "pro", "universes", "traits", "facts",
   "voice", "links", "demographics", "logistics", "charter", "final",
 ] as const;
 

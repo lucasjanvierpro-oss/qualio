@@ -25,9 +25,11 @@ const DRAFT = "rarelyst_funnel_v2";
 const T = {
   fr: {
     step: "Étape", of: "sur", back: "Retour", continue: "Continuer", finish: "Activer mon profil",
-    accountEyebrow: "Rejoindre Rarelyst", accountTitle: "Créez votre profil",
-    accountLead: "Une dizaine de minutes. Les marques ne voient jamais votre nom complet ni vos réponses brutes : seulement un portrait et vos médailles.",
-    orManual: "ou remplir à la main", firstName: "Prénom", lastName: "Nom", email: "Email", password: "Mot de passe",
+    accountEyebrow: "Rejoindre Rarelyst", accountTitle: "Créez votre compte",
+    accountLead: "Une dizaine de minutes en tout. Les marques ne voient jamais votre nom complet ni vos réponses brutes : seulement un portrait et vos médailles.",
+    orManual: "ou avec votre email",
+    identityEyebrow: "Vous", identityTitle: "Faisons connaissance",
+    identityLead: "Google et LinkedIn ne nous donnent que votre nom. Le reste sert à vous proposer les bonnes études : beaucoup visent un âge ou une ville.", firstName: "Prénom", lastName: "Nom", email: "Email", password: "Mot de passe",
     min8: "8 caractères minimum", dob: "Date de naissance", gender: "Genre", city: "Ville", country: "Pays", select: "Sélectionner…",
     genders: ["Homme", "Femme", "Non-binaire", "Homme transgenre", "Femme transgenre", "Je préfère ne pas préciser"],
     signedAs: "Connecté·e avec", under18: "Il faut avoir 18 ans ou plus.",
@@ -75,16 +77,18 @@ const T = {
     revealLead: "Les médailles « à confirmer » sont examinées par notre IA à partir de vos exemples et de vos liens. Seules les médailles confirmées apparaissent aux marques.",
     toUnlock: "À débloquer", goDashboard: "Voir les études ouvertes",
     cardTop: "Carte membre", cardMedals: "Médailles", cardFoot: "Les marques verront votre prénom, votre ville, votre portrait et vos médailles confirmées.",
-    perk1: "50 à 150 € par entretien", perk1b: "Virés directement sur votre compte bancaire.",
+    perk1: "80 à 300 € par entretien", perk1b: "Selon votre profil, virés directement sur votre compte.",
     perk2: "Des événements privés", perk2b: "Avant-premières, lancements, showrooms.",
     perk3: "Les pièces avant leur sortie", perk3b: "Des tests produits réservés au panel.",
     stripMedals: "médailles",
   },
   en: {
     step: "Step", of: "of", back: "Back", continue: "Continue", finish: "Activate my profile",
-    accountEyebrow: "Join Rarelyst", accountTitle: "Create your profile",
-    accountLead: "About ten minutes. Brands never see your full name or raw answers: only a portrait and your medals.",
-    orManual: "or fill in manually", firstName: "First name", lastName: "Last name", email: "Email", password: "Password",
+    accountEyebrow: "Join Rarelyst", accountTitle: "Create your account",
+    accountLead: "About ten minutes in total. Brands never see your full name or raw answers: only a portrait and your medals.",
+    orManual: "or with your email",
+    identityEyebrow: "You", identityTitle: "Let's get acquainted",
+    identityLead: "Google and LinkedIn only share your name. The rest helps us offer the right studies: many target an age or a city.", firstName: "First name", lastName: "Last name", email: "Email", password: "Password",
     min8: "8 characters minimum", dob: "Date of birth", gender: "Gender", city: "City", country: "Country", select: "Select…",
     genders: ["Man", "Woman", "Non-binary", "Transgender man", "Transgender woman", "Prefer not to say"],
     signedAs: "Signed in as", under18: "You must be 18 or older.",
@@ -132,7 +136,7 @@ const T = {
     revealLead: "\"Pending\" medals are reviewed by our AI from your examples and links. Only confirmed medals are shown to brands.",
     toUnlock: "To unlock", goDashboard: "See open studies",
     cardTop: "Member card", cardMedals: "Medals", cardFoot: "Brands will see your first name, city, portrait and confirmed medals.",
-    perk1: "€50 to €150 per interview", perk1b: "Wired straight to your bank account.",
+    perk1: "€80 to €300 per interview", perk1b: "Depending on your profile, wired to your account.",
     perk2: "Private events", perk2b: "Previews, launches, showrooms.",
     perk3: "Pieces before release", perk3b: "Product tests reserved for the panel.",
     stripMedals: "medals",
@@ -237,6 +241,8 @@ export default function ParticipantFunnel() {
       if (s.complete && !draft?.data) { router.replace("/participant/dashboard"); return; }
       setAccountCreated(true);
       setSignedEmail(s.email);
+      // Le compte existe déjà (Google, LinkedIn, ou créé plus tôt) : rien à refaire.
+      setCur((c) => (c === "account" ? "identity" : c));
       setData((d) => ({
         ...d,
         firstName: d.firstName || s.firstName,
@@ -292,13 +298,12 @@ export default function ParticipantFunnel() {
   }
 
   const traitsAnswered = TRAITS.every((tr) => data.selfTraits[tr.key] !== undefined);
-  const accountOk = !!(
-    data.firstName.trim() && data.lastName.trim() && data.dateOfBirth && data.gender && data.city.trim() &&
-    (accountCreated || (account.email.includes("@") && account.password.length >= 8))
-  );
+  const accountOk = accountCreated || (account.email.includes("@") && account.password.length >= 8);
+  const identityOk = !!(data.firstName.trim() && data.lastName.trim() && data.dateOfBirth && data.gender && data.city.trim());
 
   const canContinue: Record<FunnelScreen, boolean> = {
     account: accountOk,
+    identity: identityOk,
     segment: !!data.segment,
     pro: !!(data.proRole && data.proSector && data.proYears),
     universes: data.macroUniverses.length > 0,
@@ -344,20 +349,26 @@ export default function ParticipantFunnel() {
   async function next() {
     setError("");
     if (cur === "account") {
-      const age = ageOf(data.dateOfBirth);
-      if (age !== null && age < 18) { setError(t.under18); return; }
       if (!accountCreated) {
         setLoading(true);
-        const res = await createFunnelAccount({
-          firstName: data.firstName, lastName: data.lastName, email: account.email, password: account.password,
-          dateOfBirth: data.dateOfBirth, gender: data.gender, city: data.city, country: data.country,
-        });
+        const res = await createFunnelAccount({ email: account.email, password: account.password });
         setLoading(false);
         if ("error" in res) { setError(res.error); return; }
         setAccountCreated(true);
-        go(screens[idx + 1]);
-        return;
+        setSignedEmail(account.email.trim().toLowerCase());
       }
+      go("identity");
+      return;
+    }
+    if (cur === "identity") {
+      const age = ageOf(data.dateOfBirth);
+      if (age !== null && age < 18) { setError(t.under18); return; }
+      setLoading(true);
+      const res = await saveFunnelStep(FUNNEL_SCREENS.indexOf("identity"), data).catch(() => null);
+      setLoading(false);
+      if (res && "error" in res) { setError(res.error); return; }
+      go(screens[idx + 1]);
+      return;
     }
     if (cur === "universes" && data.macroUniverses.length === 0) { setError(t.min1); return; }
     if (cur === "traits" && !traitsAnswered) { setError(t.allTraits); return; }
@@ -413,40 +424,45 @@ export default function ParticipantFunnel() {
         <main className={f.main} style={cur === "final" ? { maxWidth: 760, margin: "0 auto" } : undefined}>
           <div key={cur} className={f.screen}>
 
-            {/* ── Compte ── */}
+            {/* ── Compte : Google, LinkedIn ou email, rien d'autre ── */}
             {cur === "account" && (
               <>
                 <Head eyebrow={t.accountEyebrow} title={t.accountTitle} lead={t.accountLead} />
                 <div className={f.stack}>
-                  {signedEmail ? (
-                    <div className={f.signedAs}>✓ {t.signedAs} {signedEmail}</div>
-                  ) : !accountCreated && (
+                  {accountCreated ? (
+                    <div className={f.signedAs}>✓ {t.signedAs} {signedEmail ?? account.email}</div>
+                  ) : (
                     <>
                       <SocialSignIn role="PARTICIPANT" label={lang === "fr" ? "En un clic" : "One click"} />
                       <div className={f.divider}><span>{t.orManual}</span></div>
+                      <div><label className={f.label} htmlFor="f-email">{t.email}</label><input id="f-email" type="email" className={f.input} value={account.email} onChange={(e) => setAccount((a) => ({ ...a, email: e.target.value }))} autoComplete="email" /></div>
+                      <div><label className={f.label} htmlFor="f-pw">{t.password}</label><input id="f-pw" type="password" className={f.input} value={account.password} onChange={(e) => setAccount((a) => ({ ...a, password: e.target.value }))} placeholder={t.min8} autoComplete="new-password" /></div>
                     </>
                   )}
+                </div>
+              </>
+            )}
+
+            {/* ── Identité : ce qu'aucun fournisseur ne transmet ── */}
+            {cur === "identity" && (
+              <>
+                <Head eyebrow={t.identityEyebrow} title={t.identityTitle} lead={t.identityLead} />
+                <div className={f.stack}>
                   <div className={f.grid2}>
-                    <div><label className={f.label}>{t.firstName}</label><input className={f.input} value={data.firstName} onChange={(e) => up({ firstName: e.target.value })} autoComplete="given-name" /></div>
-                    <div><label className={f.label}>{t.lastName}</label><input className={f.input} value={data.lastName} onChange={(e) => up({ lastName: e.target.value })} autoComplete="family-name" /></div>
+                    <div><label className={f.label} htmlFor="f-first">{t.firstName}</label><input id="f-first" className={f.input} value={data.firstName} onChange={(e) => up({ firstName: e.target.value })} autoComplete="given-name" /></div>
+                    <div><label className={f.label} htmlFor="f-last">{t.lastName}</label><input id="f-last" className={f.input} value={data.lastName} onChange={(e) => up({ lastName: e.target.value })} autoComplete="family-name" /></div>
                   </div>
-                  {!accountCreated && (
-                    <>
-                      <div><label className={f.label}>{t.email}</label><input type="email" className={f.input} value={account.email} onChange={(e) => setAccount((a) => ({ ...a, email: e.target.value }))} autoComplete="email" /></div>
-                      <div><label className={f.label}>{t.password}</label><input type="password" className={f.input} value={account.password} onChange={(e) => setAccount((a) => ({ ...a, password: e.target.value }))} placeholder={t.min8} autoComplete="new-password" /></div>
-                    </>
-                  )}
                   <div className={f.grid2}>
-                    <div><label className={f.label}>{t.dob}</label><input type="date" className={f.input} value={data.dateOfBirth} onChange={(e) => up({ dateOfBirth: e.target.value })} /></div>
-                    <div><label className={f.label}>{t.gender}</label>
-                      <select className={f.select} value={data.gender} onChange={(e) => up({ gender: e.target.value })}>
+                    <div><label className={f.label} htmlFor="f-dob">{t.dob}</label><input id="f-dob" type="date" className={f.input} value={data.dateOfBirth} onChange={(e) => up({ dateOfBirth: e.target.value })} /></div>
+                    <div><label className={f.label} htmlFor="f-gender">{t.gender}</label>
+                      <select id="f-gender" className={f.select} value={data.gender} onChange={(e) => up({ gender: e.target.value })}>
                         <option value="">{t.select}</option>{t.genders.map((g) => <option key={g} value={g}>{g}</option>)}
                       </select>
                     </div>
                   </div>
                   <div className={f.grid2}>
-                    <div><label className={f.label}>{t.city}</label><input className={f.input} value={data.city} onChange={(e) => up({ city: e.target.value })} autoComplete="address-level2" /></div>
-                    <div><label className={f.label}>{t.country}</label><input className={f.input} value={data.country} onChange={(e) => up({ country: e.target.value })} /></div>
+                    <div><label className={f.label} htmlFor="f-city">{t.city}</label><input id="f-city" className={f.input} value={data.city} onChange={(e) => up({ city: e.target.value })} autoComplete="address-level2" /></div>
+                    <div><label className={f.label} htmlFor="f-country">{t.country}</label><input id="f-country" className={f.input} value={data.country} onChange={(e) => up({ country: e.target.value })} /></div>
                   </div>
                 </div>
               </>
@@ -728,7 +744,7 @@ export default function ParticipantFunnel() {
 
             {cur !== "final" && (
               <div className={f.nav}>
-                {idx > 0 && <button type="button" className={`${f.btn} ${f.btnGhost}`} onClick={() => go(screens[idx - 1])}>{t.back}</button>}
+                {idx > 0 && !(cur === "identity" && accountCreated) && <button type="button" className={`${f.btn} ${f.btnGhost}`} onClick={() => go(screens[idx - 1])}>{t.back}</button>}
                 <button type="button" className={f.btn} onClick={next} disabled={loading || !canContinue[cur]}>
                   {loading ? "…" : cur === "charter" ? t.finish : t.continue}
                 </button>
