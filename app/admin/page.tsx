@@ -27,7 +27,7 @@ export default async function AdminCockpit() {
   const [
     idPending, requests, activeStudies, withLinks, ghostErrors, rewardsPending, brandsPending,
     studiesNoReport, abandons, txs, accepted30, signups30, completed30, interviews30, noShow30, cfg,
-    panelIds,
+    panelIds, housesToCheck,
   ] = await Promise.all([
     prisma.participantProfile.count({ where: { idVerificationStatus: "PENDING", idDocumentUrl: { not: null } } }),
     prisma.profileRequest.findMany({
@@ -76,7 +76,13 @@ export default async function AdminCockpit() {
       select: { id: true },
       take: 500,
     }),
+    // Sociétés déclarées mais pas encore vérifiées automatiquement.
+    prisma.brandProfile.findMany({
+      where: { legalName: { not: null }, companyVerifiedAt: null, isVerified: false },
+      select: { id: true, domainVerifiedAt: true, companyInfo: true },
+    }),
   ]);
+  const houses = housesToCheck.filter((b) => !((b.companyInfo as { match?: boolean } | null)?.match && b.domainVerifiedAt));
 
   // Liens que le robot n'a pas pu lire : à vérifier à la main.
   type Rep = { links?: { status?: string }[] };
@@ -117,6 +123,7 @@ export default async function AdminCockpit() {
     { n: studiesNoReport, title: "Synthèses à produire", text: "Des entretiens sont faits, pas encore de rapport.", href: "/admin/studies", urgent: false },
     { n: unreadLinks.length, title: "Liens à vérifier à la main", text: "LinkedIn ou Instagram privés, le robot n'a pas pu lire.", href: unreadLinks[0] ? `/admin/participants/${unreadLinks[0].id}` : "/admin/participants", urgent: false },
     { n: ghostErrors.length, title: "Analyses IA en échec", text: "Portrait et traits non générés : à relancer.", href: ghostErrors[0]?.participantProfile ? `/admin/participants/${ghostErrors[0].participantProfile.id}` : "/admin/participants", urgent: ghostErrors.length > 0 },
+    { n: houses.length, title: "Maisons à vérifier", text: "Société hors de France ou nom qui ne colle pas au domaine.", href: "/admin/access", urgent: houses.length > 0 },
     { n: brandsPending, title: "Marques sans accès", text: "Comptes créés, pas encore activés.", href: "/admin/access", urgent: false },
     { n: abandons, title: "Inscriptions abandonnées", text: "Participants partis en cours de tunnel cette semaine.", href: "/admin/participants", urgent: false },
   ];

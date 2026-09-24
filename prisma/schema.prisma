@@ -111,6 +111,13 @@ model BrandProfile {
   isActivated      Boolean @default(false)
   /// Contrôle de l'adresse du domaine prouvé (email confirmé, Google ou LinkedIn).
   domainVerifiedAt DateTime?
+  /// Société retrouvée au registre officiel (France) ou déclarée hors de France.
+  siren               String?
+  legalName           String?
+  companyInfo         Json?
+  /// Titre III automatique : registre + domaine prouvé ; sinon l'équipe tranche.
+  companyVerifiedAt   DateTime?
+  companyVerifyMethod String?
 
   stripeCustomerId String?
   credits          Int     @default(0)

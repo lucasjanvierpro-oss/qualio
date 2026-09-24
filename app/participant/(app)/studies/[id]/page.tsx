@@ -16,7 +16,7 @@ export default async function ParticipantStudyDetailPage({ params }: { params: P
   const application = await prisma.application.findUnique({
     where: { id },
     include: {
-      study: { include: { brandProfile: { select: { isVerified: true, domainVerifiedAt: true, user: { select: { email: true } } } } } },
+      study: { include: { brandProfile: { select: { isVerified: true, domainVerifiedAt: true, companyVerifiedAt: true, companyInfo: true, user: { select: { email: true } } } } } },
       interview: true,
       reward: true,
       participantProfile: { select: { availability: true } },
@@ -45,6 +45,8 @@ export default async function ParticipantStudyDetailPage({ params }: { params: P
           email: study.brandProfile.user.email,
           domainVerifiedAt: study.brandProfile.domainVerifiedAt,
           isVerified: study.brandProfile.isVerified,
+          companyVerifiedAt: study.brandProfile.companyVerifiedAt,
+          companyMatch: !!(study.brandProfile.companyInfo as { match?: boolean } | null)?.match,
         }),
       }}
       slots={slots}

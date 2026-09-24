@@ -5,7 +5,7 @@ import { createInviteCode, activateBrandManually, setBrandCertified } from "@/ap
 import { useRouter } from "next/navigation";
 
 type Code = { id: string; code: string; label: string; usedAt: string | null; expiresAt: string | null; createdAt: string };
-type Brand = { id: string; companyName: string; email: string; createdAt: string; level?: number; certified?: boolean };
+type Brand = { id: string; companyName: string; email: string; createdAt: string; level?: number; certified?: boolean; legal?: string };
 
 export default function AdminAccessClient({
   codes,
@@ -165,6 +165,7 @@ return (
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: 500, color: "#F9F8F6" }}>{b.companyName}</div>
                   <div style={{ fontSize: "12px", color: "#6B6760" }}>{b.email}</div>
+                  {b.legal && <div style={{ fontSize: "11.5px", color: "#8A8680", marginTop: "2px" }}>{b.legal}</div>}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <span title="Titre du poinçon" style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "999px", background: "#D9A83E20", color: "#D9A83E", fontWeight: 700, fontFamily: "Georgia, serif" }}>

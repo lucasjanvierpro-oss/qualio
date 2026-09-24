@@ -25,7 +25,13 @@ export default async function BrandAccountPage() {
 
   const profile = dbUser?.brandProfile;
   const cfg = await getPricingConfig();
-  const cert = { email: dbUser?.email ?? "", domainVerifiedAt: profile?.domainVerifiedAt ?? null, isVerified: profile?.isVerified ?? false };
+  const cert = {
+    email: dbUser?.email ?? "",
+    domainVerifiedAt: profile?.domainVerifiedAt ?? null,
+    isVerified: profile?.isVerified ?? false,
+    companyVerifiedAt: profile?.companyVerifiedAt ?? null,
+    companyMatch: !!(profile?.companyInfo as { match?: boolean } | null)?.match,
+  };
 
   return (
     <>

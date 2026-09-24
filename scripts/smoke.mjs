@@ -59,7 +59,7 @@ for (const u of users) {
   if (!c) { console.log(`--  ---  ${u.email} (pas de mot de passe de test)`); continue; }
   if (u.role === "BRAND") {
     const mine = studies.filter(s => u.brand_profiles?.some(b => b.id === s.brandProfileId));
-    for (const p of ["/brand/dashboard", "/brand/studies", "/brand/studies/new", "/brand/profiles", "/brand/messages", "/brand/account"]) await hit(u.email, p, c);
+    for (const p of ["/brand/dashboard", "/brand/onboarding", "/brand/studies", "/brand/studies/new", "/brand/profiles", "/brand/messages", "/brand/account"]) await hit(u.email, p, c);
     for (const s of mine) { await hit(u.email, `/brand/studies/${s.id}`, c); await hit(u.email, `/brand/studies/${s.id}/report`, c); }
   } else if (u.role === "ADMIN") {
     for (const p of ["/admin", "/admin/prix", "/admin/access", "/admin/matching", "/admin/participants", "/admin/payments", "/admin/studies", "/admin/verifications"]) await hit(u.email, p, c);

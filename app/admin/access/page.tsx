@@ -46,7 +46,11 @@ export default async function AdminAccessPage() {
         companyName: b.companyName,
         email: b.user.email,
         createdAt: b.createdAt.toLocaleDateString("fr-FR"),
-        level: certLevel({ email: b.user.email, domainVerifiedAt: b.domainVerifiedAt, isVerified: b.isVerified }),
+        level: certLevel({
+          email: b.user.email, domainVerifiedAt: b.domainVerifiedAt, isVerified: b.isVerified,
+          companyVerifiedAt: b.companyVerifiedAt, companyMatch: !!(b.companyInfo as { match?: boolean } | null)?.match,
+        }),
+        legal: b.legalName ? `${b.legalName}${b.siren ? ` · SIREN ${b.siren}` : ""} · ${b.companyVerifyMethod ?? ""}` : "Société non renseignée",
         certified: b.isVerified,
       }))}
     />

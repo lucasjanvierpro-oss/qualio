@@ -28,7 +28,7 @@ export default function CertificationCard({ level, steps, companyName }: { level
               }}>{CERT_TITLES[s.level].roman}</span>
               <span style={{ color: s.done ? "var(--color-text-secondary)" : "var(--color-text-primary)" }}>
                 <strong>{CERT_TITLES[s.level].name}</strong>{s.done ? " — obtenu" : ` — ${s.how}`}
-                {!s.done && s.level === 3 && <> <a href="mailto:contact@rarelyst.co?subject=Certification%20de%20ma%20marque" style={{ color: "var(--color-accent)", fontWeight: 600 }}>Demander la certification →</a></>}
+                {!s.done && s.level === 3 && <> <a href="/brand/onboarding" style={{ color: "var(--color-accent)", fontWeight: 600 }}>Vérifier ma maison →</a></>}
               </span>
             </li>
           ))}
