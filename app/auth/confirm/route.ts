@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { markDomainVerified } from "@/lib/brands/domainVerification";
 
 /**
  * Lien de confirmation d'adresse reçu par email.
@@ -47,6 +48,7 @@ export async function GET(request: NextRequest) {
     select: { role: true },
   });
   const role = existing?.role ?? String(data.user.user_metadata?.role ?? "").toUpperCase();
+  if (role === "BRAND") await markDomainVerified(data.user);
 
   return NextResponse.redirect(new URL(NEXT_STEP[role] ?? "/", request.url));
 }
