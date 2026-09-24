@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { login } from "@/app/actions/auth";
 import SocialSignIn from "@/components/auth/SocialSignIn";
 import EmailCodeSignIn from "@/components/auth/EmailCodeSignIn";
+import LoginNotice from "@/components/auth/LoginNotice";
 
 type LoginForm = { email: string; password: string };
 
@@ -42,6 +43,10 @@ export default function LoginPage() {
           Accédez à votre espace Rarelyst
         </p>
       </div>
+
+      <Suspense fallback={null}>
+        <LoginNotice />
+      </Suspense>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1.5">

@@ -25,6 +25,13 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // Retours de connexion (Google, LinkedIn, liens reçus par email) : la session
+  // n'existe pas encore, ce sont précisément ces routes qui la créent. Sans cette
+  // ligne, tout visiteur non connecté repartait vers /login, code perdu.
+  if (pathname.startsWith("/auth/")) {
+    return supabaseResponse;
+  }
+
   // Endpoints appelés par des services externes (aucune session utilisateur) :
   // webhooks Stripe & Whereby, et cron Vercel. Ils gèrent leur propre sécurité.
   if (
