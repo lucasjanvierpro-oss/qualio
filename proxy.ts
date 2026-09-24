@@ -6,6 +6,7 @@ import { type NextRequest, NextResponse } from "next/server";
 const PUBLIC_ROUTES = [
   "/", "/login", "/signup/brand", "/signup/participant", "/pricing",
   "/mentions-legales", "/confidentialite", "/conditions",
+  "/signup/confirmation",
 ];
 
 export async function proxy(request: NextRequest) {

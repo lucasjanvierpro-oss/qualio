@@ -5,6 +5,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod/v4";
 import { appUrl } from "@/lib/appUrl";
+import { emailConfirmationRequired } from "@/lib/auth/emailConfirmation";
 
 /** Où atterrit chaque rôle après connexion, quelle que soit la méthode. */
 const DESTINATIONS: Record<string, string> = {
@@ -71,11 +72,14 @@ export async function signupBrand(formData: FormData) {
     return { error: "Erreur lors de la création du compte" };
   }
 
-  // Auto-confirm email for V1 (no email infrastructure yet)
-  const serviceClient = await createServiceClient();
-  await serviceClient.auth.admin.updateUserById(authData.user.id, {
-    email_confirm: true,
-  });
+  // Tant qu'aucun expéditeur réel n'est branché, on confirme l'adresse nous-mêmes :
+  // sinon le compte resterait bloqué en attente d'un email qui n'arrive jamais.
+  if (!emailConfirmationRequired()) {
+    const serviceClient = await createServiceClient();
+    await serviceClient.auth.admin.updateUserById(authData.user.id, {
+      email_confirm: true,
+    });
+  }
 
   try {
     await prisma.user.create({
@@ -98,6 +102,9 @@ export async function signupBrand(formData: FormData) {
     // Profile already exists (e.g., from a previous interrupted signup)
   }
 
+  if (emailConfirmationRequired()) {
+    redirect(`/signup/confirmation?email=${encodeURIComponent(email)}&next=brand`);
+  }
   redirect("/brand/onboarding");
 }
 
@@ -135,11 +142,13 @@ export async function signupParticipant(formData: FormData) {
     return { error: "Erreur lors de la création du compte" };
   }
 
-  // Auto-confirm email for V1
-  const serviceClient = await createServiceClient();
-  await serviceClient.auth.admin.updateUserById(authData.user.id, {
-    email_confirm: true,
-  });
+  // Même raison que pour l'inscription marque.
+  if (!emailConfirmationRequired()) {
+    const serviceClient = await createServiceClient();
+    await serviceClient.auth.admin.updateUserById(authData.user.id, {
+      email_confirm: true,
+    });
+  }
 
   try {
     await prisma.user.create({
@@ -159,7 +168,34 @@ export async function signupParticipant(formData: FormData) {
     // Profile already exists
   }
 
+  if (emailConfirmationRequired()) {
+    redirect(`/signup/confirmation?email=${encodeURIComponent(email)}&next=participant`);
+  }
   redirect("/signup/participant");
+}
+
+/**
+ * Renvoie le lien de confirmation à une adresse qui n'a pas encore été validée.
+ * On ne révèle jamais si l'adresse existe : la réponse est la même dans tous
+ * les cas, sinon le formulaire devient un moyen de savoir qui est inscrit.
+ */
+export async function resendConfirmation(email: string, role: "BRAND" | "PARTICIPANT") {
+  const clean = email.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean)) {
+    return { error: "Adresse email invalide." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: clean,
+    options: { emailRedirectTo: `${appUrl()}/auth/callback?role=${role}` },
+  });
+
+  if (error?.status === 429) {
+    return { error: "Trop de demandes. Patientez une minute." };
+  }
+  return { ok: true as const };
 }
 
 // ─── Login ─────────────────────────────────────────────────
