@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { TRUST_SELECT, trustFrom, badgesOf } from "@/lib/participants/trust";
+import { badgesForBrand } from "@/lib/participants/badges";
 import { prisma } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
 import { requireBrand } from "@/lib/auth/guards";
@@ -119,6 +121,7 @@ export async function POST(request: NextRequest) {
       aiRecommendedBrands: true,
       aiTags: true,
       processingStatus: true,
+      behaviours: true,
     },
   };
 
@@ -127,7 +130,7 @@ export async function POST(request: NextRequest) {
   let [profiles, total] = await Promise.all([
     prisma.participantProfile.findMany({
       where,
-      include: { ghostFile: ghostFileSelect },
+      include: { ghostFile: ghostFileSelect, applications: { select: TRUST_SELECT } },
       orderBy: { ghostFile: { overallQualityScore: "desc" } },
       take: pageSize,
       skip: page * pageSize,
@@ -142,7 +145,7 @@ export async function POST(request: NextRequest) {
     [profiles, total] = await Promise.all([
       prisma.participantProfile.findMany({
         where,
-        include: { ghostFile: ghostFileSelect },
+        include: { ghostFile: ghostFileSelect, applications: { select: TRUST_SELECT } },
         orderBy: { ghostFile: { overallQualityScore: "desc" } },
         take: pageSize,
         skip: page * pageSize,
@@ -162,7 +165,9 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const results = profiles.map((p) => ({
+  const results = profiles.map((p) => {
+    const trust = trustFrom(p.applications);
+    return {
     id: p.id,
     firstName: p.firstName,
     lastInitial: p.lastName ? p.lastName[0] + "." : "",
@@ -182,7 +187,11 @@ export async function POST(request: NextRequest) {
       aiStrengths: p.ghostFile.aiStrengths.slice(0, 2),
       aiRecommendedBrands: p.ghostFile.aiRecommendedBrands,
     } : null,
-  }));
+    // Réservé aux marques : cette route n'est servie qu'aux comptes marque.
+    badges: badgesForBrand(badgesOf(p, p.ghostFile?.processingStatus === "done" ? p.ghostFile.behaviours : null, trust)),
+    trust: { interviewsDone: trust.interviewsDone, rating: trust.rating, reviewCount: trust.reviewCount, brands: trust.brands.map((b) => b.name).slice(0, 3) },
+    };
+  });
 
   return NextResponse.json({ results, total, page, pageSize, filtersUsed: filters, tagMatchUsed });
 }

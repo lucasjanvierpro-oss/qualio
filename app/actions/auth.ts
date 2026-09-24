@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod/v4";
 import { appUrl } from "@/lib/appUrl";
 import { emailConfirmationRequired } from "@/lib/auth/emailConfirmation";
+import { emailDomain, isProDomain } from "@/lib/brands/certification";
 
 /** Où atterrit chaque rôle après connexion, quelle que soit la méthode. */
 const DESTINATIONS: Record<string, string> = {
@@ -16,12 +17,14 @@ const DESTINATIONS: Record<string, string> = {
 
 // ─── Schemas ──────────────────────────────────────────────
 
+// Inscription marque en quatre champs : le secteur, le nom et le poste se
+// complètent plus tard, depuis le compte.
 const BrandSignupSchema = z.object({
-  companyName: z.string().min(2, "Nom de société requis"),
-  industry: z.string().min(1, "Secteur requis"),
-  contactFirstName: z.string().min(1, "Prénom requis"),
-  contactLastName: z.string().min(1, "Nom requis"),
-  contactTitle: z.string().min(1, "Poste requis"),
+  companyName: z.string().trim().min(2, "Nom de société requis"),
+  industry: z.string().optional(),
+  contactFirstName: z.string().trim().min(1, "Prénom requis"),
+  contactLastName: z.string().optional(),
+  contactTitle: z.string().optional(),
   email: z.email("Email invalide"),
   password: z.string().min(8, "8 caractères minimum"),
 });
@@ -90,10 +93,12 @@ export async function signupBrand(formData: FormData) {
         brandProfile: {
           create: {
             companyName,
-            industry,
+            industry: industry || null,
             contactFirstName,
-            contactLastName,
-            contactTitle,
+            contactLastName: contactLastName || null,
+            contactTitle: contactTitle || null,
+            // Le site se déduit d'une adresse pro ; la marque le corrige au besoin.
+            website: isProDomain(emailDomain(email)) ? `https://${emailDomain(email)}` : null,
           },
         },
       },
@@ -318,6 +323,13 @@ export async function verifyEmailCode(email: string, code: string) {
   }
 
   const role = String(data.user.user_metadata?.role ?? "").toUpperCase();
+  // Un code reçu dans la boîte prouve qu'on la contrôle : titre II du poinçon.
+  if (role === "BRAND" && isProDomain(emailDomain(email))) {
+    await prisma.brandProfile.updateMany({
+      where: { user: { supabaseId: data.user.id }, domainVerifiedAt: null },
+      data: { domainVerifiedAt: new Date() },
+    }).catch(() => {});
+  }
   redirect(DESTINATIONS[role] ?? "/");
 }
 

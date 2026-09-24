@@ -109,6 +109,8 @@ model BrandProfile {
   contactTitle     String?
   isVerified       Boolean @default(false)
   isActivated      Boolean @default(false)
+  /// Contrôle de l'adresse du domaine prouvé (email confirmé, Google ou LinkedIn).
+  domainVerifiedAt DateTime?
 
   stripeCustomerId String?
   credits          Int     @default(0)
@@ -197,6 +199,21 @@ model ParticipantProfile {
 
   agreedToCodeOfConduct Boolean @default(false)
 
+  // Segment choisi en tête de tunnel : pro | consumer | creator | hybrid
+  segment          String?
+  // Parcours pro (segment pro ou hybrid), à la manière de Respondent
+  proRole          String?
+  proSector        String?
+  proYears         String?
+  proCompany       String?
+  // Auto-déclarations explicites (0-3 par trait) et la preuve donnée en une ligne
+  selfTraits       Json?
+  traitProofs      Json?
+  // Liens publics lus par l'IA
+  websiteUrl       String?
+  otherLinks       String[] @default([])
+  linksAnalysis    Json?
+
   cvUrl            String?
   portfolioUrl     String?
   cvAnalysis       String? @db.Text // synthèse IA du CV / portfolio uploadé
@@ -275,6 +292,10 @@ model ParticipantGhostFile {
   // Tags invisibles — vocabulaire normalisé pour le moteur de recherche marques.
   // Jamais affichés à la marque ni au participant.
   aiTags               String[] @default([])
+
+  // Comportements confirmés par l'IA à partir des preuves — jamais sur simple
+  // déclaration. Clés fixes (voir lib/participants/badges.ts).
+  behaviours           String[] @default([])
 
   // Meta
   generatedAt     DateTime @default(now())
@@ -447,8 +468,10 @@ model Interview {
   transcript      String?   @db.Text
 
   completedAt   DateTime?
-  brandRating   Int?
-  brandFeedback String?
+  brandRating     Int?
+  brandFeedback   String?
+  brandReviewTags String[]  @default([])
+  brandReviewedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

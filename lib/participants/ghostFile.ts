@@ -22,6 +22,8 @@ export const GHOST_FILE_SELECT = {
   behavioralChecklist: true, adaptiveAnswers: true, expertAnswers: true,
   screenerAnswers: true, followerRange: true, instagramUrl: true,
   linkedinUrl: true, cvAnalysis: true,
+  segment: true, proRole: true, proSector: true, proYears: true, proCompany: true,
+  selfTraits: true, traitProofs: true, linksAnalysis: true,
 } as const;
 
 /**
@@ -61,6 +63,9 @@ export async function generateGhostFile(profileId: string): Promise<GhostFileRes
           adaptiveAnswers: profile.adaptiveAnswers as Record<string, string> | null,
           expertAnswers: profile.expertAnswers as Record<string, string> | null,
           screenerAnswers: profile.screenerAnswers as Record<string, string> | null,
+          selfTraits: profile.selfTraits as Record<string, number> | null,
+          traitProofs: profile.traitProofs as Record<string, string> | null,
+          linksAnalysis: profile.linksAnalysis as GhostFileInput["linksAnalysis"],
         } satisfies GhostFileInput),
       }],
     });

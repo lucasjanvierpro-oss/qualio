@@ -95,3 +95,16 @@ export async function activateBrandManually(brandProfileId: string) {
 
   revalidatePath("/admin");
 }
+
+/** Titre III du poinçon : la société a été vérifiée par l'équipe. */
+export async function setBrandCertified(brandProfileId: string, certified: boolean) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const dbUser = await prisma.user.findUnique({ where: { supabaseId: user.id } });
+  if (dbUser?.role !== "ADMIN") throw new Error("Admin only");
+
+  await prisma.brandProfile.update({ where: { id: brandProfileId }, data: { isVerified: certified } });
+  revalidatePath("/admin/access");
+}

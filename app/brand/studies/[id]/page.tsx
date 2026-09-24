@@ -2,6 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
 import { readSlots, schedulingStep } from "@/lib/interviews/schedule";
+import { TRUST_SELECT, BADGE_PROFILE_SELECT, trustFrom, badgesOf } from "@/lib/participants/trust";
+import { badgesForBrand } from "@/lib/participants/badges";
 import StudyDetailClient, { type Candidate } from "./StudyDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -28,19 +30,20 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
         applications: {
           orderBy: { updatedAt: "desc" },
           include: {
-            interview: { select: { id: true, scheduledAt: true, status: true, transcriptStatus: true } },
+            interview: { select: { id: true, scheduledAt: true, status: true, transcriptStatus: true, brandRating: true, brandReviewTags: true, brandFeedback: true } },
             participantProfile: {
               select: {
                 id: true,
                 firstName: true, lastName: true, dateOfBirth: true, city: true,
                 profession: true, brandSummary: true,
                 accessTier: true, accessNote: true,
-                linkedinVerified: true, idVerificationStatus: true,
+                ...BADGE_PROFILE_SELECT,
                 // Le passé d'un participant convainc plus qu'une déclaration :
-                // entretiens menés d'un côté, absences de l'autre.
-                applications: { select: { status: true } },
+                // entretiens menés, notes et avis des autres marques.
+                applications: { select: TRUST_SELECT },
                 ghostFile: {
                   select: {
+                    behaviours: true, processingStatus: true,
                     profileType: true, primaryExpertise: true, secondaryExpertises: true,
                     aiTags: true, aiStrengths: true, generationTag: true,
                     expertiseScore: true, vocabularyScore: true, authenticityScore: true,
@@ -73,10 +76,8 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
     );
     const refs = (g?.aiTags ?? []).filter((tag) => !shown.has(tag.toLowerCase()));
 
-    // Le taux de présence n'a de sens qu'après quelques entretiens : sur un seul,
-    // « 0 % » ou « 100 % » ne dit rien et induit la marque en erreur.
-    const done = p.applications.filter((a) => a.status === "COMPLETED").length;
-    const noShow = p.applications.filter((a) => a.status === "NO_SHOW").length;
+    const trust = trustFrom(p.applications);
+    const badges = badgesForBrand(badgesOf(p, g?.processingStatus === "done" ? g.behaviours : null, trust));
 
     return {
       applicationId: a.id,
@@ -92,8 +93,10 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
       accessNote: p.accessNote,
       idVerified: p.idVerificationStatus === "VERIFIED",
       linkedinVerified: p.linkedinVerified,
-      interviewsDone: done,
-      attendance: done + noShow >= 3 ? Math.round((done / (done + noShow)) * 100) : null,
+      interviewsDone: trust.interviewsDone,
+      attendance: trust.attendance,
+      trust,
+      badges,
       kind: g?.profileType ?? null,
       expertise: g?.primaryExpertise ?? null,
       alsoKnows: g?.secondaryExpertises ?? [],
@@ -112,6 +115,9 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
         scheduledAt: a.interview.scheduledAt.toISOString(),
         status: a.interview.status,
         transcriptReady: a.interview.transcriptStatus === "done",
+        review: a.interview.brandRating
+          ? { rating: a.interview.brandRating, tags: a.interview.brandReviewTags, comment: a.interview.brandFeedback }
+          : null,
       } : null,
     };
   });

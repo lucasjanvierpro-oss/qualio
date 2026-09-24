@@ -7,6 +7,11 @@ import s from "@/components/rl/rl.module.css";
 import p from "./profile.module.css";
 import { acceptApplication, rejectApplication } from "@/app/actions/studies";
 import { requestProfile } from "@/app/actions/profileRequests";
+import { reviewInterview } from "@/app/actions/reviews";
+import { REVIEW_TAGS, type Trust } from "@/lib/participants/trust";
+import type { EarnedBadge } from "@/lib/participants/badges";
+import { BadgeChips } from "@/components/badges/BadgeShelf";
+import TrustBlock from "@/components/badges/TrustBlock";
 
 export type Candidate = {
   applicationId: string;
@@ -24,6 +29,8 @@ export type Candidate = {
   linkedinVerified: boolean;
   interviewsDone: number;
   attendance: number | null;
+  trust: Trust;
+  badges: EarnedBadge[];
   kind: string | null;
   expertise: string | null;
   alsoKnows: string[];
@@ -33,7 +40,10 @@ export type Candidate = {
   scores: { expertise: number | null; vocabulaire: number | null; authenticite: number | null };
   step: "participant_to_propose" | "brand_to_choose" | "participant_to_choose" | null;
   proposals: string[];
-  interview: { id: string; scheduledAt: string; status: string; transcriptReady: boolean } | null;
+  interview: {
+    id: string; scheduledAt: string; status: string; transcriptReady: boolean;
+    review: { rating: number; tags: string[]; comment: string | null } | null;
+  } | null;
 };
 
 type Study = {
@@ -83,32 +93,18 @@ const TICK = (
 );
 
 /**
- * Trois pastilles au maximum. Le nombre d'entretiens déjà menés convainc
- * souvent plus une marque que la pièce d'identité : c'est un historique, pas
- * une déclaration.
+ * Les vérifications, et elles seules : l'historique (entretiens, présence,
+ * avis) a son propre bloc plus bas, les médailles leur propre rangée.
  */
 function Seals({ c }: { c: Candidate }) {
-  const items: { key: string; label: string; strong: boolean }[] = [];
-  if (c.idVerified) items.push({ key: "id", label: "Identité vérifiée", strong: true });
-  if (c.linkedinVerified) items.push({ key: "li", label: "LinkedIn vérifié", strong: true });
-  if (c.interviewsDone > 0) {
-    items.push({ key: "xp", label: `${c.interviewsDone} entretien${c.interviewsDone > 1 ? "s" : ""}`, strong: false });
-  }
-  // Une présence parfaite se dit ; une présence moyenne ne se cache pas non plus,
-  // c'est précisément ce qu'une marque a besoin de savoir avant de réserver.
-  if (c.attendance !== null) {
-    items.push({ key: "att", label: `${c.attendance} % de présence`, strong: false });
-  }
+  const items: { key: string; label: string }[] = [];
+  if (c.idVerified) items.push({ key: "id", label: "Identité vérifiée" });
+  if (c.linkedinVerified) items.push({ key: "li", label: "LinkedIn vérifié" });
   if (!items.length) return null;
-  // Trois au maximum : au-delà, plus aucune ne se remarque.
-  const shown = items.slice(0, 3);
   return (
     <div className={p.seals}>
-      {shown.map((i) => (
-        <span key={i.key} className={`${p.seal} ${i.strong ? p.sealOk : ""}`}>
-          {i.strong && TICK}
-          {i.label}
-        </span>
+      {items.map((i) => (
+        <span key={i.key} className={`${p.seal} ${p.sealOk}`}>{TICK}{i.label}</span>
       ))}
     </div>
   );
@@ -175,6 +171,10 @@ function ProfileCard({
           : kind && <span className={p.kind}>{kind}</span>}
       </div>
 
+      {c.badges.length > 0 && (
+        <div className={p.medals}><BadgeChips badges={c.badges} max={4} /></div>
+      )}
+
       {c.why && <p className={p.why}>{c.why}</p>}
 
       {c.expertise && (
@@ -207,6 +207,8 @@ function ProfileCard({
           </div>
         </div>
       )}
+
+      <TrustBlock trust={c.trust} firstName={c.name.split(" ")[0]} />
 
       {hasScores && (
         <div className={p.scores}>
@@ -259,12 +261,54 @@ function ProfileCard({
   );
 }
 
+/** Note laissée après l'entretien : lue par les autres marques, jamais par le participant. */
+function ReviewForm({ c, onDone, onClose }: { c: Candidate; onDone: () => void; onClose: () => void }) {
+  const existing = c.interview?.review;
+  const [rating, setRating] = useState(existing?.rating ?? 0);
+  const [tags, setTags] = useState<string[]>(existing?.tags ?? []);
+  const [comment, setComment] = useState(existing?.comment ?? "");
+  const [pending, startTransition] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
+
+  if (!c.interview) return null;
+  return (
+    <div className={p.reviewForm}>
+      <div className={p.reviewStars} role="radiogroup" aria-label="Note">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <button key={i} type="button" role="radio" aria-checked={rating === i} data-on={i <= rating} onClick={() => setRating(i)}>★</button>
+        ))}
+      </div>
+      <div className={p.reviewTags}>
+        {REVIEW_TAGS.map((t) => (
+          <button key={t} type="button" aria-pressed={tags.includes(t)}
+            onClick={() => setTags((v) => (v.includes(t) ? v.filter((x) => x !== t) : v.length < 4 ? [...v, t] : v))}>{t}</button>
+        ))}
+      </div>
+      <textarea className={p.reviewText} rows={2} maxLength={600} value={comment} onChange={(e) => setComment(e.target.value)}
+        placeholder="Ce qu'il faut savoir avant de l'interroger. Visible par les autres marques, pas par le participant." />
+      {err && <p className={s.error}>{err}</p>}
+      <div className={s.row}>
+        <button type="button" className={`${s.btn} ${s.btnSm}`} disabled={!rating || pending}
+          onClick={() => startTransition(async () => {
+            const r = await reviewInterview({ interviewId: c.interview!.id, rating, tags, comment });
+            if ("error" in r) setErr(r.error === "session_expired" ? "Session expirée, reconnectez-vous." : "Avis impossible pour le moment.");
+            else onDone();
+          })}>
+          {pending ? "…" : "Publier l'avis"}
+        </button>
+        <button type="button" className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} onClick={onClose}>Annuler</button>
+      </div>
+    </div>
+  );
+}
+
 export default function StudyDetailClient({ study, candidates, credits }: { study: Study; candidates: Candidate[]; credits: number }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [error, setError] = useState<{ id: string; msg: string } | null>(null);
   const [showDeclined, setShowDeclined] = useState(false);
   const [choosing, setChoosing] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState<string | null>(null);
   // Un profil sur demande ne quitte pas la liste : la marque doit continuer à
   // le voir pendant que Rarelyst traite la demande.
   const [requested, setRequested] = useState<string[]>([]);
@@ -427,20 +471,30 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
           <h2 className={s.h2}>Entretiens <span className={s.faint}>({interviews.length})</span></h2>
           <div className={s.card} style={{ marginTop: 12, padding: 0 }}>
             {interviews.map((c, i) => (
-              <div key={c.applicationId} className={s.spread} style={{ padding: "16px 20px", borderTop: i ? "1px solid var(--line)" : 0 }}>
-                <Person c={c} />
-                <div className={s.row}>
-                  {c.interview && <span className={s.small} style={{ textTransform: "capitalize" }}>{fmtDay(c.interview.scheduledAt)} · {fmtTime(c.interview.scheduledAt)}</span>}
-                  {c.status === "NO_SHOW" && <span className={`${s.badge} ${s.badgeBad}`}>Absent</span>}
-                  {c.status === "COMPLETED" && (
-                    <span className={`${s.badge} ${c.interview?.transcriptReady ? s.badgeOk : s.badgeWait}`}>
-                      {c.interview?.transcriptReady ? "Transcription prête" : "Transcription en cours"}
-                    </span>
-                  )}
-                  {c.status === "CONFIRMED" && c.interview && (
-                    <Link href={`/brand/interview/${c.interview.id}`} className={`${s.btn} ${s.btnSm}`}>Ouvrir la salle</Link>
-                  )}
+              <div key={c.applicationId} style={{ padding: "16px 20px", borderTop: i ? "1px solid var(--line)" : 0 }}>
+                <div className={s.spread}>
+                  <Person c={c} />
+                  <div className={s.row}>
+                    {c.interview && <span className={s.small} style={{ textTransform: "capitalize" }}>{fmtDay(c.interview.scheduledAt)} · {fmtTime(c.interview.scheduledAt)}</span>}
+                    {c.status === "NO_SHOW" && <span className={`${s.badge} ${s.badgeBad}`}>Absent</span>}
+                    {c.status === "COMPLETED" && (
+                      <span className={`${s.badge} ${c.interview?.transcriptReady ? s.badgeOk : s.badgeWait}`}>
+                        {c.interview?.transcriptReady ? "Transcription prête" : "Transcription en cours"}
+                      </span>
+                    )}
+                    {c.status === "COMPLETED" && reviewing !== c.applicationId && (
+                      <button type="button" className={`${s.btn} ${c.interview?.review ? s.btnGhost : ""} ${s.btnSm}`} onClick={() => setReviewing(c.applicationId)}>
+                        {c.interview?.review ? `★ ${c.interview.review.rating}/5 · modifier` : "Laisser un avis"}
+                      </button>
+                    )}
+                    {c.status === "CONFIRMED" && c.interview && (
+                      <Link href={`/brand/interview/${c.interview.id}`} className={`${s.btn} ${s.btnSm}`}>Ouvrir la salle</Link>
+                    )}
+                  </div>
                 </div>
+                {reviewing === c.applicationId && (
+                  <ReviewForm c={c} onClose={() => setReviewing(null)} onDone={() => { setReviewing(null); router.refresh(); }} />
+                )}
               </div>
             ))}
           </div>

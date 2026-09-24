@@ -1,0 +1,156 @@
+/* Historique d'un participant vu par les marques (et sa version voilée). */
+
+.block {
+  position: relative;
+  margin: 0 20px 16px;
+  padding: 14px 16px 16px;
+  border-radius: 12px;
+  background: var(--soft, #f6f4f8);
+  border: 1px solid var(--line, #eae6ee);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3, #9c95a4);
+}
+
+.private {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent, #6a43db);
+}
+
+.private svg { width: 12px; height: 12px; }
+
+.empty { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2, #5f5868); }
+
+.stats { display: flex; gap: 22px; flex-wrap: wrap; }
+
+.stat { display: flex; flex-direction: column; gap: 1px; }
+
+.stat b {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--ink, #1c1624);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat b small { font-size: 13px; font-weight: 600; color: var(--ink-3, #9c95a4); }
+.stat span { font-size: 12px; color: var(--ink-2, #5f5868); }
+
+.brands { margin-top: 14px; }
+
+.sub {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3, #9c95a4);
+  margin-bottom: 6px;
+}
+
+.logos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--bg, #fff);
+  border: 1px solid var(--line, #eae6ee);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink, #1c1624);
+}
+
+.logo img { max-height: 16px; max-width: 72px; object-fit: contain; filter: grayscale(1); }
+
+.more { font-size: 12px; font-weight: 600; color: var(--ink-3, #9c95a4); }
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+
+.tag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft, #efeafd);
+  color: var(--g2, #4b2bb5);
+}
+
+.tag em { font-style: normal; opacity: 0.6; margin-left: 4px; }
+
+.review { margin: 12px 0 0; }
+
+.review blockquote {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink, #1c1624);
+}
+
+.review figcaption {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-3, #9c95a4);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stars { letter-spacing: 1px; font-size: 11px; }
+.stars i { font-style: normal; color: #d8d2df; }
+.stars i[data-on="true"] { color: #d9a83e; }
+
+/* ── Version voilée (côté participant) ── */
+.locked { min-height: 190px; }
+
+.blur { filter: blur(6px); opacity: 0.7; user-select: none; pointer-events: none; }
+
+.veil {
+  position: absolute;
+  inset: 40px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  padding: 0 24px 12px;
+  background: linear-gradient(180deg, rgba(246, 244, 248, 0.2), rgba(246, 244, 248, 0.92) 45%);
+}
+
+.veil b { font-size: 15px; letter-spacing: -0.01em; color: var(--ink, #1c1624); }
+.veil span { font-size: 13px; line-height: 1.5; color: var(--ink-2, #5f5868); max-width: 380px; }
+
+.veilIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ink, #1c1624);
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.veilIcon svg { width: 16px; height: 16px; }

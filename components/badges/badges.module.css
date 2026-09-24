@@ -1,0 +1,198 @@
+/* ═══════════════════════════════════════════════════════════════
+   Médailles Rarelyst.
+   Le relief vient de l'ombre portée, le métal du dégradé, la vie
+   du reflet qui passe au survol et à la révélation. Un badge
+   « à confirmer » est désaturé et entouré d'un pointillé qui tourne ;
+   un badge verrouillé est gris, avec un cadenas.
+   ═══════════════════════════════════════════════════════════════ */
+
+.medal {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  line-height: 0;
+  filter: drop-shadow(0 1px 0.5px rgba(20, 12, 30, 0.25)) drop-shadow(0 10px 14px rgba(40, 20, 70, 0.22));
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.35s;
+  transform: perspective(500px) rotateX(0) rotateY(0);
+}
+
+.medal svg { overflow: visible; }
+
+.medal:hover {
+  transform: perspective(500px) rotateX(10deg) rotateY(-14deg) scale(1.04);
+  filter: drop-shadow(0 1px 0.5px rgba(20, 12, 30, 0.25)) drop-shadow(0 16px 20px rgba(40, 20, 70, 0.3));
+}
+
+.motto {
+  font-family: inherit;
+  text-transform: uppercase;
+}
+
+/* L'éclat : invisible au repos, il traverse la médaille au survol. */
+.sheen {
+  transform: translateX(0);
+  opacity: 0;
+}
+
+.medal:hover .sheen {
+  animation: sheen 1.1s ease-out;
+}
+
+@keyframes sheen {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(230px); opacity: 1; }
+}
+
+/* Irisation lente du bord « Nouveau profil » */
+.holoRim { animation: holo 6s linear infinite; }
+
+@keyframes holo {
+  0% { filter: hue-rotate(0deg) saturate(1.2); }
+  100% { filter: hue-rotate(360deg) saturate(1.2); }
+}
+
+/* ── États ─────────────────────────────────── */
+.medal[data-state="pending"] svg > path,
+.medal[data-state="pending"] svg > g,
+.medal[data-state="pending"] svg > circle:not(.orbit),
+.medal[data-state="pending"] svg > text {
+  filter: saturate(0.5) brightness(1.05);
+  opacity: 0.78;
+}
+
+.orbit {
+  transform-origin: 60px 60px;
+  animation: orbit 14s linear infinite;
+}
+
+@keyframes orbit { to { transform: rotate(360deg); } }
+
+.medal[data-state="locked"] {
+  filter: grayscale(1) contrast(0.85);
+  opacity: 0.34;
+}
+
+.medal[data-state="locked"]:hover { opacity: 0.55; }
+
+.lock {
+  position: absolute;
+  right: 4%;
+  bottom: 4%;
+  width: 30%;
+  height: 30%;
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #1c1624;
+  color: #fff;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.lock svg { width: 55%; height: 55%; }
+
+/* ── Révélation : la médaille se retourne et l'éclat passe ── */
+.reveal {
+  animation: flipIn 0.9s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+  animation-delay: var(--d, 0ms);
+}
+
+.reveal .sheen {
+  animation: sheen 1.2s ease-out both;
+  animation-delay: calc(var(--d, 0ms) + 650ms);
+}
+
+@keyframes flipIn {
+  0% { opacity: 0; transform: perspective(500px) rotateY(-100deg) scale(0.55); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: perspective(500px) rotateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .medal, .medal:hover { transform: none; transition: none; }
+  .reveal, .reveal .sheen, .holoRim, .orbit, .medal:hover .sheen { animation: none; }
+}
+
+/* ═══ Vitrine : médaille + nom + état ═══════════════════════ */
+.shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 22px 14px;
+}
+
+.shelfCompact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 12px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tileName {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--ink, #1c1624);
+}
+
+.tileNote {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink-3, #9c95a4);
+  max-width: 150px;
+}
+
+.tile[data-state="pending"] .tileNote { color: #8a5d12; }
+
+.tag {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #fbf1de;
+  color: #8a5d12;
+}
+
+.progress {
+  width: 64px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line, #eae6ee);
+  overflow: hidden;
+}
+
+.progress i {
+  display: block;
+  height: 100%;
+  background: var(--accent, #6a43db);
+  border-radius: inherit;
+}
+
+/* Rangée compacte sur la fiche vue par la marque */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: var(--soft, #f6f4f8);
+  border: 1px solid var(--line, #eae6ee);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink, #1c1624);
+  cursor: default;
+}
+
+.chip .medal { filter: drop-shadow(0 2px 3px rgba(40, 20, 70, 0.25)); }

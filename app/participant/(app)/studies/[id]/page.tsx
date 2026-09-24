@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
 import { readSlots, schedulingStep } from "@/lib/interviews/schedule";
 import ParticipantStudyDetailClient from "./ParticipantStudyDetailClient";
+import { certLevel } from "@/lib/brands/certification";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export default async function ParticipantStudyDetailPage({ params }: { params: P
   const application = await prisma.application.findUnique({
     where: { id },
     include: {
-      study: true,
+      study: { include: { brandProfile: { select: { isVerified: true, domainVerifiedAt: true, user: { select: { email: true } } } } } },
       interview: true,
       reward: true,
       participantProfile: { select: { availability: true } },
@@ -39,6 +40,12 @@ export default async function ParticipantStudyDetailPage({ params }: { params: P
         rewardAmount: study.rewardAmount,
         rewardType: study.rewardType,
         deadlineAt: study.deadlineAt?.toISOString() ?? null,
+        // Le nom de la marque reste caché ; son poinçon, non.
+        brandCert: certLevel({
+          email: study.brandProfile.user.email,
+          domainVerifiedAt: study.brandProfile.domainVerifiedAt,
+          isVerified: study.brandProfile.isVerified,
+        }),
       }}
       slots={slots}
       availability={(application.participantProfile.availability as Record<string, string[]> | null) ?? null}

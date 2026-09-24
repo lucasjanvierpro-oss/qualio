@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import AdminAccessClient from "./AdminAccessClient";
+import { certLevel } from "@/lib/brands/certification";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,8 @@ export default async function AdminAccessPage() {
         companyName: b.companyName,
         email: b.user.email,
         createdAt: b.createdAt.toLocaleDateString("fr-FR"),
+        level: certLevel({ email: b.user.email, domainVerifiedAt: b.domainVerifiedAt, isVerified: b.isVerified }),
+        certified: b.isVerified,
       }))}
     />
   );

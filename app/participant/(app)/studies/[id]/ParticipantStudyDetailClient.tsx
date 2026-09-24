@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import s from "@/components/rl/rl.module.css";
 import type { Slot } from "@/lib/interviews/schedule";
+import Hallmark from "@/components/brand/Hallmark";
+import { CERT_TITLES, type CertLevel } from "@/lib/brands/certification";
 
 type Step = "participant_to_propose" | "brand_to_choose" | "participant_to_choose" | null;
 
@@ -20,6 +22,7 @@ type Props = {
     rewardAmount: number;
     rewardType: string;
     deadlineAt: string | null;
+    brandCert: CertLevel;
   };
   slots: Slot[];
   availability: Record<string, string[]> | null;
@@ -150,6 +153,15 @@ export default function ParticipantStudyDetailClient(p: Props) {
           <span>{reward} de récompense</span>
           {p.study.deadlineAt && <span>Jusqu&apos;au {fmtDay(p.study.deadlineAt)}</span>}
         </div>
+        {p.study.brandCert > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16 }}>
+            <Hallmark level={p.study.brandCert} size={64} />
+            <span className={s.small} style={{ color: "var(--ink-2)", lineHeight: 1.45 }}>
+              <strong style={{ color: "var(--ink)" }}>Marque poinçonnée · {CERT_TITLES[p.study.brandCert].name}</strong><br />
+              {CERT_TITLES[p.study.brandCert].meaning}
+            </span>
+          </div>
+        )}
       </header>
 
       <div className={s.sectionGap}><Progress current={current} /></div>

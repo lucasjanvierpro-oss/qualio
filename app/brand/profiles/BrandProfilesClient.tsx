@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import type { EarnedBadge } from "@/lib/participants/badges";
+import { BadgeChips } from "@/components/badges/BadgeShelf";
 
 type GhostSummary = {
   overallQualityScore: number | null;
@@ -24,6 +26,8 @@ type ProfileCard = {
   brandAffinities: string[];
   followerRange: string | null;
   ghostFile: GhostSummary | null;
+  badges: EarnedBadge[];
+  trust: { interviewsDone: number; rating: number | null; reviewCount: number; brands: string[] };
 };
 
 const PROFILE_TYPES = ["expert", "insider", "influencer", "creative", "enthusiast"];
@@ -124,6 +128,22 @@ function ProfileCard({ p, onClick }: { p: ProfileCard; onClick: () => void }) {
           </span>
         )}
       </div>
+
+      {/* Médailles confirmées */}
+      {p.badges?.length > 0 && <div style={{ marginBottom: "10px" }}><BadgeChips badges={p.badges} max={3} /></div>}
+
+      {/* Historique entre marques */}
+      {p.trust && (
+        <div style={{ fontSize: "12px", color: "var(--color-text-secondary)", margin: "0 0 10px", display: "flex", flexWrap: "wrap", gap: "4px 10px" }}>
+          {p.trust.interviewsDone > 0 ? (
+            <>
+              <strong style={{ color: "var(--color-text-primary)" }}>{p.trust.interviewsDone} entretien{p.trust.interviewsDone > 1 ? "s" : ""}</strong>
+              {p.trust.rating !== null && <span><span style={{ color: "#d9a83e" }}>★</span> {p.trust.rating.toLocaleString("fr-FR")} ({p.trust.reviewCount} avis)</span>}
+              {p.trust.brands.length > 0 && <span>Déjà interrogé·e par {p.trust.brands.join(", ")}</span>}
+            </>
+          ) : <span>Jamais interrogé·e sur Rarelyst</span>}
+        </div>
+      )}
 
       {/* Bio */}
       {p.professionalBio && (

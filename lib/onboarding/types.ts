@@ -20,6 +20,17 @@ export type OnboardingState = {
   city: string;
   country: string;
 
+  // Segment et parcours pro
+  segment: "" | "pro" | "consumer" | "creator" | "hybrid";
+  proRole: string;
+  proSector: string;
+  proYears: string;
+  proCompany: string;
+
+  // Questions explicites : 0-3 par trait, et la preuve en une ligne
+  selfTraits: Record<string, number>;
+  traitProofs: Record<string, string>;
+
   // Étape 1 — démographie
   employmentStatus: string;
   educationLevel: string;
@@ -46,6 +57,9 @@ export type OnboardingState = {
   cvUrl: string;
   portfolioUrl: string;
   instagramUrl: string;
+  tiktokUrl: string;
+  websiteUrl: string;
+  otherLinks: string[];
 
   // Étape 7 — logistique
   availability: Record<string, string[]>;
@@ -60,21 +74,25 @@ export type OnboardingState = {
 export const EMPTY_ONBOARDING: OnboardingState = {
   step: 0,
   firstName: "", lastName: "", dateOfBirth: "", gender: "", city: "", country: "FR",
+  segment: "", proRole: "", proSector: "", proYears: "", proCompany: "",
+  selfTraits: {}, traitProofs: {},
   employmentStatus: "", educationLevel: "", householdIncome: "", ethnicity: "",
   macroUniverses: [], brandAffinities: [], engagementTypes: [],
   selfProfileType: "",
   behavioralChecklist: [], adaptiveAnswers: {},
   expertAnswers: {},
   linkedinUrl: "", cvUrl: "", portfolioUrl: "", instagramUrl: "",
+  tiktokUrl: "", websiteUrl: "", otherLinks: [],
   availability: {}, preferredFormat: "", interviewLanguages: [], rewardPreference: "",
   agreedToCodeOfConduct: false,
 };
 
 // Écrans du tunnel, dans l'ordre. Source unique de vérité — la page et les
 // server actions s'y réfèrent plutôt que de compter les écrans à la main.
+// `pro` n'est montré qu'aux segments pro et hybride.
 export const FUNNEL_SCREENS = [
-  "account", "gain", "demographics", "universes", "profile_type",
-  "behavioral", "expert", "level", "badges", "logistics", "charter", "final",
+  "account", "segment", "pro", "universes", "traits", "facts",
+  "voice", "links", "demographics", "logistics", "charter", "final",
 ] as const;
 
 export type FunnelScreen = (typeof FUNNEL_SCREENS)[number];

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { createInviteCode, activateBrandManually } from "@/app/actions/inviteCodes";
+import { createInviteCode, activateBrandManually, setBrandCertified } from "@/app/actions/inviteCodes";
 import { useRouter } from "next/navigation";
 
 type Code = { id: string; code: string; label: string; usedAt: string | null; expiresAt: string | null; createdAt: string };
-type Brand = { id: string; companyName: string; email: string; createdAt: string };
+type Brand = { id: string; companyName: string; email: string; createdAt: string; level?: number; certified?: boolean };
 
 export default function AdminAccessClient({
   codes,
@@ -166,7 +166,20 @@ return (
                   <div style={{ fontSize: "13px", fontWeight: 500, color: "#F9F8F6" }}>{b.companyName}</div>
                   <div style={{ fontSize: "12px", color: "#6B6760" }}>{b.email}</div>
                 </div>
-                <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "999px", background: "#1A7A4A20", color: "#1A7A4A", fontWeight: 600 }}>Actif</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span title="Titre du poinçon" style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "999px", background: "#D9A83E20", color: "#D9A83E", fontWeight: 700, fontFamily: "Georgia, serif" }}>
+                    {["—", "I", "II", "III"][b.level ?? 0]}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={activating === b.id}
+                    onClick={async () => { setActivating(b.id); await setBrandCertified(b.id, !b.certified); setActivating(null); router.refresh(); }}
+                    style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "6px", border: "1px solid #3A3936", background: "transparent", color: "#F9F8F6", cursor: "pointer" }}
+                  >
+                    {b.certified ? "Retirer la certification" : "Certifier (III)"}
+                  </button>
+                  <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "999px", background: "#1A7A4A20", color: "#1A7A4A", fontWeight: 600 }}>Actif</span>
+                </div>
               </div>
             ))}
           </div>

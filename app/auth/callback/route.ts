@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { emailDomain, isProDomain } from "@/lib/brands/certification";
+import { emailConfirmationRequired } from "@/lib/auth/emailConfirmation";
+import type { User } from "@supabase/supabase-js";
 
 /**
  * Retour de Google, de LinkedIn et des liens envoyés par email.
@@ -30,6 +33,25 @@ function splitName(meta: Record<string, unknown>) {
   return { firstName: given, lastName: family };
 }
 
+/**
+ * Titre II du poinçon : la marque a prouvé qu'elle contrôle son adresse pro.
+ * Google et LinkedIn ne transmettent qu'une adresse vérifiée ; un lien de
+ * confirmation reçu par email prouve la même chose — mais seulement quand la
+ * confirmation est réellement exigée, sinon le compte a été confirmé d'office.
+ */
+async function markDomainVerified(user: User) {
+  const email = user.email ?? "";
+  if (!isProDomain(emailDomain(email))) return;
+  const provider = String(user.app_metadata?.provider ?? "email");
+  const proven = provider === "google" || provider === "linkedin_oidc" ||
+    (provider === "email" && !!user.email_confirmed_at && emailConfirmationRequired());
+  if (!proven) return;
+  await prisma.brandProfile.updateMany({
+    where: { user: { supabaseId: user.id }, domainVerifiedAt: null },
+    data: { domainVerifiedAt: new Date() },
+  }).catch(() => {});
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
@@ -54,6 +76,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (existingUser) {
+    if (existingUser.role === "BRAND") await markDomainVerified(data.user);
     return NextResponse.redirect(new URL(DESTINATIONS[existingUser.role] ?? next, request.url));
   }
 
@@ -114,5 +137,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=account_conflict", request.url));
   }
 
+  if (role === "BRAND") await markDomainVerified(data.user);
   return NextResponse.redirect(new URL(ONBOARDING[role] ?? next, request.url));
 }
