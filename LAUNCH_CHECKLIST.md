@@ -15,7 +15,7 @@
   - [ ] 🔴 `DATABASE_URL` + `DIRECT_URL`
   - [ ] 🔴 `STRIPE_SECRET_KEY` + `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` + `STRIPE_WEBHOOK_SECRET`
   - [ ] 🔴 `ANTHROPIC_API_KEY` (ghost file, tags, rapport IA, recherche NL — rien ne marche sans)
-  - [ ] 🟡 `RESEND_API_KEY` (emails)
+  - [x] 🟡 `RESEND_API_KEY` (emails) — posée par l'intégration Resend ↔ Vercel, 24/09/2026
   - [ ] 🟡 `WHEREBY_API_KEY` (visio — fallback placeholder sinon)
   - [ ] 🟡 `CRON_SECRET` (générer avec `openssl rand -hex 32`)
   - [ ] 🔴 `NEXT_PUBLIC_APP_URL` (localhost en dev, URL Vercel en prod)
@@ -100,7 +100,7 @@
 
 ## J. EMAILS — RESEND
 
-- [ ] 🟡 Domaine vérifié dans Resend (sinon les emails partent de onboarding@resend.dev)
+- [x] 🟡 Domaine vérifié dans Resend (sinon les emails partent de onboarding@resend.dev) — rarelyst.co, 24/09/2026
 - [ ] 🔴 Email invitation participant (le plus important du flow)
 - [ ] 🔴 Email confirmation entretien avec lien visio (participant + marque)
 - [ ] 🟡 Rappels 24h / 1h (cron)

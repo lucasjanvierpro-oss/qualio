@@ -111,6 +111,6 @@ Sans domaine vérifié, Resend n'envoie que vers **ton propre email**. Pour envo
 ## ⚠️ Rappels avant le POC Lacoste
 
 - [ ] Passer les clés Stripe de `sk_test_` à `sk_live_` (vrais paiements)
-- [ ] Domaine Resend vérifié (vrais emails)
+- [x] Domaine Resend vérifié (vrais emails) — `rarelyst.co`, le 24/09/2026
 - [ ] Bucket `id-documents` créé dans Supabase
 - [ ] Dérouler la checklist complète : voir `LAUNCH_CHECKLIST.md`

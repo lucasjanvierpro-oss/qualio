@@ -204,6 +204,37 @@ Comptes de démo : mot de passe dans `SEED_PASSWORD` (`.env.local`, jamais dans 
 
 ---
 
+## Phase 15 — Emails réels et confirmation d'adresse ✅ 24 septembre 2026
+
+- **Resend branché pour de bon** : domaine `rarelyst.co` vérifié (région Irlande),
+  DNS posés dans Vercel (`resend._domainkey`, `send` MX + TXT, `_dmarc`),
+  suivi des clics désactivé. `RESEND_API_KEY` posée sur le projet Vercel `qualio`
+  par l'intégration officielle Resend ↔ Vercel (personne n'a copié la clé).
+- **Supabase envoie via Resend** (intégration Resend ↔ Supabase) : expéditeur
+  `Rarelyst <noreply@rarelyst.co>`, limite 25 emails/heure.
+- **Supabase pointait sur `http://localhost:3000`** (adresse du site) sans aucune
+  adresse de retour autorisée : liens d'email et retours Google/LinkedIn en ligne
+  partaient vers l'ordinateur de Lucas. Corrigé : `https://www.rarelyst.co`, et
+  retours autorisés `https://www.rarelyst.co/**` + `http://localhost:3000/**`.
+- **`proxy.ts` renvoyait `/auth/callback` vers `/login`** pour tout visiteur non
+  connecté (le code de connexion était perdu). `/auth/*` passe désormais.
+- **Modèles d'email en français** : « Confirmez votre adresse email » (lien vers
+  `/auth/confirm`, qui marche même ouvert sur un autre appareil) et « Votre code
+  de connexion » (le modèle envoyait un lien au lieu du code ; codes ramenés de
+  8 à 6 chiffres, ce qu'attend `verifyEmailCode`).
+- **`REQUIRE_EMAIL_CONFIRMATION=true`** sur Vercel : ne concerne que l'inscription
+  **marque**. Le tunnel participant (`createFunnelAccount`) confirme toujours
+  l'adresse lui-même pour ne pas couper le tunnel — mais Supabase envoie quand
+  même l'email de confirmation au participant (inoffensif, à trancher).
+- Lien expiré : la tentative de connexion renvoie un nouveau lien. La page de
+  connexion explique enfin les échecs (`?error=`).
+
+**Reste à faire** : Lucas teste une inscription marque avec une vraie adresse.
+La politique de confidentialité indique Resend « États-Unis » ; l'envoi part
+désormais d'Irlande, à vérifier avant de modifier le texte.
+
+---
+
 ## 🔴 Problèmes identifiés, PAS encore traités
 
 1. **Réseau local bloquant Postgres** → soit changer de réseau (partage de
