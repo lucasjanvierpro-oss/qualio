@@ -23,6 +23,7 @@ export type Candidate = {
   idVerified: boolean;
   linkedinVerified: boolean;
   interviewsDone: number;
+  attendance: number | null;
   kind: string | null;
   expertise: string | null;
   alsoKnows: string[];
@@ -93,10 +94,17 @@ function Seals({ c }: { c: Candidate }) {
   if (c.interviewsDone > 0) {
     items.push({ key: "xp", label: `${c.interviewsDone} entretien${c.interviewsDone > 1 ? "s" : ""}`, strong: false });
   }
+  // Une présence parfaite se dit ; une présence moyenne ne se cache pas non plus,
+  // c'est précisément ce qu'une marque a besoin de savoir avant de réserver.
+  if (c.attendance !== null) {
+    items.push({ key: "att", label: `${c.attendance} % de présence`, strong: false });
+  }
   if (!items.length) return null;
+  // Trois au maximum : au-delà, plus aucune ne se remarque.
+  const shown = items.slice(0, 3);
   return (
     <div className={p.seals}>
-      {items.map((i) => (
+      {shown.map((i) => (
         <span key={i.key} className={`${p.seal} ${i.strong ? p.sealOk : ""}`}>
           {i.strong && TICK}
           {i.label}

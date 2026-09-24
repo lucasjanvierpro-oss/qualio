@@ -36,7 +36,9 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
                 profession: true, brandSummary: true,
                 accessTier: true, accessNote: true,
                 linkedinVerified: true, idVerificationStatus: true,
-                _count: { select: { applications: { where: { status: "COMPLETED" } } } },
+                // Le passé d'un participant convainc plus qu'une déclaration :
+                // entretiens menés d'un côté, absences de l'autre.
+                applications: { select: { status: true } },
                 ghostFile: {
                   select: {
                     profileType: true, primaryExpertise: true, secondaryExpertises: true,
@@ -71,6 +73,11 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
     );
     const refs = (g?.aiTags ?? []).filter((tag) => !shown.has(tag.toLowerCase()));
 
+    // Le taux de présence n'a de sens qu'après quelques entretiens : sur un seul,
+    // « 0 % » ou « 100 % » ne dit rien et induit la marque en erreur.
+    const done = p.applications.filter((a) => a.status === "COMPLETED").length;
+    const noShow = p.applications.filter((a) => a.status === "NO_SHOW").length;
+
     return {
       applicationId: a.id,
       status: a.status,
@@ -85,7 +92,8 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
       accessNote: p.accessNote,
       idVerified: p.idVerificationStatus === "VERIFIED",
       linkedinVerified: p.linkedinVerified,
-      interviewsDone: p._count.applications,
+      interviewsDone: done,
+      attendance: done + noShow >= 3 ? Math.round((done / (done + noShow)) * 100) : null,
       kind: g?.profileType ?? null,
       expertise: g?.primaryExpertise ?? null,
       alsoKnows: g?.secondaryExpertises ?? [],
