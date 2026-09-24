@@ -220,7 +220,11 @@ export async function login(formData: FormData) {
 
   if (error) {
     if (error.message.includes("Email not confirmed")) {
-      return { error: "Votre email n'est pas encore confirmé. Vérifiez votre boîte mail." };
+      // Le lien reçu à l'inscription expire : sans ce renvoi, une marque qui a
+      // tardé à cliquer n'aurait plus aucun moyen d'activer son compte.
+      // Supabase ne répond ainsi qu'une fois le mot de passe reconnu.
+      await supabase.auth.resend({ type: "signup", email });
+      return { error: "Votre adresse n'est pas encore confirmée. Un nouveau lien vient de vous être envoyé : vérifiez votre boîte mail." };
     }
     return { error: "Email ou mot de passe incorrect" };
   }
