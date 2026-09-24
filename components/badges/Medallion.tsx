@@ -2,10 +2,9 @@ import { useId } from "react";
 import { BADGES, type BadgeId, type BadgeState } from "@/lib/participants/badges";
 import css from "./badges.module.css";
 
-// Médaille gravée : bord métallique, champ émaillé, devise en couronne, pictogramme
-// au centre, reflet qui passe. Chaque famille a sa forme — sceau festonné pour le
-// statut, hexagone pour le profil, octogone pour le parcours — pour qu'on
-// reconnaisse de loin ce qui est un état, une nature ou un historique.
+// Médaille gravée : bord métallique, champ émaillé, nom en arc, pictogramme
+// au centre, reflet qui passe. Chaque famille a sa forme — sceau festonné pour
+// l'identité, hexagone pour les preuves, octogone pour l'historique.
 
 type Metal = [string, string, string];
 const GOLD: Metal = ["#fff3c4", "#d9a83e", "#7d5410"];
@@ -18,38 +17,34 @@ const HOLO: Metal = ["#c8fbea", "#b7c8ff", "#ffc9e6"];
 type Palette = { rim: Metal; field: [string, string]; ink: string; text: string; holo?: boolean };
 
 const PALETTES: Record<BadgeId, Palette> = {
-  nouveau:       { rim: HOLO,   field: ["#3a2a66", "#120b24"], ink: "#f2e9ff", text: "#e3d6ff", holo: true },
-  verifie:       { rim: SILVER, field: ["#23845f", "#0a3a28"], ink: "#dcfbeb", text: "#bdf0d6" },
-  relie:         { rim: SILVER, field: ["#41649a", "#152744"], ink: "#e3edff", text: "#c6d6f5" },
-  insider:       { rim: GOLD,   field: ["#2e2638", "#0c0911"], ink: "#f1cf78", text: "#e6c46d" },
-  early_adopter: { rim: LILAC,  field: ["#7c56f2", "#2b1479"], ink: "#ffffff", text: "#e6dcff" },
-  maven:         { rim: ROSE,   field: ["#ea6a50", "#76230f"], ink: "#fff1ea", text: "#ffd9cc" },
-  collector:     { rim: GOLD,   field: ["#a7731b", "#452b05"], ink: "#ffe7a8", text: "#ffe1a0" },
-  thrifter:      { rim: BRONZE, field: ["#72833a", "#29330d"], ink: "#f0f7cf", text: "#dfeab0" },
-  quality:       { rim: SILVER, field: ["#f1f3f5", "#a3acb6"], ink: "#262c33", text: "#3b424b" },
-  luxury:        { rim: GOLD,   field: ["#921f3d", "#360613"], ink: "#f3d27f", text: "#f0c9a0" },
-  loyal:         { rim: SILVER, field: ["#33508f", "#0e1837"], ink: "#e6edff", text: "#c9d5f7" },
-  sharer:        { rim: ROSE,   field: ["#e2386f", "#6c1236"], ink: "#fff0f5", text: "#ffd0e0" },
-  premier:       { rim: BRONZE, field: ["#6e4b2b", "#26170a"], ink: "#ffd9ab", text: "#f3c996" },
-  habitue:       { rim: SILVER, field: ["#4d535d", "#1a1d22"], ink: "#eef1f5", text: "#d3d8df" },
-  recommande:    { rim: GOLD,   field: ["#f2c64a", "#8f6200"], ink: "#3a2600", text: "#4a3200" },
-  ponctuel:      { rim: SILVER, field: ["#159064", "#063d2d"], ink: "#dcfff0", text: "#b8f0d8" },
+  nouveau:    { rim: HOLO,   field: ["#3a2a66", "#120b24"], ink: "#f2e9ff", text: "#e3d6ff", holo: true },
+  verifie:    { rim: SILVER, field: ["#23845f", "#0a3a28"], ink: "#dcfbeb", text: "#bdf0d6" },
+  linkedin:   { rim: SILVER, field: ["#2f6fb3", "#0e2d57"], ink: "#e6f0ff", text: "#cfe0fa" },
+  emploi:     { rim: GOLD,   field: ["#2e2638", "#0c0911"], ink: "#f1cf78", text: "#e6c46d" },
+  video:      { rim: ROSE,   field: ["#e2386f", "#6c1236"], ink: "#fff0f5", text: "#ffd0e0" },
+  cv:         { rim: SILVER, field: ["#f1f3f5", "#a3acb6"], ink: "#262c33", text: "#3b424b" },
+  portfolio:  { rim: LILAC,  field: ["#7c56f2", "#2b1479"], ink: "#ffffff", text: "#e6dcff" },
+  reseaux:    { rim: ROSE,   field: ["#ea6a50", "#76230f"], ink: "#fff1ea", text: "#ffd9cc" },
+  achat:      { rim: GOLD,   field: ["#921f3d", "#360613"], ink: "#f3d27f", text: "#f0c9a0" },
+  diplome:    { rim: BRONZE, field: ["#72833a", "#29330d"], ink: "#f0f7cf", text: "#dfeab0" },
+  premier:    { rim: BRONZE, field: ["#6e4b2b", "#26170a"], ink: "#ffd9ab", text: "#f3c996" },
+  habitue:    { rim: SILVER, field: ["#4d535d", "#1a1d22"], ink: "#eef1f5", text: "#d3d8df" },
+  recommande: { rim: GOLD,   field: ["#f2c64a", "#8f6200"], ink: "#3a2600", text: "#4a3200" },
+  ponctuel:   { rim: SILVER, field: ["#159064", "#063d2d"], ink: "#dcfff0", text: "#b8f0d8" },
 };
 
 // Pictogrammes dessinés sur une grille de 24.
 const GLYPHS: Record<BadgeId, string> = {
   nouveau: "M12 2.5l1.9 6.2 6.1 2.3-6.1 2.3L12 19.5l-1.9-6.2L4 11l6.1-2.3z M19 3v4 M17 5h4",
   verifie: "M12 3l7 3v5c0 4.6-3 8-7 10-4-2-7-5.4-7-10V6z M8.6 12.2l2.4 2.4 4.6-4.9",
-  relie: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1 M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
-  insider: "M8 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8z M12 12h9 M18 12v3 M21 12v2.5",
-  early_adopter: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18z M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z",
-  maven: "M4 5h16v10.5H10l-5 4v-4H4z M8.5 10.3h.01 M12 10.3h.01 M15.5 10.3h.01",
-  collector: "M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z",
-  thrifter: "M4.5 11a7.5 7.5 0 0 1 13.2-4.6 M19.5 13a7.5 7.5 0 0 1-13.2 4.6 M18 3v4h-4 M6 21v-4h4",
-  quality: "M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z",
-  luxury: "M6.5 4h11l3.5 5-9 11L3 9z M3 9h18 M9.5 4 8 9l4 11 4-11-1.5-5",
-  loyal: "M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.1a4.3 4.3 0 0 1 7.5 2.7C19.5 15.4 12 20 12 20z",
-  sharer: "M3 6.5h12.5v11H3z M15.5 10.5l5-3v9l-5-3",
+  linkedin: "M3 5h18v14H3z M7.5 9.5a2 2 0 1 0 0 .01 M5 15.5c.6-2.2 4.4-2.2 5 0 M13 9h5 M13 12h5 M13 15h3",
+  emploi: "M4 8h16v11H4z M9 8V5.5h6V8 M8.5 13.5l2.2 2.2 4.8-4.7",
+  video: "M3 6.5h12.5v11H3z M15.5 10.5l5-3v9l-5-3",
+  cv: "M6 3h9l3 3v15H6z M15 3v3h3 M9 11h6 M9 14h6 M9 17h4",
+  portfolio: "M3 5.5c3-1 6-1 9 1 3-2 6-2 9-1v13c-3-1-6-1-9 1-3-2-6-2-9-1z M12 6.5v13",
+  reseaux: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18z M3.5 9h17 M3.5 15h17 M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9s1-6.5 3.5-9z",
+  achat: "M5 8h14l-1 13H6z M9 8a3 3 0 0 1 6 0 M9.5 14.5l2 2 3.5-3.5",
+  diplome: "M2 9l10-5 10 5-10 5z M6 11v5c3 2 9 2 12 0v-5 M22 9v5",
   premier: "M9 5a3 3 0 0 1 6 0v6.5a3 3 0 0 1-6 0z M5.5 11.5a6.5 6.5 0 0 0 13 0 M12 18v3",
   habitue: "M4 6h16v14H4z M4 10h16 M8 3.5v4 M16 3.5v4 M8.5 14.5l2.2 2.2 4.8-4.7",
   recommande: "M12 3l2.8 5.8 6.2.9-4.5 4.4 1.1 6.2L12 17.4l-5.6 2.9 1.1-6.2L3 9.7l6.2-.9z",
@@ -89,10 +84,13 @@ function polygon(sides: number, r: number, round: number, rot = 0): string {
   return d + "Z";
 }
 
+// Sceau pour l'identité et le statut, hexagone pour les preuves, octogone
+// pour l'historique.
 const SHAPES = {
   statut: seal(),
-  profil: polygon(6, 57, 9),
-  parcours: polygon(8, 56, 7, Math.PI / 8),
+  identite: seal(),
+  preuve: polygon(6, 57, 9),
+  historique: polygon(8, 56, 7, Math.PI / 8),
 };
 
 export type MedallionProps = {

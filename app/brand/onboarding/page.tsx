@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { DEFAULT_PRICING } from "@/lib/pricing/config";
 
 export default function BrandOnboardingPage() {
   const [step, setStep] = useState(0);
@@ -59,16 +60,19 @@ export default function BrandOnboardingPage() {
                 Choisissez votre formule
               </h2>
               <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: 0 }}>
-                Vous pouvez démarrer gratuitement avec 5 crédits.
+                Un profil coûte de {DEFAULT_PRICING.tiers.averti.baseCredits} à {DEFAULT_PRICING.tiers.rare.baseCredits} crédits selon son palier · 1 crédit = 10 € HT.
               </p>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
-              {[
-                { plan: "Essai gratuit", price: "0€", credits: "5 crédits", studies: "1 étude", cta: "Démarrer gratuitement", recommended: false },
-                { plan: "Starter", price: "149€/mois", credits: "20 crédits/mois", studies: "3 études/mois", cta: "Choisir Starter", recommended: true },
-                { plan: "Growth", price: "349€/mois", credits: "60 crédits/mois", studies: "Illimité", cta: "Choisir Growth", recommended: false },
-              ].map((p) => (
+              {DEFAULT_PRICING.packs.map((pk, i) => ({
+                plan: pk.label,
+                price: `${(pk.priceCents / 100).toLocaleString("fr-FR")} € HT`,
+                credits: `${pk.credits} crédits`,
+                studies: pk.note,
+                cta: "Choisir",
+                recommended: i === 1,
+              })).map((p) => (
                 <div key={p.plan} style={{ padding: "18px 20px", background: p.recommended ? "var(--color-accent-light)" : "var(--color-surface)", border: `1px solid ${p.recommended ? "var(--color-accent)" : "var(--color-border-base)"}`, borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -80,7 +84,7 @@ export default function BrandOnboardingPage() {
                   <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                     <span style={{ fontFamily: "var(--font-mono-base)", fontSize: "15px", fontWeight: 700, color: "var(--color-text-primary)" }}>{p.price}</span>
                     <button
-                      onClick={() => router.push("/brand/dashboard")}
+                      onClick={() => router.push("/brand/account")}
                       style={{ padding: "8px 16px", background: p.recommended ? "var(--color-accent)" : "var(--color-surface-2)", color: p.recommended ? "#fff" : "var(--color-text-primary)", border: `1px solid ${p.recommended ? "transparent" : "var(--color-border-strong)"}`, borderRadius: "7px", fontSize: "13px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
                     >
                       {p.cta}
@@ -91,7 +95,7 @@ export default function BrandOnboardingPage() {
             </div>
 
             <p style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textAlign: "center" }}>
-              Pas de carte bancaire requise pour l'essai gratuit · Annulez à tout moment
+              Sans abonnement · Les crédits n&apos;expirent pas · <a href="/brand/dashboard" style={{ color: "inherit" }}>Plus tard</a>
             </p>
           </div>
         )}

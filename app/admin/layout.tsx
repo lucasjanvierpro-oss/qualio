@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { ReactNode } from "react";
 
+// Relancer une analyse IA depuis l'admin la fait tourner après la réponse.
+export const maxDuration = 300;
+
 const NAV = [
-  { href: "/admin",                label: "Vue d'ensemble" },
+  { href: "/admin",                label: "Pilotage" },
+  { href: "/admin/prix",           label: "Prix" },
   { href: "/admin/studies",        label: "Études" },
   { href: "/admin/participants",   label: "Participants" },
   { href: "/admin/matching",       label: "Matching" },

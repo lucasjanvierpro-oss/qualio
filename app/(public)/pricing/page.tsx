@@ -1,254 +1,107 @@
 import Link from "next/link";
+import { getPricingConfig } from "@/lib/pricing/quotes";
+import { TIERS } from "@/lib/pricing/config";
 
-const PACKS = [
-  {
-    name: "Essai gratuit",
-    price: "0€",
-    credits: 5,
-    unit: null,
-    features: [
-      "5 crédits offerts",
-      "1 étude complète (5 participants)",
-      "Sélection manuelle par l'équipe Rarelyst",
-      "Profils vérifiés et screeners qualitatifs",
-    ],
-    cta: "Commencer gratuitement",
-    href: "/signup/brand",
-    highlight: false,
-    tag: null,
-  },
-  {
-    name: "Pack M",
-    price: "780€",
-    credits: 12,
-    unit: "65€ / participant",
-    features: [
-      "12 crédits (sans expiration)",
-      "~2 études complètes",
-      "Sélection manuelle par l'équipe Rarelyst",
-      "Profils vérifiés + Ghost File IA",
-      "Rapport de synthèse IA post-étude",
-      "Support prioritaire par email",
-    ],
-    cta: "Acheter ce pack",
-    href: "/signup/brand?pack=M",
-    highlight: true,
-    tag: "Le plus populaire",
-  },
-  {
-    name: "Pack L",
-    price: "1 375€",
-    credits: 25,
-    unit: "55€ / participant",
-    features: [
-      "25 crédits (sans expiration)",
-      "~4–5 études complètes",
-      "Sélection manuelle par l'équipe Rarelyst",
-      "Profils vérifiés + Ghost File IA",
-      "Rapport de synthèse IA post-étude",
-      "Support dédié (appel de cadrage inclus)",
-    ],
-    cta: "Acheter ce pack",
-    href: "/signup/brand?pack=L",
-    highlight: false,
-    tag: "−8%",
-  },
+// Les tarifs viennent des réglages de prix (/admin/prix) : une seule grille
+// pour ce site, le compte marque et le paiement.
+export const revalidate = 300;
+
+const HOW = [
+  { t: "Le palier", d: "Client·e averti·e, Initié·e ou Rare : ce que la personne sait et a prouvé de son métier." },
+  { t: "La durée", d: "30, 45 ou 60 minutes ; un participant de focus group coûte moins qu'un entretien seul." },
+  { t: "La demande", d: "Un profil que plusieurs marques ont retenu ces trois derniers mois vaut un peu plus." },
+  { t: "La rareté", d: "Moins il existe de profils comparables dans le panel, plus le prix monte." },
+  { t: "La certification", d: "Identité, emploi, LinkedIn, CV vérifiés : un profil prouvé vaut plus qu'un profil déclaré." },
+  { t: "Les avis", d: "Les notes laissées par les autres marques après leurs entretiens." },
 ];
 
 const FAQ = [
-  {
-    q: "C'est quoi un crédit ?",
-    a: "1 crédit = 1 participant confirmé pour votre étude. Si un participant ne se présente pas, le crédit est remboursé automatiquement.",
-  },
-  {
-    q: "Les crédits expirent ?",
-    a: "Non. Tous les crédits achetés sont sans date d'expiration. Vous pouvez les utiliser à votre rythme.",
-  },
-  {
-    q: "Combien de temps pour recevoir des participants ?",
-    a: "48 à 72h après votre brief pour les premiers profils confirmés. C'est la promesse centrale de Rarelyst.",
-  },
-  {
-    q: "Que se passe-t-il si un participant annule ?",
-    a: "Vous récupérez votre crédit automatiquement. On vous propose un remplaçant dans les 24h.",
-  },
-  {
-    q: "Puis-je personnaliser mes critères ?",
-    a: "Oui — âge, ville, profession, affinités marques, comportements d'achat, et tout critère libre. La sélection est manuelle, donc très précise.",
-  },
-  {
-    q: "Quelle est la récompense pour les participants ?",
-    a: "Vous choisissez le montant (20€ à 100€) et le format (virement bancaire ou bon d'achat). C'est géré par Rarelyst, vous n'avez rien à traiter.",
-  },
+  { q: "C'est quoi un crédit ?", a: "1 crédit vaut 10 € HT. Chaque profil affiche son prix en crédits avant que vous l'acceptiez ; rien n'est débité tant que vous n'avez pas dit oui." },
+  { q: "Pourquoi tous les profils n'ont pas le même prix ?", a: "Une vendeuse d'une maison de luxe ou une directrice artistique ne s'interrogent pas au même prix qu'un client passionné. Le prix se calcule seul à partir du palier, de la durée, de la demande, de la rareté, des preuves et des avis ; il est figé au moment où le profil vous est proposé." },
+  { q: "Une petite marque peut-elle commencer ?", a: "Oui. Le pack Découverte (400 € HT) couvre un premier entretien avec un·e client·e averti·e, sans abonnement ni engagement." },
+  { q: "Et si le participant ne vient pas ?", a: "Les crédits du profil vous sont rendus automatiquement." },
+  { q: "Les crédits expirent-ils ?", a: "Non. Utilisez-les à votre rythme." },
+  { q: "Qui paie les participants ?", a: "Rarelyst, sur ce que vous avez réglé en crédits. Vous n'avez ni virement ni bon d'achat à gérer." },
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const cfg = await getPricingConfig();
+  const euros = (credits: number) => ((credits * cfg.creditValueCents) / 100).toLocaleString("fr-FR");
+
   return (
-    <div style={{ background: "var(--color-bg)", minHeight: "100vh" }}>
-
-      {/* Nav */}
-      <nav style={{ padding: "0 40px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--color-border-base)" }}>
-        <Link href="/" style={{ textDecoration: "none" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontStyle: "normal", color: "var(--color-text-primary)" }}>
-            Rarelyst
-          </span>
-        </Link>
-        <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-          <Link href="/login" style={{ fontSize: "13px", color: "var(--color-text-secondary)", textDecoration: "none" }}>Connexion</Link>
-          <Link href="/signup/brand" style={{ padding: "7px 16px", background: "var(--color-accent)", color: "#fff", borderRadius: "3px", fontSize: "13px", fontWeight: 600, textDecoration: "none" }}>
-            Démarrer →
-          </Link>
-        </div>
-      </nav>
-
-      {/* Header */}
-      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "72px 40px 48px", textAlign: "center" }}>
-        <p className="q-label" style={{ marginBottom: "14px" }}>Tarifs</p>
-        <h1 style={{
-          fontFamily: "var(--font-display)",
-          fontSize: "clamp(32px, 4vw, 52px)",
-          fontWeight: 800, fontStyle: "normal",
-          letterSpacing: "-0.03em",
-          color: "var(--color-text-primary)",
-          margin: "0 0 16px",
-        }}>
-          Simple, transparent, sans abonnement
+    <div style={{ width: "100%", maxWidth: 1000, margin: "0 auto", color: "var(--color-text-primary)" }}>
+      <header style={{ textAlign: "center", marginBottom: 44 }}>
+        <p className="q-label" style={{ marginBottom: 12 }}>Tarifs</p>
+        <h1 style={{ fontSize: "clamp(30px, 4vw, 46px)", fontWeight: 800, letterSpacing: "-0.035em", margin: "0 0 12px", lineHeight: 1.05 }}>
+          Vous payez le profil, pas un abonnement
         </h1>
-        <p style={{ fontSize: "16px", color: "var(--color-text-secondary)", maxWidth: "420px", margin: "0 auto", lineHeight: 1.65 }}>
-          Achetez des crédits, utilisez-les quand vous voulez. Pas d'engagement, pas d'expiration.
+        <p style={{ fontSize: 16, color: "var(--color-text-secondary)", maxWidth: 560, margin: "0 auto", lineHeight: 1.6 }}>
+          Des crédits, sans engagement. Chaque profil affiche son prix avant que vous l&apos;acceptiez : ce qu&apos;il sait, ce qu&apos;il a prouvé, combien il est demandé.
         </p>
-      </div>
+      </header>
 
-      {/* Plans */}
-      <div style={{ maxWidth: "960px", margin: "0 auto", padding: "0 40px 80px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
-          {PACKS.map((p) => (
-            <div key={p.name} className={p.highlight ? "" : "hover-lift"} style={{
-              background: p.highlight ? "var(--color-accent)" : "var(--color-surface)",
-              border: `1px solid ${p.highlight ? "var(--color-accent)" : "var(--color-border-base)"}`,
-              borderRadius: "4px",
-              padding: "32px 28px",
-              position: "relative",
-              display: "flex",
-              flexDirection: "column",
-            }}>
-              {p.tag && (
-                <div style={{
-                  position: "absolute", top: "-1px", right: "20px",
-                  padding: "3px 10px",
-                  background: p.highlight ? "#fff" : "var(--color-warning-light)",
-                  color: p.highlight ? "var(--color-accent)" : "var(--color-warning)",
-                  border: `1px solid ${p.highlight ? "#fff" : "var(--color-warning)"}`,
-                  borderTop: "none",
-                  borderRadius: "0 0 4px 4px",
-                  fontSize: "10px", fontWeight: 700,
-                  letterSpacing: "0.04em", textTransform: "uppercase",
-                }}>
-                  {p.tag}
-                </div>
-              )}
-
-              <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.10em", color: p.highlight ? "rgba(255,255,255,0.5)" : "var(--color-text-tertiary)", margin: "0 0 16px" }}>
-                {p.name}
-              </p>
-
-              <div style={{ marginBottom: "8px" }}>
-                <span style={{ fontFamily: "var(--font-mono-base)", fontSize: "40px", fontWeight: 700, color: p.highlight ? "#fff" : "var(--color-text-primary)", letterSpacing: "-0.03em", lineHeight: 1 }}>
-                  {p.price}
-                </span>
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
+        {TIERS.map((id, i) => {
+          const t = cfg.tiers[id];
+          return (
+            <div key={id} style={{ padding: "24px 24px 22px", borderRadius: 16, background: i === 2 ? "#1c1624" : "var(--color-surface)", color: i === 2 ? "#f1edf6" : undefined, border: `1px solid ${i === 2 ? "#1c1624" : "var(--color-border-base)"}` }}>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", opacity: 0.6 }}>{i === 2 ? "Sur demande possible" : `Palier ${i + 1}`}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", marginTop: 6 }}>{t.label}</div>
+              <div style={{ fontSize: 14, opacity: 0.72, marginTop: 4, minHeight: 42, lineHeight: 1.45 }}>{t.who}</div>
+              <div style={{ marginTop: 16, display: "flex", alignItems: "baseline", gap: 6 }}>
+                <span style={{ fontSize: 13, opacity: 0.6 }}>dès</span>
+                <span style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}>{t.baseCredits}</span>
+                <span style={{ fontSize: 14, fontWeight: 600 }}>crédits</span>
               </div>
+              <div style={{ fontSize: 13, opacity: 0.65 }}>soit {euros(t.baseCredits)} € HT l&apos;entretien de 45 min, tout compris</div>
+            </div>
+          );
+        })}
+      </section>
 
-              {p.unit ? (
-                <div style={{ fontSize: "12px", color: p.highlight ? "rgba(255,255,255,0.5)" : "var(--color-text-tertiary)", marginBottom: "24px" }}>
-                  {p.unit}
-                </div>
-              ) : (
-                <div style={{ fontSize: "12px", color: p.highlight ? "rgba(255,255,255,0.5)" : "var(--color-text-tertiary)", marginBottom: "24px" }}>
-                  Pour découvrir Rarelyst
-                </div>
-              )}
-
-              <div style={{ borderTop: `1px solid ${p.highlight ? "rgba(255,255,255,0.15)" : "var(--color-border-base)"}`, paddingTop: "20px", marginBottom: "24px", flex: 1 }}>
-                {p.features.map((f) => (
-                  <div key={f} style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: "10px" }}>
-                    <span style={{ color: p.highlight ? "rgba(255,255,255,0.6)" : "var(--color-success)", fontWeight: 700, flexShrink: 0, fontSize: "12px", marginTop: "1px" }}>✓</span>
-                    <span style={{ fontSize: "13px", color: p.highlight ? "rgba(255,255,255,0.8)" : "var(--color-text-secondary)", lineHeight: 1.5 }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Link href={p.href} style={{
-                display: "block", textAlign: "center",
-                padding: "11px", borderRadius: "2px",
-                fontSize: "13px", fontWeight: 700,
-                textDecoration: "none",
-                background: p.highlight ? "#fff" : "var(--color-accent)",
-                color: p.highlight ? "var(--color-accent)" : "#fff",
-              }}>
-                {p.cta}
-              </Link>
+      <section style={{ marginTop: 44 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", margin: "0 0 6px" }}>Comment le prix d&apos;un profil se calcule</h2>
+        <p style={{ fontSize: 14.5, color: "var(--color-text-secondary)", margin: "0 0 18px" }}>
+          Automatiquement, et toujours affiché avec son détail. Le participant touche une part fixe de ce prix : plus un profil vaut, plus il est payé.
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "14px 28px" }}>
+          {HOW.map((h) => (
+            <div key={h.t} style={{ borderTop: "2px solid var(--color-text-primary)", paddingTop: 10 }}>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>{h.t}</div>
+              <div style={{ fontSize: 14, color: "var(--color-text-secondary)", marginTop: 3, lineHeight: 1.5 }}>{h.d}</div>
             </div>
           ))}
         </div>
+      </section>
 
-        {/* Credit unit visual */}
-        <div style={{ marginTop: "48px", padding: "28px 32px", background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "4px", display: "flex", alignItems: "center", gap: "32px", justifyContent: "center", flexWrap: "wrap" }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "36px", fontWeight: 700, color: "var(--color-text-primary)", lineHeight: 1 }}>1</div>
-            <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-text-tertiary)", marginTop: "4px" }}>crédit</div>
-          </div>
-          <div style={{ fontSize: "22px", color: "var(--color-border-strong)" }}>=</div>
-          <div style={{ fontSize: "14px", color: "var(--color-text-secondary)", lineHeight: 1.6, maxWidth: "360px" }}>
-            <strong style={{ color: "var(--color-text-primary)" }}>1 participant confirmé</strong> pour votre étude.
-            Si un participant annule ou ne se présente pas, le crédit vous est restitué automatiquement.
-          </div>
+      <section style={{ marginTop: 48 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", margin: "0 0 16px" }}>Les packs de crédits</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+          {cfg.packs.map((p) => (
+            <div key={p.id} style={{ padding: 20, borderRadius: 14, background: "var(--color-surface)", border: "1px solid var(--color-border-base)" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--color-text-secondary)" }}>{p.label}</div>
+              <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-0.03em", marginTop: 4, fontVariantNumeric: "tabular-nums" }}>{p.credits} <span style={{ fontSize: 14, fontWeight: 600 }}>crédits</span></div>
+              <div style={{ fontSize: 16, fontWeight: 700, marginTop: 2 }}>{(p.priceCents / 100).toLocaleString("fr-FR")} € HT</div>
+              <div style={{ fontSize: 13, color: "var(--color-text-tertiary)", marginTop: 4 }}>{p.note}</div>
+            </div>
+          ))}
         </div>
-      </div>
-
-      {/* FAQ */}
-      <section style={{ background: "var(--color-surface)", borderTop: "1px solid var(--color-border-base)" }}>
-        <div style={{ maxWidth: "720px", margin: "0 auto", padding: "72px 40px" }}>
-          <p className="q-label" style={{ marginBottom: "20px", textAlign: "center" }}>Questions fréquentes</p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-            {FAQ.map((item, i) => (
-              <div key={i} style={{ borderTop: i === 0 ? "1px solid var(--color-border-base)" : "none", borderBottom: "1px solid var(--color-border-base)", padding: "20px 0" }}>
-                <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "8px" }}>
-                  {item.q}
-                </div>
-                <div style={{ fontSize: "14px", color: "var(--color-text-secondary)", lineHeight: 1.65 }}>
-                  {item.a}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div style={{ textAlign: "center", marginTop: 26 }}>
+          <Link href="/signup/brand" style={{ display: "inline-block", padding: "12px 26px", background: "var(--color-accent)", color: "#fff", borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: "none" }}>
+            Créer un compte marque →
+          </Link>
         </div>
       </section>
 
-      {/* Bottom CTA */}
-      <div style={{ textAlign: "center", padding: "72px 40px" }}>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "36px", fontWeight: 800, fontStyle: "normal", letterSpacing: "-0.025em", color: "var(--color-text-primary)", margin: "0 0 20px" }}>
-          Prêt à recruter autrement ?
-        </h2>
-        <Link href="/signup/brand" style={{ display: "inline-block", padding: "13px 32px", background: "var(--color-accent)", color: "#fff", borderRadius: "3px", fontSize: "14px", fontWeight: 700, textDecoration: "none" }}>
-          Commencer gratuitement →
-        </Link>
-        <p style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginTop: "12px" }}>
-          5 crédits offerts · Aucune carte bancaire requise
-        </p>
-      </div>
-
-      {/* Footer */}
-      <footer style={{ borderTop: "1px solid var(--color-border-base)", padding: "24px 40px" }}>
-        <div style={{ maxWidth: "960px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: "16px", fontStyle: "normal", color: "var(--color-text-primary)" }}>Rarelyst</span>
-          <div style={{ display: "flex", gap: "20px" }}>
-            <Link href="/" style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textDecoration: "none" }}>Accueil</Link>
-            <Link href="/login" style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textDecoration: "none" }}>Connexion</Link>
-            <span style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>© 2026 Rarelyst</span>
+      <section style={{ marginTop: 56, maxWidth: 720, marginInline: "auto" }}>
+        <h2 style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", margin: "0 0 10px" }}>Questions fréquentes</h2>
+        {FAQ.map((f) => (
+          <div key={f.q} style={{ borderBottom: "1px solid var(--color-border-base)", padding: "16px 0" }}>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>{f.q}</div>
+            <div style={{ fontSize: 14, color: "var(--color-text-secondary)", marginTop: 6, lineHeight: 1.6 }}>{f.a}</div>
           </div>
-        </div>
-      </footer>
+        ))}
+      </section>
     </div>
   );
 }

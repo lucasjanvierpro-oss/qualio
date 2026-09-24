@@ -23,10 +23,10 @@ const LOCK = (
  * note, marques qui l'ont interrogé·e, derniers avis. Comme les avis d'une
  * place de marché, mais entre marques uniquement.
  */
-export default function TrustBlock({ trust, firstName }: { trust: Trust; firstName: string }) {
+export default function TrustBlock({ trust, firstName, dark }: { trust: Trust; firstName: string; dark?: boolean }) {
   const hasHistory = trust.interviewsDone > 0;
   return (
-    <section className={css.block}>
+    <section className={`${css.block} ${dark ? css.dark : ""}`}>
       <div className={css.head}>
         <span className={css.title}>Historique Rarelyst</span>
         <span className={css.private}>{LOCK} Visible des marques uniquement</span>

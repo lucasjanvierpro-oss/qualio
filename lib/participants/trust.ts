@@ -5,7 +5,7 @@
 // propre fiche l'annonce), mais n'en voit pas le contenu : un avis ne se
 // négocie pas.
 
-import { computeBadges, linkCounts, type EarnedBadge } from "./badges";
+import { computeBadges, computeTraits, proofsFromProfile, type EarnedBadge, type TraitState } from "./badges";
 
 export const REVIEW_TAGS = [
   "Précis·e", "Inspirant·e", "Vocabulaire d'expert", "Franc·he",
@@ -82,36 +82,41 @@ export function trustFrom(apps: TrustApp[]): Trust {
   };
 }
 
-/** Sélection Prisma des champs nécessaires aux badges. */
+/** Sélection Prisma des champs nécessaires aux médailles et aux traits. */
 export const BADGE_PROFILE_SELECT = {
-  createdAt: true, segment: true, proRole: true, selfTraits: true, traitProofs: true,
-  idVerificationStatus: true, linkedinVerified: true,
+  createdAt: true, segment: true, proRole: true, proYears: true, selfTraits: true, traitProofs: true,
+  idVerificationStatus: true, idDocumentUrl: true, linkedinVerified: true,
   linkedinUrl: true, instagramUrl: true, tiktokUrl: true, websiteUrl: true, portfolioUrl: true,
-  otherLinks: true, linksAnalysis: true,
+  otherLinks: true, linksAnalysis: true, cvUrl: true, cvAnalysis: true,
+  workEmail: true, workEmailVerifiedAt: true,
+  accessTier: true, priceTier: true, priceOverrideCredits: true,
 } as const;
 
+type BadgeProfile = Parameters<typeof proofsFromProfile>[0] & { createdAt: Date };
+
 export function badgesOf(
-  p: {
-    createdAt: Date; segment: string | null; proRole: string | null;
-    selfTraits: unknown; traitProofs: unknown; idVerificationStatus: string; linkedinVerified: boolean;
-    linkedinUrl: string | null; instagramUrl: string | null; tiktokUrl: string | null;
-    websiteUrl: string | null; portfolioUrl: string | null; otherLinks: string[]; linksAnalysis: unknown;
-  },
-  behaviours: string[] | null,
+  p: BadgeProfile,
   trust: Pick<Trust, "interviewsDone" | "noShow" | "ratings">,
 ): EarnedBadge[] {
   return computeBadges({
     createdAt: p.createdAt,
+    proofs: proofsFromProfile(p),
+    interviewsDone: trust.interviewsDone,
+    noShow: trust.noShow,
+    ratings: trust.ratings,
+  });
+}
+
+/** Traits déclarés et confirmés ; `behaviours` vaut null tant que l'IA n'a pas tourné. */
+export function traitsOf(
+  p: { segment: string | null; proRole: string | null; selfTraits: unknown; traitProofs: unknown },
+  behaviours: string[] | null,
+): TraitState[] {
+  return computeTraits({
     segment: p.segment,
     proRole: p.proRole,
     selfTraits: p.selfTraits as Record<string, number> | null,
     traitProofs: p.traitProofs as Record<string, string> | null,
     behaviours,
-    idVerified: p.idVerificationStatus === "VERIFIED",
-    linkedinVerified: p.linkedinVerified,
-    links: linkCounts(p),
-    interviewsDone: trust.interviewsDone,
-    noShow: trust.noShow,
-    ratings: trust.ratings,
   });
 }

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createStudy } from "@/app/actions/studies";
+import { DEFAULT_PRICING, TIERS } from "@/lib/pricing/config";
+import { quote } from "@/lib/pricing/engine";
 
 type StudyData = {
   // Step 1 — Basics
@@ -52,11 +54,10 @@ const EMPTY: StudyData = {
   voucherBrand: "",
 };
 
-const STEPS = ["Informations", "Profil cible", "Planification", "Récompense", "Récapitulatif"];
+const STEPS = ["Informations", "Profil cible", "Planification", "Budget", "Récapitulatif"];
 
 const CITIES = ["Paris", "Lyon", "Marseille", "Bordeaux", "Lille", "Toulouse", "Nantes", "Remote / Partout"];
 const INTERESTS_LIST = ["Mode", "Streetwear", "Luxe", "Beauté", "Tech", "Musique", "Food", "Voyage", "Sport", "Gaming", "Design", "Développement durable"];
-const REWARD_PRESETS = [2000, 3000, 5000, 7500, 10000]; // in cents
 
 export default function NewStudyPage() {
   const [step, setStep] = useState(0);
@@ -64,6 +65,19 @@ export default function NewStudyPage() {
   const [submitting, setSubmitting] = useState(false);
   const [brandInput, setBrandInput] = useState("");
   const router = useRouter();
+
+  // Estimation par palier, pour un profil moyen (à moitié certifié, sans
+  // demande particulière) : le prix réel s'affiche sur chaque profil proposé.
+  const budget = TIERS.slice(0, 2).map((tier) => ({
+    tier,
+    label: DEFAULT_PRICING.tiers[tier].label,
+    credits: quote(DEFAULT_PRICING, {
+      tier, durationMin: data.interviewDuration, focusGroup: data.studyType === "FOCUS_GROUP",
+      certScore: 50, ratings: [], signals: { brandsAccepted90d: 0, shortlisted90d: 0, peers: 30, panelSize: 0 }, overrideCredits: null,
+    }).credits,
+  }));
+  const budgetMin = budget[0].credits * data.targetCount;
+  const budgetMax = budget[1].credits * data.targetCount;
 
   function update(patch: Partial<StudyData>) {
     setData((prev) => ({ ...prev, ...patch }));
@@ -304,67 +318,29 @@ export default function NewStudyPage() {
         </div>
       )}
 
-      {/* STEP 4 — Rewards */}
+      {/* STEP 4 — Budget : le prix se calcule par profil, Rarelyst paie les participants */}
       {step === 3 && (
         <div>
-          <Field label="Type de récompense *">
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-              {[
-                { value: "CASH", label: "💸 Espèces", desc: "Virement bancaire via Stripe" },
-                { value: "VOUCHER", label: "🎁 Bon d'achat", desc: "Amazon, Fnac, Zalando…" },
-              ].map((t) => (
-                <button key={t.value} onClick={() => update({ rewardType: t.value as "CASH" | "VOUCHER" })}
-                  style={{ padding: "14px", border: "1px solid", borderRadius: "8px", textAlign: "left", cursor: "pointer", borderColor: data.rewardType === t.value ? "var(--color-accent)" : "var(--color-border-base)", background: data.rewardType === t.value ? "var(--color-accent-light)" : "var(--color-surface)" }}>
-                  <div style={{ fontSize: "14px", fontWeight: 600, color: data.rewardType === t.value ? "var(--color-accent)" : "var(--color-text-primary)", marginBottom: "3px" }}>{t.label}</div>
-                  <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>{t.desc}</div>
-                </button>
-              ))}
-            </div>
-          </Field>
-
-          {data.rewardType === "VOUCHER" && (
-            <Field label="Marque du bon d'achat">
-              <select value={data.voucherBrand} onChange={(e) => update({ voucherBrand: e.target.value })} style={inputStyle}>
-                <option value="">Choisir…</option>
-                {["Amazon", "Fnac", "Zalando", "Monoprix", "Decathlon", "Autre"].map((b) => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </Field>
-          )}
-
-          <Field label="Montant par participant *">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
-              {REWARD_PRESETS.map((p) => (
-                <button key={p} onClick={() => update({ rewardAmount: p })}
-                  style={{ padding: "8px 16px", border: "1px solid", borderRadius: "8px", cursor: "pointer", fontFamily: "var(--font-mono-base)", fontWeight: 600, fontSize: "15px", borderColor: data.rewardAmount === p ? "var(--color-accent)" : "var(--color-border-base)", background: data.rewardAmount === p ? "var(--color-accent)" : "var(--color-surface)", color: data.rewardAmount === p ? "#fff" : "var(--color-text-primary)" }}>
-                  {p / 100}€
-                </button>
-              ))}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>Montant personnalisé :</span>
-              <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--color-border-base)", borderRadius: "8px", overflow: "hidden" }}>
-                <input
-                  type="number"
-                  min={10}
-                  max={500}
-                  value={data.rewardAmount / 100}
-                  onChange={(e) => update({ rewardAmount: Math.round(+e.target.value * 100) })}
-                  style={{ ...inputStyle, border: "none", width: "80px", borderRadius: 0, fontFamily: "var(--font-mono-base)", fontWeight: 600 }}
-                />
-                <span style={{ padding: "0 12px", background: "var(--color-surface-2)", fontSize: "14px", color: "var(--color-text-secondary)", alignSelf: "stretch", display: "flex", alignItems: "center" }}>€</span>
+          <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", lineHeight: 1.6, margin: "0 0 18px" }}>
+            Vous n&apos;avez pas de récompense à fixer : Rarelyst rémunère les participants. Chaque profil proposé affiche son prix
+            en crédits (1 crédit = 10 € HT) et vous l&apos;acceptez en connaissance de cause.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "10px", marginBottom: "18px" }}>
+            {budget.map((b) => (
+              <div key={b.tier} style={{ padding: "14px", border: "1px solid var(--color-border-base)", borderRadius: "10px", background: "var(--color-surface)" }}>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-text-primary)" }}>{b.label}</div>
+                <div style={{ fontSize: "22px", fontWeight: 800, marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{b.credits} <span style={{ fontSize: "13px", fontWeight: 600 }}>crédits</span></div>
+                <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>par profil, {data.interviewDuration} min{data.studyType === "FOCUS_GROUP" ? ", en focus group" : ""}</div>
               </div>
-            </div>
-          </Field>
-
+            ))}
+          </div>
           <div style={{ padding: "16px", background: "var(--color-surface-2)", borderRadius: "8px", marginBottom: "32px" }}>
-            <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "4px" }}>Estimation du coût total en récompenses :</div>
-            <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "22px", fontWeight: 700, color: "var(--color-text-primary)" }}>
-              {((data.rewardAmount * data.targetCount) / 100).toFixed(0)}€
+            <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "4px" }}>Budget estimé pour {data.targetCount} participants :</div>
+            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" }}>
+              {budgetMin} à {budgetMax} crédits
             </div>
             <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginTop: "2px" }}>
-              {data.rewardAmount / 100}€ × {data.targetCount} participants (hors crédits de recrutement)
+              soit {(budgetMin * 10).toLocaleString("fr-FR")} à {(budgetMax * 10).toLocaleString("fr-FR")} € HT selon les profils retenus. Le prix exact de chacun dépend de sa demande, de sa rareté et de ses preuves.
             </div>
           </div>
 
@@ -408,11 +384,11 @@ export default function NewStudyPage() {
               ],
             },
             {
-              title: "Récompense",
+              title: "Budget estimé",
               items: [
-                ["Type", data.rewardType === "CASH" ? "Espèces" : `Bon ${data.voucherBrand || ""}`],
-                ["Montant / participant", `${data.rewardAmount / 100}€`],
-                ["Budget total estimé", `${(data.rewardAmount * data.targetCount) / 100}€`],
+                ["Par profil", `${budget[0].credits} à ${budget[1].credits} crédits`],
+                ["Pour l'étude", `${budgetMin} à ${budgetMax} crédits`],
+                ["Participants", "Rémunérés par Rarelyst"],
               ],
             },
           ].map((section) => (

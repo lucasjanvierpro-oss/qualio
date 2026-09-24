@@ -235,6 +235,15 @@ model ParticipantProfile {
   participationCount Int     @default(0)
   averageRating      Float?
   accessTier         AccessTier @default(STANDARD)
+  /// Palier de prix imposé par l'admin (averti | initie | rare) ; sinon calculé.
+  priceTier            String?
+  /// Prix fixé à la main, en crédits ; prime sur le calcul automatique.
+  priceOverrideCredits Int?
+  /// Emploi vérifié : un code envoyé à l'adresse professionnelle.
+  workEmail              String?
+  workEmailVerifiedAt    DateTime?
+  workEmailCodeHash      String?
+  workEmailCodeExpiresAt DateTime?
   /// Ce que la marque lit à la place du prix, ex. « Sur demande · 48 h de délai ».
   accessNote         String?
   profileRequests    ProfileRequest[]
@@ -424,6 +433,12 @@ model Application {
   brandAccepted Boolean?
   brandNote     String?
 
+  // Prix figé quand la marque accepte : ce qu'elle a payé et ce que touchera
+  // le participant, avec le détail du calcul.
+  priceCredits        Int?
+  participantPayCents Int?
+  priceBreakdown      Json?
+
   // Créneaux proposés (JSON: [{ startTime: ISO, note?: string, proposedBy?: "participant" | "admin" }]).
   // Entretien individuel : le participant propose, la marque choisit.
   // Sans `proposedBy`, un créneau vient de l'admin (ancien fonctionnement).
@@ -577,4 +592,13 @@ model ProfileRequest {
   @@index([brandProfileId])
   @@index([status])
   @@map("profile_requests")
+}
+
+/// Réglages du moteur de prix (une seule ligne, id = "default").
+model PricingConfig {
+  id        String   @id
+  data      Json
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("pricing_config")
 }

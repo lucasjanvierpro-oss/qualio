@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
       aiRecommendedBrands: p.ghostFile.aiRecommendedBrands,
     } : null,
     // Réservé aux marques : cette route n'est servie qu'aux comptes marque.
-    badges: badgesForBrand(badgesOf(p, p.ghostFile?.processingStatus === "done" ? p.ghostFile.behaviours : null, trust)),
+    badges: badgesForBrand(badgesOf(p, trust)),
     trust: { interviewsDone: trust.interviewsDone, rating: trust.rating, reviewCount: trust.reviewCount, brands: trust.brands.map((b) => b.name).slice(0, 3) },
     };
   });

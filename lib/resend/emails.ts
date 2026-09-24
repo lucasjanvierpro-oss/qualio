@@ -234,3 +234,12 @@ export async function sendAvailabilityRequested(to: string, firstName: string, s
     cta: { label: "Proposer mes créneaux", href: `${APP_URL}/participant/studies/${applicationId}` },
   }));
 }
+
+export async function sendWorkEmailCode(to: string, firstName: string, code: string) {
+  const html = layout({
+    title: "Votre code de vérification",
+    body: `Bonjour ${esc(firstName || "")},<br>Voici le code qui confirme que vous travaillez bien ici. Il est valable 15 minutes.`,
+    aside: `<div style="font-size:30px;font-weight:700;letter-spacing:.3em;text-align:center;">${esc(code)}</div>`,
+  });
+  return send(to, `${code} · votre code Rarelyst`, html);
+}

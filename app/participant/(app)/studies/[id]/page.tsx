@@ -37,7 +37,7 @@ export default async function ParticipantStudyDetailPage({ params }: { params: P
         objective: study.objective,
         isFocusGroup: study.studyType === "FOCUS_GROUP",
         interviewDuration: study.interviewDuration,
-        rewardAmount: study.rewardAmount,
+        rewardAmount: application.participantPayCents ?? study.rewardAmount,
         rewardType: study.rewardType,
         deadlineAt: study.deadlineAt?.toISOString() ?? null,
         // Le nom de la marque reste caché ; son poinçon, non.

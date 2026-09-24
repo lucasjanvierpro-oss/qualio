@@ -18,6 +18,12 @@ export async function PATCH(
   const { id } = await params;
   const { status } = await req.json() as { status: string };
 
+  // Pour ne rembourser une absence qu'une fois, même si le statut est renvoyé deux fois.
+  const before = await prisma.interview.findUnique({
+    where: { id },
+    select: { application: { select: { status: true } } },
+  });
+
   const interview = await prisma.interview.update({
     where: { id },
     data: {
@@ -27,7 +33,7 @@ export async function PATCH(
     include: {
       application: {
         include: {
-          study: { select: { rewardAmount: true, rewardType: true, voucherBrand: true, title: true } },
+          study: { select: { rewardAmount: true, rewardType: true, voucherBrand: true, title: true, brandProfileId: true } },
           participantProfile: { include: { user: { select: { email: true } } } },
           reward: { select: { id: true } },
         },
@@ -48,7 +54,8 @@ export async function PATCH(
           applicationId: interview.applicationId,
           participantProfileId: interview.application.participantProfileId,
           type: interview.application.study.rewardType,
-          amountCents: interview.application.study.rewardAmount,
+          // Le montant fixé par le moteur de prix ; l'ancien montant de l'étude sinon.
+          amountCents: interview.application.participantPayCents ?? interview.application.study.rewardAmount,
           status: "PENDING",
           voucherBrand: interview.application.study.voucherBrand,
         },
@@ -70,6 +77,26 @@ export async function PATCH(
       where: { id: interview.applicationId },
       data: { status: "NO_SHOW" },
     });
+
+    // Absence : la marque récupère ce qu'elle a payé pour ce profil.
+    const paid = interview.application.priceCredits ?? 0;
+    if (paid > 0 && before?.application.status !== "NO_SHOW") {
+      const brandProfileId = interview.application.study.brandProfileId;
+      await prisma.$transaction(async (tx) => {
+        const b = await tx.brandProfile.update({
+          where: { id: brandProfileId },
+          data: { credits: { increment: paid } },
+          select: { credits: true },
+        });
+        await tx.creditTransaction.create({
+          data: {
+            brandProfileId, type: "REFUND", amount: paid, balanceAfter: b.credits,
+            description: `Absence remboursée · ${interview.application.participantProfile.firstName}`,
+            studyId: interview.studyId,
+          },
+        });
+      });
+    }
     // Si cet absent était le dernier entretien attendu, les autres sont peut-être
     // tous transcrits : on tente le rapport sans attendre une action manuelle.
     await generateAndStoreReportFromTranscripts(interview.studyId, { requireAll: true }).catch(() => null);

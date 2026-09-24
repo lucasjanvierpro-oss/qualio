@@ -7,6 +7,7 @@ import { after } from "next/server";
 import { assertAdmin, getSessionUser } from "@/lib/auth/guards";
 import { sendAvailabilityRequested } from "@/lib/resend/emails";
 import { sendStudySubmittedAdmin } from "@/lib/resend/emails";
+import { priceProfiles } from "@/lib/pricing/quotes";
 
 type StudyCreateData = {
   title: string;
@@ -88,22 +89,24 @@ export async function createStudy(data: StudyCreateData) {
   return { studyId: study.id };
 }
 
-export async function acceptApplication(applicationId: string) {
+export async function acceptApplication(applicationId: string, expectedCredits?: number) {
   const me = await getSessionUser();
   // Une session expire au bout d'une heure. Lever une exception ici ferait
   // tomber la page entière sur un écran d'erreur, au lieu de proposer
   // simplement de se reconnecter.
   if (!me?.brandProfileId) return { error: "session_expired" as const };
 
-  // Une seule requête : la marque attend ce clic, chaque aller-retour vers la
-  // base se voit à l'écran.
   const application = await prisma.application.findUnique({
     where: { id: applicationId },
     select: {
       studyId: true,
       status: true,
-      study: { select: { brandProfileId: true, title: true } },
-      participantProfile: { select: { firstName: true, user: { select: { email: true } } } },
+      participantProfileId: true,
+      priceCredits: true,
+      participantPayCents: true,
+      priceBreakdown: true,
+      study: { select: { brandProfileId: true, title: true, interviewDuration: true, studyType: true } },
+      participantProfile: { select: { firstName: true, accessTier: true, user: { select: { email: true } } } },
     },
   });
   if (!application || application.study.brandProfileId !== me.brandProfileId) {
@@ -112,21 +115,49 @@ export async function acceptApplication(applicationId: string) {
   if (application.status !== "SHORTLISTED" && application.status !== "PENDING") {
     return { error: "already_decided" };
   }
+  // Un profil sur demande ne s'achète pas au crédit : il se demande.
+  if (application.participantProfile.accessTier === "ON_REQUEST") return { error: "on_request" };
+
+  // Le prix est recalculé ici, jamais pris au navigateur. Si la marque a vu un
+  // autre montant (la demande a bougé entre-temps), on le lui dit plutôt que
+  // de débiter une somme qu'elle n'a pas validée.
+  // Prix fixé à la proposition s'il existe, sinon calculé maintenant.
+  let q: { credits: number; participantPayCents: number; tier: string; multiplier: number; factors: unknown; overridden: boolean; marginCents: number };
+  if (application.priceCredits && application.participantPayCents) {
+    const b = (application.priceBreakdown ?? {}) as { tier?: string; multiplier?: number; factors?: unknown; overridden?: boolean; marginCents?: number };
+    q = {
+      credits: application.priceCredits, participantPayCents: application.participantPayCents,
+      tier: b.tier ?? "averti", multiplier: b.multiplier ?? 1, factors: b.factors ?? [], overridden: !!b.overridden,
+      marginCents: b.marginCents ?? 0,
+    };
+  } else {
+    const pricing = (await priceProfiles([application.participantProfileId], {
+      durationMin: application.study.interviewDuration,
+      focusGroup: application.study.studyType === "FOCUS_GROUP",
+    })).get(application.participantProfileId);
+    if (!pricing) return { error: "not_found" };
+    q = pricing.quote;
+  }
+  if (expectedCredits !== undefined && expectedCredits !== q.credits) return { error: "price_changed" };
 
   // Tout ou rien, et conditionné à l'état attendu : si deux clics arrivent en
-  // même temps, un seul passe la condition et un seul crédit est débité.
-  // Le solde est vérifié dans la même condition que le débit, pour qu'il ne
-  // puisse pas passer sous zéro entre la lecture et l'écriture.
+  // même temps, un seul passe la condition et un seul prix est débité.
   const outcome = await prisma.$transaction(async (tx) => {
     const debited = await tx.brandProfile.updateMany({
-      where: { id: me.brandProfileId!, credits: { gte: 1 } },
-      data: { credits: { decrement: 1 } },
+      where: { id: me.brandProfileId!, credits: { gte: q.credits } },
+      data: { credits: { decrement: q.credits } },
     });
     if (debited.count === 0) return "not_enough_credits" as const;
 
     const moved = await tx.application.updateMany({
       where: { id: applicationId, status: { in: ["SHORTLISTED", "PENDING"] } },
-      data: { brandAccepted: true, status: "INVITED" },
+      data: {
+        brandAccepted: true,
+        status: "INVITED",
+        priceCredits: q.credits,
+        participantPayCents: q.participantPayCents,
+        priceBreakdown: { tier: q.tier, multiplier: q.multiplier, factors: q.factors as object, overridden: q.overridden, marginCents: q.marginCents },
+      },
     });
     if (moved.count === 0) throw new Error("already_decided");
 
@@ -138,15 +169,16 @@ export async function acceptApplication(applicationId: string) {
       data: {
         brandProfileId: me.brandProfileId!,
         type: "CONSUME",
-        amount: -1,
+        amount: -q.credits,
         balanceAfter: brand.credits,
-        description: "Participant accepté",
+        description: `Profil accepté · ${application.participantProfile.firstName}`,
         studyId: application.studyId,
       },
     });
     return "ok" as const;
   }).catch((e: Error) => (e.message === "already_decided" ? ("already_decided" as const) : Promise.reject(e)));
 
+  if (outcome === "not_enough_credits") return { error: outcome, needed: q.credits };
   if (outcome !== "ok") return { error: outcome };
 
   // Le participant est invité à proposer ses disponibilités : c'est à la marque
@@ -167,10 +199,22 @@ export async function acceptApplication(applicationId: string) {
 
 export async function shortlistParticipant(studyId: string, participantProfileId: string, note?: string) {
   await assertAdmin();
+  // Le prix est fixé au moment où le profil est proposé : la marque voit un
+  // montant qui ne bouge plus, le participant sait ce qu'il touchera.
+  const study = await prisma.study.findUniqueOrThrow({ where: { id: studyId }, select: { interviewDuration: true, studyType: true } });
+  const q = (await priceProfiles([participantProfileId], {
+    durationMin: study.interviewDuration,
+    focusGroup: study.studyType === "FOCUS_GROUP",
+  })).get(participantProfileId)?.quote;
+  const price = q ? {
+    priceCredits: q.credits,
+    participantPayCents: q.participantPayCents,
+    priceBreakdown: { tier: q.tier, multiplier: q.multiplier, factors: q.factors, overridden: q.overridden, marginCents: q.marginCents },
+  } : {};
   await prisma.application.upsert({
     where: { studyId_participantProfileId: { studyId, participantProfileId } },
-    create: { studyId, participantProfileId, status: "SHORTLISTED", adminMatchNote: note ?? null },
-    update: { status: "SHORTLISTED", adminMatchNote: note ?? null },
+    create: { studyId, participantProfileId, status: "SHORTLISTED", adminMatchNote: note ?? null, ...price },
+    update: { status: "SHORTLISTED", adminMatchNote: note ?? null, ...price },
   });
   revalidatePath(`/admin/studies/${studyId}`);
   revalidatePath("/admin/matching");

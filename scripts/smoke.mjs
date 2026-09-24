@@ -62,7 +62,7 @@ for (const u of users) {
     for (const p of ["/brand/dashboard", "/brand/studies", "/brand/studies/new", "/brand/profiles", "/brand/messages", "/brand/account"]) await hit(u.email, p, c);
     for (const s of mine) { await hit(u.email, `/brand/studies/${s.id}`, c); await hit(u.email, `/brand/studies/${s.id}/report`, c); }
   } else if (u.role === "ADMIN") {
-    for (const p of ["/admin", "/admin/access", "/admin/matching", "/admin/participants", "/admin/payments", "/admin/studies", "/admin/verifications"]) await hit(u.email, p, c);
+    for (const p of ["/admin", "/admin/prix", "/admin/access", "/admin/matching", "/admin/participants", "/admin/payments", "/admin/studies", "/admin/verifications"]) await hit(u.email, p, c);
     for (const s of studies) { await hit(u.email, `/admin/studies/${s.id}`, c); await hit(u.email, `/admin/studies/${s.id}/report`, c); }
     for (const pp of participants) await hit(u.email, `/admin/participants/${pp.id}`, c);
   } else if (u.role === "PARTICIPANT") {

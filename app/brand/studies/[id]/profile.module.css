@@ -474,3 +474,47 @@
   background: var(--bg);
   resize: vertical;
 }
+
+/* ── Certification et traits ── */
+.certRow { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.certLabel { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
+.certLabel b { color: var(--ink); }
+.certGauge { flex: 1; height: 5px; border-radius: 999px; background: var(--line); overflow: hidden; max-width: 160px; }
+.certGauge i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--g2), var(--g3)); }
+.traits { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.trait { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--soft); border: 1px solid var(--line); color: var(--ink); }
+.trait em { font-style: normal; font-weight: 500; color: var(--ink-3); margin-left: 5px; font-size: 11px; }
+
+/* ── Prix du profil ── */
+.price {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  padding: 2px 0;
+  text-align: right;
+}
+.price b { font-size: 15px; letter-spacing: -0.01em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.price span { font-size: 11.5px; color: var(--ink-3); text-decoration: underline dotted; text-underline-offset: 3px; }
+.card[data-tier="ON_REQUEST"] .price b { color: #fff; }
+.topup { flex-basis: 100%; text-align: right; font-size: 12.5px; font-weight: 600; color: var(--accent); }
+.priceWhy {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  padding: 10px 12px 10px 26px;
+  border-radius: 10px;
+  background: var(--soft);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.card[data-tier="ON_REQUEST"] .priceWhy { background: rgba(255,255,255,.06); color: #c3b8d4; }
+.card[data-tier="ON_REQUEST"] .certLabel { color: #c3b8d4; }
+.card[data-tier="ON_REQUEST"] .certLabel b { color: #fff; }
+.card[data-tier="ON_REQUEST"] .certGauge { background: rgba(255,255,255,.14); }
+.card[data-tier="ON_REQUEST"] .trait { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.12); color: #fff; }

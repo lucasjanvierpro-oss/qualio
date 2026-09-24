@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import BrandAccountClient from "./BrandAccountClient";
 import CertificationCard from "@/components/brand/CertificationCard";
 import { certLevel, certSteps } from "@/lib/brands/certification";
+import { getPricingConfig } from "@/lib/pricing/quotes";
+import { TIERS } from "@/lib/pricing/config";
 
 export default async function BrandAccountPage() {
   const supabase = await createClient();
@@ -22,6 +24,7 @@ export default async function BrandAccountPage() {
   });
 
   const profile = dbUser?.brandProfile;
+  const cfg = await getPricingConfig();
   const cert = { email: dbUser?.email ?? "", domainVerifiedAt: profile?.domainVerifiedAt ?? null, isVerified: profile?.isVerified ?? false };
 
   return (
@@ -30,6 +33,9 @@ export default async function BrandAccountPage() {
       <CertificationCard level={certLevel(cert)} steps={certSteps(cert)} companyName={profile?.companyName ?? ""} />
     </div>
     <BrandAccountClient
+      packs={cfg.packs}
+      tiers={TIERS.map((t) => ({ label: cfg.tiers[t].label, credits: cfg.tiers[t].baseCredits }))}
+      creditValueCents={cfg.creditValueCents}
       isActivated={profile?.isActivated ?? false}
       credits={profile?.credits ?? 0}
       companyName={profile?.companyName ?? ""}

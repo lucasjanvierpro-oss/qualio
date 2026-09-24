@@ -31,6 +31,11 @@ export type Candidate = {
   attendance: number | null;
   trust: Trust;
   badges: EarnedBadge[];
+  /** Traits confirmés par l'IA (Initiée, Défricheuse…). */
+  traits: string[];
+  /** Niveau de certification, 0 à 100. */
+  certScore: number;
+  price: { credits: number; euros: number; tierLabel: string; why: string[] } | null;
   kind: string | null;
   expertise: string | null;
   alsoKnows: string[];
@@ -147,6 +152,8 @@ function ProfileCard({
   requested: boolean;
 }) {
   const [openPortrait, setOpenPortrait] = useState(false);
+  const [openPrice, setOpenPrice] = useState(false);
+  const cost = c.price?.credits ?? 0;
   const [allRefs, setAllRefs] = useState(false);
   const onRequestOnly = c.tier === "ON_REQUEST";
 
@@ -171,8 +178,17 @@ function ProfileCard({
           : kind && <span className={p.kind}>{kind}</span>}
       </div>
 
-      {c.badges.length > 0 && (
-        <div className={p.medals}><BadgeChips badges={c.badges} max={4} /></div>
+      {(c.badges.length > 0 || c.traits.length > 0) && (
+        <div className={p.medals}>
+          <div className={p.certRow}>
+            <span className={p.certLabel}>Profil certifié à <b>{c.certScore} %</b></span>
+            <span className={p.certGauge} aria-hidden="true"><i style={{ width: `${c.certScore}%` }} /></span>
+          </div>
+          <BadgeChips badges={c.badges} max={4} />
+          {c.traits.length > 0 && (
+            <div className={p.traits}>{c.traits.map((t) => <span key={t} className={p.trait}>{t}<em>confirmé par l&apos;IA</em></span>)}</div>
+          )}
+        </div>
       )}
 
       {c.why && <p className={p.why}>{c.why}</p>}
@@ -208,7 +224,7 @@ function ProfileCard({
         </div>
       )}
 
-      <TrustBlock trust={c.trust} firstName={c.name.split(" ")[0]} />
+      <TrustBlock trust={c.trust} firstName={c.name.split(" ")[0]} dark={onRequestOnly} />
 
       {hasScores && (
         <div className={p.scores}>
@@ -241,19 +257,31 @@ function ProfileCard({
                 Demander ce profil
               </button>
             )}
-            <span className={p.onRequest}>{c.accessNote ?? "Aucun crédit débité"}</span>
+            <span className={p.onRequest}>{c.accessNote ?? (c.price ? `Prix indicatif : ${c.price.credits} crédits` : "Aucun crédit débité")}</span>
           </>
         ) : (
           <>
-            <button type="button" className={s.btn} disabled={busy || credits < 1} onClick={onAccept}>
+            <button type="button" className={s.btn} disabled={busy || !c.price || credits < cost} onClick={onAccept}>
               Je veux l&apos;entendre
             </button>
             <button type="button" className={`${s.btn} ${s.btnGhost}`} disabled={busy} onClick={onReject}>
               Décliner
             </button>
-            {credits >= 1
-              ? <span className={p.cost}>1 crédit</span>
-              : <Link href="/brand/account" className={p.cost} style={{ color: "var(--accent)" }}>Ajouter des crédits →</Link>}
+            {c.price && (
+              <button type="button" className={p.price} aria-expanded={openPrice} onClick={() => setOpenPrice((v) => !v)}>
+                <b>{c.price.credits} crédits</b>
+                <span>{(c.price.euros / 100).toLocaleString("fr-FR")} € HT · {c.price.tierLabel}</span>
+              </button>
+            )}
+            {c.price && credits < cost && (
+              <Link href="/brand/account" className={p.topup}>Il vous manque {cost - credits} crédits →</Link>
+            )}
+            {openPrice && c.price && (
+              <ul className={p.priceWhy}>
+                <li><b>Palier {c.price.tierLabel}</b></li>
+                {c.price.why.map((w) => <li key={w}>{w}</li>)}
+              </ul>
+            )}
           </>
         )}
       </div>
@@ -328,13 +356,14 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
   const confirmed = candidates.filter((c) => c.status === "CONFIRMED" || c.status === "COMPLETED").length;
   const meta = STUDY_STATUS[study.status] ?? STUDY_STATUS.ACTIVE;
 
-  function decide(id: string, fn: () => Promise<{ error?: string; ok?: boolean } | undefined>) {
+  function decide(id: string, fn: () => Promise<{ error?: string; ok?: boolean; needed?: number } | undefined>) {
     setError(null);
     startTransition(async () => {
       markDecided(id);
       const r = await fn();
       if (r?.error) {
-        const msg = r.error === "not_enough_credits" ? "Crédits insuffisants pour accepter ce profil."
+        const msg = r.error === "not_enough_credits" ? `Crédits insuffisants : ce profil en demande ${r.needed ?? "plus"}.`
+          : r.error === "price_changed" ? "Le prix de ce profil vient d'évoluer. Vérifiez-le et confirmez à nouveau."
           : r.error === "already_decided" ? "Ce profil a déjà été traité."
           : r.error === "session_expired" ? "Votre session a expiré. Reconnectez-vous, votre choix n'a pas été enregistré."
           : "Action impossible. Réessayez.";
@@ -397,7 +426,7 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
       <section className={s.sectionGap}>
         <div className={s.spread}>
           <h2 className={s.h2}>Profils proposés <span className={s.faint}>({toReview.length})</span></h2>
-          <span className={`${s.small} ${s.muted}`}>1 crédit par profil accepté · {credits} disponible{credits > 1 ? "s" : ""}</span>
+          <span className={`${s.small} ${s.muted}`}>Prix par profil selon son palier · <b>{credits} crédits</b> disponibles</span>
         </div>
         {toReview.length === 0 ? (
           <p className={`${s.cardSoft} ${s.muted}`} style={{ marginTop: 12 }}>
@@ -414,7 +443,7 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
                 credits={credits}
                 busy={c.tier === "STANDARD" && decided.includes(c.applicationId)}
                 error={error?.id === c.applicationId ? error.msg : null}
-                onAccept={() => decide(c.applicationId, () => acceptApplication(c.applicationId))}
+                onAccept={() => decide(c.applicationId, () => acceptApplication(c.applicationId, c.price?.credits))}
                 onReject={() => decide(c.applicationId, () => rejectApplication(c.applicationId))}
                 onRequest={() => ask(c)}
                 requested={requested.includes(c.applicationId)}

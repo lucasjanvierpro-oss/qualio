@@ -154,3 +154,12 @@
 }
 
 .veilIcon svg { width: 16px; height: 16px; }
+
+/* Sur la fiche sombre d'un profil sur demande */
+.dark { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); }
+.dark .title { color: #9d93ad; }
+.dark .private { color: #c8b8ff; }
+.dark .empty, .dark .stat span, .dark .review figcaption { color: #c3b8d4; }
+.dark .stat b, .dark .review blockquote { color: #fff; }
+.dark .logo { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.12); color: #fff; }
+.dark .tag { background: rgba(140, 104, 242, 0.25); color: #e6dcff; }

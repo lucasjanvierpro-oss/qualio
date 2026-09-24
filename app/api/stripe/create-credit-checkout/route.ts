@@ -3,20 +3,17 @@ import { stripe } from "@/lib/stripe/client";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { appUrl } from "@/lib/appUrl";
-
-const CREDIT_PACKS = [
-  { credits: 5,  priceCents: 7500 },
-  { credits: 15, priceCents: 19500 },
-  { credits: 30, priceCents: 36000 },
-];
+import { getPricingConfig } from "@/lib/pricing/quotes";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { credits } = await request.json() as { credits: number };
-  const pack = CREDIT_PACKS.find((p) => p.credits === credits);
+  // Les packs viennent des réglages de prix : une seule grille pour le site,
+  // le compte marque et le paiement.
+  const { packId } = await request.json() as { packId?: string };
+  const pack = (await getPricingConfig()).packs.find((p) => p.id === packId);
   if (!pack) return NextResponse.json({ error: "Invalid pack" }, { status: 400 });
 
   const dbUser = await prisma.user.findUnique({
@@ -46,8 +43,8 @@ export async function POST(request: NextRequest) {
         currency: "eur",
         unit_amount: pack.priceCents,
         product_data: {
-          name: `Pack ${pack.credits} crédits Rarelyst`,
-          description: `${pack.credits} participants confirmés`,
+          name: `Pack ${pack.label} · ${pack.credits} crédits Rarelyst`,
+          description: `${pack.credits} crédits, 1 crédit = 10 € HT`,
         },
       },
       quantity: 1,

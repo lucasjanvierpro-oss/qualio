@@ -9,7 +9,7 @@ import {
   SEGMENTS, PRO_ROLES, PRO_SECTORS, PRO_YEARS, TRAITS, TRAIT_SCALE, TRAIT_CLAIMED, PROOF_MIN,
   FACTS, VOICE_Q, LINK_FIELDS, isPro, toUrl, type Segment,
 } from "@/lib/onboarding/questions";
-import { computeBadges, BADGES, type EarnedBadge } from "@/lib/participants/badges";
+import { computeBadges, computeTraits, proofsFromProfile, BADGES, TRAIT_LABELS, type EarnedBadge, type TraitState } from "@/lib/participants/badges";
 import type { LinksAnalysis } from "@/lib/participants/links";
 import { createFunnelAccount, saveFunnelStep, completeFunnel, funnelSession } from "@/app/actions/funnel";
 import VoiceInput from "@/components/onboarding/VoiceInput";
@@ -46,8 +46,8 @@ const T = {
     engageOpts: ["Je suis leurs collections et défilés", "J'assiste à leurs événements", "J'achète régulièrement leurs produits", "Je fais de la veille (newsletters, Instagram…)", "Je travaille ou ai travaillé avec elles", "Je revends / collecte leurs pièces", "Je les recommande à mon entourage"],
     min1: "Choisissez au moins un univers.",
     traitsEyebrow: "Questions franches", traitsTitle: "Qui êtes-vous, vraiment ?",
-    traitsLead: "Répondez sans modestie ni exagération. Dès « Plutôt oui », donnez un exemple en une ligne : c'est lui qui fait gagner la médaille.",
-    proofWaiting: "Un exemple précis débloque la médaille", proofOk: "Médaille à confirmer ✓",
+    traitsLead: "Répondez sans modestie ni exagération. Dès « Plutôt oui », donnez un exemple en une ligne : c'est lui qui permet à l'IA de confirmer le trait sur votre profil.",
+    proofWaiting: "Un exemple précis, et l'IA pourra le confirmer", proofOk: "Trait à confirmer ✓",
     allTraits: "Répondez aux huit questions pour continuer.",
     factsEyebrow: "Des faits", factsTitle: "Ce que vous avez déjà fait",
     factsLead: "Pas ce que vous aimeriez faire : ce qui vous est déjà arrivé. Cochez tout ce qui est vrai.",
@@ -74,7 +74,7 @@ const T = {
     charterWarn: "Tout paiement en dehors de Rarelyst est strictement interdit.",
     accept: "J'accepte la charte", scrollToEnd: "Faites défiler la charte jusqu'en bas",
     revealEyebrow: "Profil actif", revealTitle: "Vos premières médailles",
-    revealLead: "Les médailles « à confirmer » sont examinées par notre IA à partir de vos exemples et de vos liens. Seules les médailles confirmées apparaissent aux marques.",
+    revealLead: "Chaque médaille est une preuve : plus vous en avez, plus les marques vous font confiance, et plus vos entretiens sont payés. Vos traits (Défricheur·se, Prescripteur·rice…) sont confirmés par notre IA à partir de vos exemples.",
     toUnlock: "À débloquer", goDashboard: "Voir les études ouvertes",
     cardTop: "Carte membre", cardMedals: "Médailles", cardFoot: "Les marques verront votre prénom, votre ville, votre portrait et vos médailles confirmées.",
     perk1: "80 à 300 € par entretien", perk1b: "Selon votre profil, virés directement sur votre compte.",
@@ -133,7 +133,7 @@ const T = {
     charterWarn: "Any payment outside of Rarelyst is strictly prohibited.",
     accept: "I accept the charter", scrollToEnd: "Scroll the charter to the bottom",
     revealEyebrow: "Profile live", revealTitle: "Your first medals",
-    revealLead: "\"Pending\" medals are reviewed by our AI from your examples and links. Only confirmed medals are shown to brands.",
+    revealLead: "Each medal is a proof: the more you have, the more brands trust you, and the more your interviews pay. Your traits are confirmed by our AI from your examples.",
     toUnlock: "To unlock", goDashboard: "See open studies",
     cardTop: "Member card", cardMedals: "Medals", cardFoot: "Brands will see your first name, city, portrait and confirmed medals.",
     perk1: "€80 to €300 per interview", perk1b: "Depending on your profile, wired to your account.",
@@ -266,21 +266,21 @@ export default function ParticipantFunnel() {
   const idx = Math.max(0, screens.indexOf(cur));
   const counted = screens.filter((s) => s !== "final");
 
-  // Médailles en direct : ce que la personne vient de déclarer et de prouver.
-  const links = [data.linkedinUrl, data.instagramUrl, data.tiktokUrl, data.websiteUrl, ...data.otherLinks].filter(Boolean);
+  // Médailles en direct : les preuves que la personne vient de donner.
   const badges = useMemo(() => computeBadges({
     createdAt: new Date(),
-    segment: data.segment || null,
-    proRole: data.proRole,
-    selfTraits: data.selfTraits,
-    traitProofs: data.traitProofs,
-    behaviours: null,
-    idVerified: false,
-    linkedinVerified: false,
-    links: { given: links.length, read: analysis?.links.filter((l) => l.status === "read").length ?? 0 },
+    proofs: proofsFromProfile({
+      linkedinUrl: data.linkedinUrl, instagramUrl: data.instagramUrl, tiktokUrl: data.tiktokUrl,
+      websiteUrl: data.websiteUrl, portfolioUrl: data.portfolioUrl, cvUrl: data.cvUrl,
+      linksAnalysis: analysis,
+    }),
     interviewsDone: 0, noShow: 0, ratings: [],
-  }), [data.segment, data.proRole, data.selfTraits, data.traitProofs, links.length, analysis]);
+  }), [data.linkedinUrl, data.instagramUrl, data.tiktokUrl, data.websiteUrl, data.portfolioUrl, data.cvUrl, analysis]);
   const won = badges.filter((b) => b.state !== "locked");
+  const declaredTraits = useMemo(() => computeTraits({
+    segment: data.segment || null, proRole: data.proRole,
+    selfTraits: data.selfTraits, traitProofs: data.traitProofs, behaviours: null,
+  }), [data.segment, data.proRole, data.selfTraits, data.traitProofs]);
 
   function up(patch: Partial<OnboardingState>) { setData((d) => ({ ...d, ...patch })); }
   function toggle(key: "macroUniverses" | "brandAffinities" | "engagementTypes" | "behavioralChecklist" | "interviewLanguages", val: string) {
@@ -546,8 +546,9 @@ export default function ParticipantFunnel() {
                     return (
                       <div key={tr.key} className={f.trait} data-claimed={claimed} data-proven={proven}>
                         <div className={f.traitQ}>{tr.q[lang]}</div>
-                        <span className={f.traitMedal}>
-                          <Medallion id={tr.key} state={proven ? "pending" : "locked"} size={52} lang={lang} />
+                        <span className={f.traitMedal} data-on={proven}>
+                          {TRAIT_LABELS[tr.key].name[lang]}
+                          <small>{proven ? (lang === "fr" ? "à confirmer" : "pending") : (lang === "fr" ? "à prouver" : "to prove")}</small>
                         </span>
                         <div className={f.traitDef}>{tr.def[lang]}</div>
                         <div className={f.scale} role="radiogroup" aria-label={tr.q[lang]}>
@@ -735,7 +736,7 @@ export default function ParticipantFunnel() {
             )}
 
             {/* ── Révélation ── */}
-            {cur === "final" && <Reveal badges={badges} lang={lang} t={t} onGo={() => {
+            {cur === "final" && <Reveal badges={badges} traits={declaredTraits} lang={lang} t={t} onGo={() => {
               try { localStorage.removeItem(DRAFT); } catch { /* noop */ }
               router.push("/participant/dashboard");
             }} />}
@@ -755,7 +756,7 @@ export default function ParticipantFunnel() {
 
         {cur !== "final" && (
           <aside className={f.aside}>
-            <MemberCard name={shortName} city={data.city} segment={segLabel} universes={data.macroUniverses.map((i) => t.macroOpts[Number(i)]).filter(Boolean)} won={won} t={t} />
+            <MemberCard name={shortName} city={data.city} segment={segLabel} universes={data.macroUniverses.map((i) => t.macroOpts[Number(i)]).filter(Boolean)} won={won} traits={declaredTraits} lang={lang} t={t} />
             {cur === "account" && (
               <div className={f.perks}>
                 {[[t.perk1, t.perk1b], [t.perk2, t.perk2b], [t.perk3, t.perk3b]].map(([a, b]) => (
@@ -773,8 +774,8 @@ export default function ParticipantFunnel() {
 type Dict = (typeof T)[Lang];
 
 /** La carte se remplit au fil des réponses : nom, univers, médailles. */
-function MemberCard({ name, city, segment, universes, won, t }: {
-  name: string; city: string; segment?: string; universes: string[]; won: EarnedBadge[]; t: Dict;
+function MemberCard({ name, city, segment, universes, won, traits, lang, t }: {
+  name: string; city: string; segment?: string; universes: string[]; won: EarnedBadge[]; traits: TraitState[]; lang: Lang; t: Dict;
 }) {
   const SLOTS_SHOWN = 8;
   return (
@@ -790,14 +791,17 @@ function MemberCard({ name, city, segment, universes, won, t }: {
           {Array.from({ length: Math.max(0, SLOTS_SHOWN - won.length) }, (_, i) => <span key={i} className={f.emptySlot} />)}
         </div>
       </div>
+      {traits.length > 0 && (
+        <div className={f.cardTraits}>{traits.map((x) => <span key={x.id}>{TRAIT_LABELS[x.id].name[lang]}</span>)}</div>
+      )}
       <p className={f.cardFoot}>{t.cardFoot}</p>
     </div>
   );
 }
 
-function Reveal({ badges, lang, t, onGo }: { badges: EarnedBadge[]; lang: Lang; t: Dict; onGo: () => void }) {
+function Reveal({ badges, traits, lang, t, onGo }: { badges: EarnedBadge[]; traits: TraitState[]; lang: Lang; t: Dict; onGo: () => void }) {
   const got = badges.filter((b) => b.state !== "locked");
-  const next = badges.filter((b) => b.state === "locked" && ["verifie", "relie", "premier", "recommande", "ponctuel"].includes(b.id));
+  const next = badges.filter((b) => b.state === "locked" && !BADGES[b.id].soon && ["verifie", "emploi", "linkedin", "cv", "portfolio", "reseaux", "premier"].includes(b.id));
   return (
     <div className={f.reveal}>
       <p className={f.eyebrow}>{t.revealEyebrow}</p>
@@ -805,6 +809,11 @@ function Reveal({ badges, lang, t, onGo }: { badges: EarnedBadge[]; lang: Lang; 
       <div className={f.revealStage}>
         {got.map((b, i) => <BadgeTile key={b.id} b={b} lang={lang} size={i === 0 ? 132 : 104} reveal delay={200 + i * 180} />)}
       </div>
+      {traits.length > 0 && (
+        <div className={f.revealTraits}>
+          {traits.map((x) => <span key={x.id}>{TRAIT_LABELS[x.id].name[lang]}<small>{lang === "fr" ? "à confirmer" : "pending"}</small></span>)}
+        </div>
+      )}
       <p className={f.revealNote}>{t.revealLead}</p>
       {next.length > 0 && (
         <>

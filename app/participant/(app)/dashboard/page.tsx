@@ -35,7 +35,7 @@ export default async function ParticipantDashboard() {
   const applications = profile?.applications ?? [];
 
   const upcomingInterview = applications
-    .flatMap((a) => a.interview ? [{ ...a.interview, study: a.study }] : [])
+    .flatMap((a) => a.interview ? [{ ...a.interview, study: a.study, participantPayCents: a.participantPayCents }] : [])
     .filter((i) => i.status === "scheduled" && new Date(i.scheduledAt) > new Date())
     .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())[0];
 
@@ -104,7 +104,7 @@ export default async function ParticipantDashboard() {
               {new Date(upcomingInterview.scheduledAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
               {" "}&middot;{" "}
               Récompense : <span style={{ fontFamily: "var(--font-mono-base)", fontWeight: 700 }}>
-                {(upcomingInterview.study.rewardAmount / 100).toFixed(0)}€
+                {((upcomingInterview.participantPayCents ?? upcomingInterview.study.rewardAmount) / 100).toFixed(0)}€
               </span>
             </div>
           </div>
@@ -241,7 +241,7 @@ export default async function ParticipantDashboard() {
                 <div style={{ display: "flex", alignItems: "center", gap: "18px", flexShrink: 0 }}>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "20px", fontWeight: 700, color: "var(--color-text-primary)", lineHeight: 1 }}>
-                      {(app.study.rewardAmount / 100).toFixed(0)}€
+                      {((app.participantPayCents ?? app.study.rewardAmount) / 100).toFixed(0)}€
                     </div>
                     <div style={{ fontSize: "10px", color: "var(--color-text-tertiary)", marginTop: "3px" }}>récompense</div>
                   </div>

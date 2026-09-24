@@ -6,22 +6,25 @@ import { redeemInviteCode } from "@/app/actions/inviteCodes";
 
 type Transaction = { id: string; type: string; amount: number; desc: string; date: string; balance: number };
 
-const PACKS = [
-  { credits: 5,  price: "375€",  unit: "75€/entretien", label: "Pack S" },
-  { credits: 12, price: "780€",  unit: "65€/entretien", label: "Pack M", popular: true },
-  { credits: 25, price: "1 375€", unit: "55€/entretien", label: "Pack L" },
-];
+type Pack = { id: string; label: string; credits: number; priceCents: number; note: string };
+type TierInfo = { label: string; credits: number };
 
 export default function BrandAccountClient({
   isActivated,
   credits,
   companyName,
   transactions,
+  packs,
+  tiers,
+  creditValueCents,
 }: {
   isActivated: boolean;
   credits: number;
   companyName: string;
   transactions: Transaction[];
+  packs: Pack[];
+  tiers: TierInfo[];
+  creditValueCents: number;
 }) {
   const [tab, setTab] = useState<"credits" | "profile">("credits");
   const [inviteCode, setInviteCode] = useState("");
@@ -152,49 +155,57 @@ export default function BrandAccountClient({
               <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginTop: "6px" }}>crédits disponibles</div>
             </div>
             <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", textAlign: "right" }}>
-              <div>1 crédit = 1 participant confirmé</div>
-              <div style={{ marginTop: "4px" }}>Remboursé si no-show</div>
+              <div>1 crédit = {creditValueCents / 100} € HT</div>
+              <div style={{ marginTop: "4px" }}>Un profil coûte selon son palier · remboursé en cas d&apos;absence</div>
             </div>
           </div>
 
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "22px" }}>
+            {tiers.map((t) => (
+              <span key={t.label} style={{ fontSize: "13px", padding: "6px 12px", borderRadius: "999px", background: "var(--color-surface)", border: "1px solid var(--color-border-base)", color: "var(--color-text-secondary)" }}>
+                <b style={{ color: "var(--color-text-primary)" }}>{t.label}</b> · à partir de {t.credits} crédits l&apos;entretien de 45 min
+              </span>
+            ))}
+          </div>
+
           <h3 style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 14px" }}>Acheter des crédits</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "32px" }}>
-            {PACKS.map((pack) => (
-              <div key={pack.credits} style={{
-                padding: "20px", border: `1px solid ${pack.popular ? "var(--color-accent)" : "var(--color-border-base)"}`,
-                borderRadius: "10px", background: pack.popular ? "var(--color-accent-light)" : "var(--color-surface)",
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "32px" }}>
+            {packs.map((pack, i) => { const popular = i === 1; return (
+              <div key={pack.id} style={{
+                padding: "20px", border: `1px solid ${popular ? "var(--color-accent)" : "var(--color-border-base)"}`,
+                borderRadius: "10px", background: popular ? "var(--color-accent-light)" : "var(--color-surface)",
                 position: "relative",
               }}>
-                {pack.popular && (
+                {popular && (
                   <div style={{ position: "absolute", top: "-10px", left: "50%", transform: "translateX(-50%)", background: "var(--color-accent)", color: "#fff", fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "999px" }}>
                     Populaire
                   </div>
                 )}
                 <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>{pack.label}</div>
                 <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "32px", fontWeight: 700, color: "var(--color-text-primary)" }}>{pack.credits}</div>
-                <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "12px" }}>crédits · {pack.unit}</div>
+                <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "12px" }}>crédits · {pack.note}</div>
                 <button
                   onClick={async () => {
                     const res = await fetch("/api/stripe/create-credit-checkout", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ credits: pack.credits }),
+                      body: JSON.stringify({ packId: pack.id }),
                     });
                     const { url } = await res.json();
                     if (url) window.location.href = url;
                   }}
                   style={{
                     width: "100%", padding: "10px",
-                    background: pack.popular ? "var(--color-accent)" : "var(--color-surface-2)",
-                    color: pack.popular ? "#fff" : "var(--color-text-primary)",
-                    border: `1px solid ${pack.popular ? "transparent" : "var(--color-border-strong)"}`,
+                    background: popular ? "var(--color-accent)" : "var(--color-surface-2)",
+                    color: popular ? "#fff" : "var(--color-text-primary)",
+                    border: `1px solid ${popular ? "transparent" : "var(--color-border-strong)"}`,
                     borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer",
                   }}
                 >
-                  {pack.price}
+                  {(pack.priceCents / 100).toLocaleString("fr-FR")} € HT
                 </button>
               </div>
-            ))}
+            ); })}
           </div>
 
           {transactions.length > 0 && (

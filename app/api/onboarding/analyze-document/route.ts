@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
     include: { participantProfile: { select: { id: true } } },
   });
   if (!dbUser?.participantProfile) return NextResponse.json({ error: "no_profile" }, { status: 404 });
+  // Seuls ses propres documents : le chemin vient du navigateur, et le bucket
+  // contient ceux de tous les participants.
+  if (!path.startsWith(`${dbUser.participantProfile.id}/`) || path.includes("..")) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
 
   // Récupère le fichier depuis le bucket privé
   const service = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);

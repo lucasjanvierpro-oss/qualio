@@ -141,7 +141,7 @@ export default async function ParticipantStudiesPage() {
                     {/* Récompense */}
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: "16px", fontWeight: 700, color: "var(--color-accent)" }}>
-                        {fmtReward(app.study.rewardAmount, app.study.rewardType)}
+                        {fmtReward(app.participantPayCents ?? app.study.rewardAmount, app.study.rewardType)}
                       </div>
                       <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "2px" }}>récompense</div>
                     </div>
@@ -176,7 +176,7 @@ export default async function ParticipantStudiesPage() {
                     {st.label}
                   </span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--color-text-tertiary)" }}>
-                    {fmtReward(app.study.rewardAmount, app.study.rewardType)}
+                    {fmtReward(app.participantPayCents ?? app.study.rewardAmount, app.study.rewardType)}
                   </span>
                 </div>
               );

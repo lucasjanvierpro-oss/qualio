@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { markDomainVerified } from "@/lib/brands/domainVerification";
+import type { User } from "@supabase/supabase-js";
+
+/**
+ * Médaille « LinkedIn vérifié » : se connecter avec LinkedIn prouve que le
+ * compte appartient à la personne. Supabase relie l'identité LinkedIn au
+ * compte existant quand l'adresse est la même.
+ */
+async function markLinkedinVerified(user: User) {
+  const viaLinkedin = user.app_metadata?.provider === "linkedin_oidc"
+    || (user.identities ?? []).some((i) => i.provider === "linkedin_oidc");
+  if (!viaLinkedin) return;
+  await prisma.participantProfile.updateMany({
+    where: { user: { supabaseId: user.id }, linkedinVerified: false },
+    data: { linkedinVerified: true },
+  }).catch(() => {});
+}
 
 /**
  * Retour de Google, de LinkedIn et des liens envoyés par email.
@@ -56,6 +72,7 @@ export async function GET(request: NextRequest) {
 
   if (existingUser) {
     if (existingUser.role === "BRAND") await markDomainVerified(data.user);
+    if (existingUser.role === "PARTICIPANT") await markLinkedinVerified(data.user);
     return NextResponse.redirect(new URL(DESTINATIONS[existingUser.role] ?? next, request.url));
   }
 
@@ -117,5 +134,6 @@ export async function GET(request: NextRequest) {
   }
 
   if (role === "BRAND") await markDomainVerified(data.user);
+  else await markLinkedinVerified(data.user);
   return NextResponse.redirect(new URL(ONBOARDING[role] ?? next, request.url));
 }
