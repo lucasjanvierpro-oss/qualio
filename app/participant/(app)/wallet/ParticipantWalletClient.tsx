@@ -189,12 +189,22 @@ function CashCard({ reward }: { reward: Reward }) {
   );
 }
 
+type Bonus = { id: string; kind: string; amountCents: number; status: string; createdAt: string };
+
+const BONUS_LABEL: Record<string, string> = {
+  first: "Premier entretien d'un filleul",
+  interview: "Entretien d'un filleul",
+  welcome: "Bienvenue : premier entretien",
+};
+
 export default function ParticipantWalletClient({
   rewards,
+  bonuses = [],
   stripeConnectStatus,
   participantId,
 }: {
   rewards: Reward[];
+  bonuses?: Bonus[];
   stripeConnectStatus: string | null;
   participantId: string;
 }) {
@@ -210,8 +220,11 @@ export default function ParticipantWalletClient({
   const cashRewards = rewards.filter((r) => r.type === "CASH");
   const voucherRewards = rewards.filter((r) => r.type === "VOUCHER");
   const availableCents = cashRewards.filter((r) => r.status === "PAID").reduce((s, r) => s + r.amountCents, 0);
-  const pendingCents = cashRewards.filter((r) => r.status === "PENDING").reduce((s, r) => s + r.amountCents, 0);
-  const totalEarned = rewards.filter((r) => ["PAID", "REVEALED"].includes(r.status)).reduce((s, r) => s + r.amountCents, 0);
+  // Les primes de parrainage s'ajoutent aux gains des entretiens.
+  const pendingCents = cashRewards.filter((r) => r.status === "PENDING").reduce((s, r) => s + r.amountCents, 0)
+    + bonuses.filter((b) => b.status === "pending").reduce((s, b) => s + b.amountCents, 0);
+  const totalEarned = rewards.filter((r) => ["PAID", "REVEALED"].includes(r.status)).reduce((s, r) => s + r.amountCents, 0)
+    + bonuses.filter((b) => b.status === "paid").reduce((s, b) => s + b.amountCents, 0);
 
   const isStripeConnected = connectStatus === "active";
 
@@ -294,6 +307,19 @@ export default function ParticipantWalletClient({
           </div>
         ))}
       </div>
+
+      {/* Parrainage : les primes, ou l'invitation à parrainer */}
+      <a href="/participant/parrainage" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, padding: "16px 20px", marginBottom: 28, borderRadius: 14, background: "linear-gradient(135deg, #fff6e3, #ffffff)", border: "1px solid #f1e6cf", textDecoration: "none", color: "inherit" }}>
+        <span>
+          <strong style={{ display: "block", fontSize: 15 }}>{bonuses.length ? `Parrainage · ${bonuses.length} prime${bonuses.length > 1 ? "s" : ""}` : "Parrainez un ami, gagnez 50 €"}</strong>
+          <span style={{ fontSize: 13.5, color: "var(--color-text-secondary)" }}>
+            {bonuses.length
+              ? bonuses.slice(0, 3).map((b) => `${BONUS_LABEL[b.kind] ?? "Prime"} : ${euros(b.amountCents)} €`).join(" · ")
+              : "Dès que votre ami termine son premier entretien, puis 30 € aux suivants."}
+          </span>
+        </span>
+        <span style={{ fontWeight: 700, color: "#8a5d12", whiteSpace: "nowrap" }}>Voir →</span>
+      </a>
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "4px", marginBottom: "24px", borderBottom: "1px solid var(--color-border)" }}>

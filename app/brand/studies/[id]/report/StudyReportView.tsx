@@ -13,6 +13,7 @@ type Theme = { nom: string; resume: string; intensite: number; tonalite?: Tonali
 type Verbatim = { content: string; participant: string; theme?: string; tonalite?: Tonalite };
 type Persona = { nom: string; portrait: string; posture: string };
 type Reco = { titre: string; detail: string };
+type Reponse = { question: string; reponse: string; appui?: string; verbatim?: string; participant?: string };
 
 export type StructuredReport = {
   titre?: string;
@@ -27,6 +28,8 @@ export type StructuredReport = {
   signauxFaibles?: string[];
   questionsOuvertes?: string[];
   recommandations?: Reco[];
+  /** Réponses aux questions que la marque voulait trancher (brief). */
+  reponses?: Reponse[];
   methodologie?: string;
 };
 
@@ -161,6 +164,20 @@ export default function StudyReportView({
         <section className={r.panel} data-show={show("synthese")} aria-label="Synthèse">
           <h2 className={r.printTitle}>Synthèse</h2>
           {report.syntheseExecutive && <p className={r.exec}>{report.syntheseExecutive}</p>}
+          {(report.reponses ?? []).length > 0 && (
+            <div className={s.card}>
+              <h3 className={s.h3}>Vos questions, ce qu&apos;en disent les entretiens</h3>
+              <ol className={r.recos}>
+                {report.reponses!.map((rp) => (
+                  <li key={rp.question}>
+                    <strong>{rp.question}</strong>
+                    <span className={s.muted}>{rp.reponse}{rp.appui ? ` · ${rp.appui}` : ""}</span>
+                    {rp.verbatim && <Quote text={rp.verbatim} who={rp.participant} />}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
           {report.problematique && (
             <div className={s.cardSoft}><h3 className={s.h3}>La vraie question</h3><p className={s.muted} style={{ margin: 0 }}>{report.problematique}</p></div>
           )}

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { sendRewardAvailable } from "@/lib/resend/emails";
 import { generateAndStoreReportFromTranscripts } from "@/lib/reports/generate";
+import { grantReferralBonuses } from "@/lib/referral/referral";
 
 export async function PATCH(
   req: NextRequest,
@@ -70,6 +71,9 @@ export async function PATCH(
         reward.type as "CASH" | "VOUCHER"
       ).catch(() => null);
     }
+
+    // Parrainage : l'entretien est mené et payé, les primes peuvent naître.
+    await grantReferralBonuses(interview.applicationId).catch((e) => console.error("[referral]", e));
   }
 
   if (status === "no_show") {

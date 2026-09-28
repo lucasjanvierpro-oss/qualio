@@ -60,6 +60,8 @@ type Study = {
   duration: number;
   deadlineAt: string | null;
   hasReport: boolean;
+  createdAt: string;
+  brief: { objective: string; profiles: { label: string; count: number }[]; decisions: string[]; guide: string[]; fileName: string | null };
 };
 
 const TZ = "Europe/Paris";
@@ -330,7 +332,7 @@ function ReviewForm({ c, onDone, onClose }: { c: Candidate; onDone: () => void; 
   );
 }
 
-export default function StudyDetailClient({ study, candidates, credits }: { study: Study; candidates: Candidate[]; credits: number }) {
+export default function StudyDetailClient({ study, candidates, credits, isNew }: { study: Study; candidates: Candidate[]; credits: number; isNew?: boolean }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [error, setError] = useState<{ id: string; msg: string } | null>(null);
@@ -428,12 +430,10 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
           <h2 className={s.h2}>Profils proposés <span className={s.faint}>({toReview.length})</span></h2>
           <span className={`${s.small} ${s.muted}`}>Prix par profil selon son palier · <b>{credits} crédits</b> disponibles</span>
         </div>
-        {toReview.length === 0 ? (
-          <p className={`${s.cardSoft} ${s.muted}`} style={{ marginTop: 12 }}>
-            {candidates.length === 0
-              ? "Nous sélectionnons vos premiers profils. Ils apparaîtront ici, avec la raison de chaque choix."
-              : "Aucun profil en attente de votre avis."}
-          </p>
+        {toReview.length === 0 && candidates.length === 0 ? (
+          <Waiting isNew={!!isNew} createdAt={study.createdAt} />
+        ) : toReview.length === 0 ? (
+          <p className={`${s.cardSoft} ${s.muted}`} style={{ marginTop: 12 }}>Aucun profil en attente de votre avis.</p>
         ) : (
           <div className={s.grid2} style={{ marginTop: 12 }}>
             {toReview.map((c) => (
@@ -530,6 +530,8 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
         </section>
       )}
 
+      <BriefRecap brief={study.brief} />
+
       {declined.length > 0 && (
         <section className={s.sectionGap}>
           <button type="button" className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} onClick={() => setShowDeclined((v) => !v)} aria-expanded={showDeclined}>
@@ -543,5 +545,63 @@ export default function StudyDetailClient({ study, candidates, credits }: { stud
         </section>
       )}
     </div>
+  );
+}
+
+// Tant qu'aucun profil n'est proposé : ce qui se passe, et quand.
+function Waiting({ isNew, createdAt }: { isNew: boolean; createdAt: string }) {
+  const due = new Date(new Date(createdAt).getTime() + 24 * 3600_000);
+  const dueText = new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, weekday: "long", hour: "2-digit", minute: "2-digit" }).format(due);
+  const steps = [
+    { title: "Brief reçu", text: "La fiche de votre étude est entre nos mains.", done: true },
+    { title: "Recherche dans le panel", text: "Le moteur classe les profils qui correspondent à chaque groupe.", done: true },
+    { title: "Vérification à la main", text: "L'équipe relit chaque profil avant de vous le proposer.", done: false },
+    { title: "Vos profils, avec leur prix", text: `Au plus tard ${dueText}. Vous recevez un email.`, done: false },
+  ];
+  return (
+    <div className={s.card} style={{ marginTop: 12 }}>
+      <p className={s.eyebrow} style={{ margin: 0 }}>{isNew ? "Brief bien reçu" : "Sélection en cours"}</p>
+      <h3 className={s.h3} style={{ marginTop: 4 }}>Vos premiers profils arrivent sous 24 h</h3>
+      <ol style={{ listStyle: "none", margin: "16px 0 0", padding: 0, display: "grid", gap: 12 }}>
+        {steps.map((st, i) => (
+          <li key={st.title} style={{ display: "grid", gridTemplateColumns: "26px 1fr", gap: 12, alignItems: "start" }}>
+            <span style={{ display: "grid", placeItems: "center", width: 24, height: 24, borderRadius: "50%", fontSize: 12, fontWeight: 700, background: st.done ? "var(--ok)" : i === 2 ? "var(--accent)" : "var(--soft)", color: st.done || i === 2 ? "#fff" : "var(--ink-3)" }}>{st.done ? "✓" : i + 1}</span>
+            <span><b style={{ fontSize: 15 }}>{st.title}</b><span className={`${s.small} ${s.muted}`} style={{ display: "block" }}>{st.text}</span></span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+// Le brief de l'étude, replié : ce que la marque a demandé, pour s'y référer.
+function BriefRecap({ brief }: { brief: Study["brief"] }) {
+  const has = brief.decisions.length > 0 || brief.guide.length > 0 || brief.profiles.length > 0;
+  if (!has) return null;
+  return (
+    <details className={`${s.card} ${s.sectionGap}`}>
+      <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: 17 }}>Votre brief{brief.fileName ? ` · ${brief.fileName}` : ""}</summary>
+      <div style={{ display: "grid", gap: 18, marginTop: 16 }}>
+        <p className={s.muted} style={{ margin: 0 }}>{brief.objective}</p>
+        {brief.profiles.length > 0 && (
+          <div className={s.row}>
+            {brief.profiles.map((x) => <span key={x.label} className={`${s.badge} ${s.badgeAccent}`}>{x.count} · {x.label}</span>)}
+          </div>
+        )}
+        {brief.decisions.length > 0 && (
+          <div>
+            <h3 className={s.h3}>Ce que la synthèse devra trancher</h3>
+            <ul className={s.muted} style={{ margin: "6px 0 0", paddingLeft: 18, display: "grid", gap: 4 }}>{brief.decisions.map((d) => <li key={d}>{d}</li>)}</ul>
+          </div>
+        )}
+        {brief.guide.length > 0 && (
+          <div>
+            <h3 className={s.h3}>Guide d&apos;entretien</h3>
+            <ol className={s.muted} style={{ margin: "6px 0 0", paddingLeft: 20, display: "grid", gap: 4 }}>{brief.guide.map((q) => <li key={q}>{q}</li>)}</ol>
+            <p className={`${s.small} ${s.faint}`} style={{ margin: "8px 0 0" }}>Il s&apos;affiche à côté de la visio pendant chaque entretien.</p>
+          </div>
+        )}
+      </div>
+    </details>
   );
 }

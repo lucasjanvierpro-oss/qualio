@@ -25,6 +25,11 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // Lien de parrainage : pose le cookie du parrain puis renvoie à l'inscription.
+  if (pathname.startsWith("/r/")) {
+    return supabaseResponse;
+  }
+
   // Retours de connexion (Google, LinkedIn, liens reçus par email) : la session
   // n'existe pas encore, ce sont précisément ces routes qui la créent. Sans cette
   // ligne, tout visiteur non connecté repartait vers /login, code perdu.

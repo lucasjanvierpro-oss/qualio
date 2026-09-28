@@ -10,6 +10,7 @@ const NAV = [
   { href: "/participant/profile", label: "Mon profil" },
   { href: "/participant/verification", label: "Vérification" },
   { href: "/participant/wallet", label: "Mes gains" },
+  { href: "/participant/parrainage", label: "Parrainage" },
   { href: "/participant/settings", label: "Paramètres" },
 ];
 

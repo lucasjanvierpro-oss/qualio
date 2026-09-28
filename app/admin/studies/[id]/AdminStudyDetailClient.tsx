@@ -63,6 +63,10 @@ type Study = {
   exclusionCriteria: string | null;
   adminNotes: string | null;
   applications: Application[];
+  brief: string | null;
+  briefFileName: string | null;
+  decisions: string[];
+  guide: string[];
 };
 
 type Participant = {
@@ -591,6 +595,21 @@ export default function AdminStudyDetailClient({
               )}
             </div>
           </div>
+          {(study.decisions.length > 0 || study.guide.length > 0) && (
+            <div>
+              <h3 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 10px" }}>À trancher · guide</h3>
+              <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "8px", padding: "14px 16px", fontSize: "14px", color: "var(--color-text-primary)", lineHeight: 1.55 }}>
+                {study.decisions.length > 0 && <ul style={{ margin: "0 0 10px", paddingLeft: 18 }}>{study.decisions.map((d) => <li key={d}>{d}</li>)}</ul>}
+                {study.guide.length > 0 && <ol style={{ margin: 0, paddingLeft: 18, color: "var(--color-text-secondary)" }}>{study.guide.map((q) => <li key={q}>{q}</li>)}</ol>}
+              </div>
+            </div>
+          )}
+          {study.brief && (
+            <details style={{ gridColumn: "1 / -1" }}>
+              <summary style={{ cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Brief d&apos;origine{study.briefFileName ? ` · ${study.briefFileName}` : ""}</summary>
+              <div style={{ marginTop: 10, background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "8px", padding: "14px 16px", fontSize: "14px", lineHeight: 1.6, whiteSpace: "pre-wrap", maxHeight: 420, overflow: "auto" }}>{study.brief}</div>
+            </details>
+          )}
           {study.exclusionCriteria && (
             <div>
               <h3 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 10px" }}>Critères d'exclusion</h3>

@@ -50,10 +50,14 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant/après, sans bal
   "recommandations": [
     { "titre": "Orientation de réflexion (pas une décision)", "detail": "1-2 phrases" }
   ],
+  "reponses": [
+    { "question": "question de la marque, recopiée telle quelle", "reponse": "2-3 phrases : ce que disent les entretiens sur ce choix, nuances comprises", "appui": "combien de participants vont dans ce sens, ex. '5 sur 6'", "verbatim": "citation exacte", "participant": "type de profil" }
+  ],
   "methodologie": "3-5 phrases neutres : périmètre, nombre de participants, profils, format, limites de généralisation."
 }
 
 Contraintes :
+- reponses : une entrée par question listée dans « QUESTIONS QUE LA MARQUE VEUT TRANCHER », dans le même ordre ; tableau vide s'il n'y en a pas. Dis ce que les entretiens indiquent et avec quelle force ; si le corpus ne permet pas de trancher, dis-le.
 - forces : 2-3 items. vigilance : 2-3 items. insights : 3-5 items (jamais plus). themes : 3-6 items. verbatims : 5-10 items. personas : 2-3 items. recommandations : 3-5 items.
 - "intensite" : entier 1-5. "tonalite" : "positif" | "neutre" | "negatif".
 - Les verbatims doivent être des citations RÉELLES tirées du corpus fourni, pas inventées.
@@ -69,8 +73,10 @@ export function buildUserMessage(input: {
   studyFormat: string;
   verbatims: VerbatimInput[];
   additionalContext?: string;
+  /** Ce que la marque a demandé à la synthèse de trancher, dans son brief. */
+  decisions?: string[];
 }): string {
-  const { studyObjective, brandContext, participantProfiles, studyFormat, verbatims, additionalContext } = input;
+  const { studyObjective, brandContext, participantProfiles, studyFormat, verbatims, additionalContext, decisions = [] } = input;
   return `OBJECTIF DE L'ÉTUDE :
 ${studyObjective}
 
@@ -84,6 +90,9 @@ ${participantProfiles.map((p, i) =>
 
 FORMAT DE L'ÉTUDE :
 ${studyFormat}
+
+QUESTIONS QUE LA MARQUE VEUT TRANCHER :
+${decisions.length ? decisions.map((d, i) => `${i + 1}. ${d}`).join("\n") : "Aucune précisée."}
 
 VERBATIMS ET CONTENUS DES ENTRETIENS :
 ${verbatims.map((v, i) => `--- ENTRETIEN ${i + 1} [${v.participantType}] ---\n${v.content}`).join("\n\n")}
@@ -185,6 +194,7 @@ export async function generateAndStoreReportFromTranscripts(
     participantProfiles,
     studyFormat: `${transcribed.length} entretiens ${study.studyType === "ONE_ON_ONE" ? "1:1" : "focus group"} de ${study.interviewDuration} minutes, transcrits automatiquement`,
     verbatims,
+    decisions: study.decisions,
   });
 
   try {

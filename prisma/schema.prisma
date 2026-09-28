@@ -272,6 +272,14 @@ model ParticipantProfile {
   updatedAt DateTime @updatedAt
 
   @@map("participant_profiles")
+
+  // Parrainage : un code par personne, et qui l'a invitée. Les primes ne
+  // naissent que d'entretiens réellement menés (voir ReferralBonus).
+  referralCode    String?              @unique
+  referredById    String?
+  referredBy      ParticipantProfile?  @relation("Referrals", fields: [referredById], references: [id])
+  referrals       ParticipantProfile[] @relation("Referrals")
+  referralBonuses ReferralBonus[]
 }
 
 // ─── GHOST FILE (IA) ─────────────────────────────────────
@@ -373,6 +381,13 @@ model Study {
 
   adminNotes      String? @db.Text
   creditsConsumed Int     @default(0)
+
+  // Le brief tel que la marque l'a donné (écrit, ou tiré de son document),
+  // ce que la synthèse devra trancher et le guide d'entretien proposé.
+  brief         String?  @db.Text
+  briefFileName String?
+  decisions     String[] @default([])
+  guide         String[] @default([])
 
   timeSlots          StudyTimeSlot[]
   applications       Application[]
@@ -602,6 +617,27 @@ model ProfileRequest {
 }
 
 /// Réglages du moteur de prix (une seule ligne, id = "default").
+// Une prime de parrainage : pour le parrain au premier entretien de son
+// filleul puis à chacun des suivants (plafonné), et pour le filleul à son
+// premier entretien. Unique par bénéficiaire, entretien et type : rejouer la
+// clôture d'un entretien ne paie jamais deux fois.
+model ReferralBonus {
+  id            String             @id @default(cuid())
+  beneficiaryId String
+  beneficiary   ParticipantProfile @relation(fields: [beneficiaryId], references: [id])
+  refereeId     String
+  applicationId String
+  kind          String             // "first" | "interview" | "welcome"
+  amountCents   Int
+  status        String             @default("pending") // pending | paid | cancelled
+  createdAt     DateTime           @default(now())
+  paidAt        DateTime?
+
+  @@unique([beneficiaryId, applicationId, kind])
+  @@index([refereeId])
+  @@map("referral_bonuses")
+}
+
 model PricingConfig {
   id        String   @id
   data      Json

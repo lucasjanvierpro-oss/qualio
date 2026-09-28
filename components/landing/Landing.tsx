@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Familjen_Grotesk } from "next/font/google";
 import styles from "./landing.module.css";
-import SearchConsole from "./SearchConsole";
+import Film from "./Film";
 import { LANE_1, LANE_2, type LaneProfile } from "./content";
 
 const familjen = Familjen_Grotesk({ subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap" });
@@ -65,7 +65,7 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <SearchConsole />
+          <Film />
         </section>
 
         <div className={styles.lanes} aria-label="Le genre de profils que nous recrutons">
@@ -151,7 +151,7 @@ export default function Landing() {
               <div className={styles.figures}>
                 <div><b>72 h</b><span>premiers profils</span></div>
                 <div><b>4 à 8</b><span>entretiens</span></div>
-                <div><b>Sur devis</b><span>tarif pilote</span></div>
+                <div><b>Inclus</b><span>vidéo, transcription, synthèse</span></div>
               </div>
             </div>
             <div className={`${styles.card} ${styles.cardPeople} ${styles.reveal}`} id="participer">
@@ -160,9 +160,9 @@ export default function Landing() {
               <p>Styliste, acheteur, collectionneur, passionné averti : donnez votre avis aux marques avant leurs lancements, et soyez payé pour le faire. Plus votre profil est rare, plus il est demandé.</p>
               <Link className={styles.btn} href="/signup/participant">Rejoindre le panel <span className={styles.arr}>→</span></Link>
               <div className={styles.figures}>
-                <div><b>50–150 €</b><span>par entretien</span></div>
-                <div><b>45 min</b><span>en visio</span></div>
-                <div><b>Vos univers</b><span>seulement</span></div>
+                <div><b>90 à 350 €</b><span>par entretien</span></div>
+                <div><b>48 h</b><span>pour être payé</span></div>
+                <div><b>50 €</b><span>par ami qui fait son premier entretien</span></div>
               </div>
             </div>
           </div>

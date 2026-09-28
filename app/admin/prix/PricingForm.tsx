@@ -104,6 +104,34 @@ export default function PricingForm({ initial }: { initial: PricingConfig }) {
         </div>
       </div>
 
+      <div className={`${a.card} ${a.tierCard}`}>
+        <h3>Parrainage</h3>
+        <div className={a.grid}>
+          <div className={a.field}><label htmlFor="rf1">Au parrain, 1er entretien du filleul (€)</label>
+            <input id="rf1" className={a.input} value={cfg.referral.firstCents / 100} onChange={(e) => set((c) => { c.referral.firstCents = Math.round(num(e.target.value) * 100); return c; })} /></div>
+          <div className={a.field}><label htmlFor="rf2">Au parrain, entretiens suivants (€)</label>
+            <input id="rf2" className={a.input} value={cfg.referral.perInterviewCents / 100} onChange={(e) => set((c) => { c.referral.perInterviewCents = Math.round(num(e.target.value) * 100); return c; })} /></div>
+          <div className={a.field}><label htmlFor="rf3">Entretiens primés par filleul</label>
+            <input id="rf3" className={a.input} value={cfg.referral.maxInterviews} onChange={(e) => set((c) => { c.referral.maxInterviews = num(e.target.value); return c; })} /></div>
+          <div className={a.field}><label htmlFor="rf4">Au filleul, bonus 1er entretien (€)</label>
+            <input id="rf4" className={a.input} value={cfg.referral.welcomeCents / 100} onChange={(e) => set((c) => { c.referral.welcomeCents = Math.round(num(e.target.value) * 100); return c; })} /></div>
+          <div className={a.field}><label htmlFor="rf5">Retrait minimum du solde (€)</label>
+            <input id="rf5" className={a.input} value={cfg.payoutMinCents / 100} onChange={(e) => set((c) => { c.payoutMinCents = Math.round(num(e.target.value) * 100); return c; })} /></div>
+        </div>
+        {(() => {
+          const r = cfg.referral;
+          const maxCost = r.firstCents + Math.max(0, r.maxInterviews - 1) * r.perInterviewCents + r.welcomeCents;
+          const marginPer = cfg.tiers.averti.baseCredits * cfg.creditValueCents - cfg.tiers.averti.participantPayCents;
+          const share = marginPer > 0 && r.maxInterviews > 0 ? maxCost / (marginPer * r.maxInterviews) : 0;
+          return (
+            <small>
+              Coût maximal par filleul : {(maxCost / 100).toLocaleString("fr-FR")} €, versé seulement s&apos;il fait {r.maxInterviews} entretiens.
+              Au palier le moins cher, cela représente {Math.round(share * 100)} % de la marge de ces entretiens. Aucune prime à l&apos;inscription.
+            </small>
+          );
+        })()}
+      </div>
+
       <div className={a.bar2}>
         <button type="button" className={a.btn} disabled={pending} onClick={save}>{pending ? "Enregistrement…" : "Enregistrer les réglages"}</button>
         <button type="button" className={`${a.btn} ${a.btnGhost}`} disabled={pending} onClick={() => set(() => structuredClone(DEFAULT_PRICING))}>Revenir aux valeurs recommandées</button>

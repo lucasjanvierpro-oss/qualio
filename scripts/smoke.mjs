@@ -52,7 +52,7 @@ async function hit(label, path, cookie) {
   console.log(`${ok ? "OK " : "KO "} ${String(status).padEnd(4)} ${label.padEnd(30)} ${path}`);
 }
 
-for (const p of ["/", "/login", "/signup/brand", "/signup/participant"]) await hit("public", p, null);
+for (const p of ["/", "/login", "/signup/brand", "/signup/participant", "/r/CODE-INCONNU"]) await hit("public", p, null);
 
 for (const u of users) {
   const c = await cookieFor(u.email);
@@ -68,7 +68,7 @@ for (const u of users) {
   } else if (u.role === "PARTICIPANT") {
     const pid = u.participant_profiles?.[0]?.id;
     const mine = apps.filter(a => a.participantProfileId === pid);
-    for (const p of ["/participant/dashboard", "/participant/studies", "/participant/profile", "/participant/verification", "/participant/wallet", "/participant/settings"]) await hit(u.email, p, c);
+    for (const p of ["/participant/dashboard", "/participant/studies", "/participant/profile", "/participant/verification", "/participant/wallet", "/participant/parrainage", "/participant/settings"]) await hit(u.email, p, c);
     for (const a of mine) await hit(u.email, `/participant/studies/${a.id}`, c);
   }
 }

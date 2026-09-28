@@ -717,3 +717,29 @@
 .revealTraits { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .revealTraits span { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--g2); }
 .revealTraits small { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
+
+/* Invitation d'un parrain, en tête de l'écran de compte */
+.invited {
+  display: flex; align-items: center; gap: 12px; margin: -6px 0 18px; padding: 12px 14px;
+  border-radius: 14px; background: #fff7e6; border: 1px solid #f3dca8; font-size: 14.5px; line-height: 1.45; color: #5c4210;
+  animation: invitedIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.invited b { color: #3a2a08; }
+.invitedAv {
+  flex-shrink: 0; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(140deg, #f4cd6b, #c8912b); color: #fff; font-weight: 700; font-size: 16px;
+}
+@keyframes invitedIn { from { opacity: 0; transform: translateY(6px); } }
+
+/* Fin du tunnel : l'invitation à parrainer */
+.referTeaser {
+  display: flex; align-items: center; gap: 14px; margin: 28px auto 0; max-width: 520px; padding: 14px 18px;
+  border-radius: 16px; background: linear-gradient(135deg, #fff6e3, #ffffff); border: 1px solid #f1e6cf;
+  font-size: 14.5px; line-height: 1.45; color: #5c4210; text-decoration: none;
+}
+.referTeaser b { color: #3a2a08; }
+.referCoin {
+  flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-weight: 800; color: #5c4210;
+  background: linear-gradient(140deg, #fff3cf, #f4cd6b); border: 2px solid #e0a93c;
+}
+.referCoin::after { content: "€"; font-size: 10px; margin-left: 1px; }

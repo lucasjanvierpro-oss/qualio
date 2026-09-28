@@ -18,8 +18,9 @@ function age(dob: Date | null): number | null {
   return a;
 }
 
-export default async function StudyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function StudyDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ nouveau?: string }> }) {
   const { id } = await params;
+  const { nouveau } = await searchParams;
   const me = await getSessionUser();
   if (!me) redirect("/login");
   if (!me.brandProfileId) redirect("/login");
@@ -157,7 +158,16 @@ export default async function StudyDetailPage({ params }: { params: Promise<{ id
         duration: study.interviewDuration,
         deadlineAt: study.deadlineAt?.toISOString() ?? null,
         hasReport: !!study.report,
+        createdAt: study.createdAt.toISOString(),
+        brief: {
+          objective: study.objective,
+          profiles: (((study.targetCriteria ?? {}) as { profiles?: { label: string; count: number }[] }).profiles ?? []).map((x) => ({ label: x.label, count: x.count })),
+          decisions: study.decisions,
+          guide: study.guide,
+          fileName: study.briefFileName,
+        },
       }}
+      isNew={nouveau === "1"}
       candidates={candidates}
       credits={brand?.credits ?? 0}
     />

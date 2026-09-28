@@ -10,6 +10,7 @@ import { FUNNEL_LAST_STEP } from "@/lib/onboarding/types";
 import { generateGhostFile } from "@/lib/participants/ghostFile";
 import { analyzeLinks, type LinkInput } from "@/lib/participants/links";
 import { appUrl } from "@/lib/appUrl";
+import { attachReferrer } from "@/lib/referral/referral";
 
 // ── Étape 0 : le compte, et rien d'autre ─────────────────────────────
 // Même chemin qu'une connexion Google ou LinkedIn : on crée d'abord le compte,
@@ -180,6 +181,9 @@ export async function saveFunnelStep(step: number, s: Partial<OnboardingState>):
     where: { id: profileId },
     data: { onboardingStep: step, ...profileDataFromState(s) },
   });
+  // Arrivé par un lien de parrainage : le compte est rattaché au parrain une
+  // fois pour toutes (Google, LinkedIn ou email, tous passent par ici).
+  await attachReferrer(profileId).catch(() => null);
   return { ok: true };
 }
 

@@ -33,6 +33,22 @@ export type PricingConfig = {
   bounds: { min: number; max: number };
   /** Packs vendus aux marques. */
   packs: { id: string; label: string; credits: number; priceCents: number; note: string }[];
+  /**
+   * Parrainage. Rien n'est payé à l'inscription : chaque prime naît d'un
+   * entretien qu'une marque a payé, donc d'une marge déjà encaissée.
+   */
+  referral: {
+    /** Au parrain, quand son filleul termine son premier entretien. */
+    firstCents: number;
+    /** Au parrain, pour chaque entretien suivant du filleul… */
+    perInterviewCents: number;
+    /** …jusqu'à ce nombre d'entretiens (premier compris). */
+    maxInterviews: number;
+    /** Au filleul, en plus de sa rémunération, à son premier entretien. */
+    welcomeCents: number;
+  };
+  /** Seuil de retrait du solde participant. */
+  payoutMinCents: number;
 };
 
 export const DEFAULT_PRICING: PricingConfig = {
@@ -66,6 +82,8 @@ export const DEFAULT_PRICING: PricingConfig = {
     { id: "maison", label: "Maison", credits: 400, priceCents: 320000, note: "−20 % · plusieurs études" },
     { id: "grande-maison", label: "Grande maison", credits: 1000, priceCents: 700000, note: "−30 % · l'année" },
   ],
+  referral: { firstCents: 5000, perInterviewCents: 3000, maxInterviews: 10, welcomeCents: 2000 },
+  payoutMinCents: 5000,
 };
 
 /** Fusionne une configuration enregistrée (éventuellement partielle) avec les défauts. */
@@ -85,6 +103,7 @@ export function mergePricing(saved: unknown): PricingConfig {
     duration: s.duration?.length ? s.duration : DEFAULT_PRICING.duration,
     scarcity: s.scarcity?.length ? s.scarcity : DEFAULT_PRICING.scarcity,
     packs: s.packs?.length ? s.packs : DEFAULT_PRICING.packs,
+    referral: { ...DEFAULT_PRICING.referral, ...(s.referral ?? {}) },
   };
 }
 

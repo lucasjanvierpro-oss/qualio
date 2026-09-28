@@ -44,9 +44,16 @@ export default async function ParticipantWalletPage() {
     createdAt: r.createdAt.toISOString(),
   }));
 
+  const bonuses = (await prisma.referralBonus.findMany({
+    where: { beneficiaryId: profile.id, status: { not: "cancelled" } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, kind: true, amountCents: true, status: true, createdAt: true },
+  })).map((b) => ({ ...b, createdAt: b.createdAt.toISOString() }));
+
   return (
     <ParticipantWalletClient
       rewards={rewards}
+      bonuses={bonuses}
       stripeConnectStatus={profile.stripeConnectStatus}
       participantId={profile.id}
     />

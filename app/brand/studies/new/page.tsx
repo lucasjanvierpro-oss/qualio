@@ -1,493 +1,391 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import s from "@/components/rl/rl.module.css";
 import { createStudy } from "@/app/actions/studies";
-import { DEFAULT_PRICING, TIERS } from "@/lib/pricing/config";
+import { DEFAULT_PRICING } from "@/lib/pricing/config";
 import { quote } from "@/lib/pricing/engine";
+import { DURATIONS, EMPTY_DRAFT, type BriefDraft } from "@/lib/studies/briefTypes";
+import b from "./brief.module.css";
 
-type StudyData = {
-  // Step 1 — Basics
-  title: string;
-  objective: string;
-  studyType: "ONE_ON_ONE" | "FOCUS_GROUP";
-  targetCount: number;
-  language: string;
-  // Step 2 — Participant Profile
-  ageMin: number;
-  ageMax: number;
-  cities: string[];
-  interests: string[];
-  brandAffinities: string[];
-  profession: string;
-  customCriteria: string;
-  exclusionCriteria: string;
-  // Step 3 — Scheduling
-  deadlineAt: string;
-  interviewDuration: number;
-  timeSlots: string[];
-  // Step 4 — Rewards
-  rewardType: "CASH" | "VOUCHER";
-  rewardAmount: number;
-  voucherBrand: string;
-};
+// Nouvelle étude, en deux temps. La marque écrit ce qu'elle cherche ou dépose
+// son brief ; l'IA en tire une fiche (profils, format, ce que la synthèse
+// devra trancher, guide d'entretien). La marque la relit, corrige, envoie.
 
-const EMPTY: StudyData = {
-  title: "",
-  objective: "",
-  studyType: "ONE_ON_ONE",
-  targetCount: 6,
-  language: "fr",
-  ageMin: 18,
-  ageMax: 45,
-  cities: [],
-  interests: [],
-  brandAffinities: [],
-  profession: "",
-  customCriteria: "",
-  exclusionCriteria: "",
-  deadlineAt: "",
-  interviewDuration: 30,
-  timeSlots: [],
-  rewardType: "CASH",
-  rewardAmount: 5000,
-  voucherBrand: "",
-};
+type Phase = "write" | "reading" | "review";
 
-const STEPS = ["Informations", "Profil cible", "Planification", "Budget", "Récapitulatif"];
+const EXAMPLES = [
+  { label: "Lancer une ligne", text: "On lance une ligne de maroquinerie en cuir recyclé à l'automne. On veut entendre des acheteuses de luxe qui achètent aussi en seconde main, et deux ou trois vendeuses en boutique. Il faut trancher le prix de lancement et le nombre de coloris." },
+  { label: "Tester un prix", text: "Nous hésitons à passer notre sneaker phare de 290 à 340 €. Nous voulons comprendre comment nos clients fidèles et des revendeurs sneakers perçoivent cette hausse, et ce qui la rendrait acceptable." },
+  { label: "Comprendre une clientèle", text: "Nos clientes de 25-35 ans achètent de moins en moins en boutique. On veut comprendre où et comment elles découvrent les marques aujourd'hui, avec des clientes averties et quelques créatrices de contenu mode." },
+];
 
-const CITIES = ["Paris", "Lyon", "Marseille", "Bordeaux", "Lille", "Toulouse", "Nantes", "Remote / Partout"];
-const INTERESTS_LIST = ["Mode", "Streetwear", "Luxe", "Beauté", "Tech", "Musique", "Food", "Voyage", "Sport", "Gaming", "Design", "Développement durable"];
+const MOMENTS = [
+  { id: "matin", label: "Matin" },
+  { id: "midi", label: "Midi" },
+  { id: "apres-midi", label: "Après-midi" },
+  { id: "soir", label: "Soir" },
+];
+
+const READING_STEPS = ["Qui interroger", "Le format", "Ce que la synthèse devra trancher", "Le guide d'entretien"];
+
+const ACCEPT = ".pdf,.docx,.pptx,.txt,.md";
 
 export default function NewStudyPage() {
-  const [step, setStep] = useState(0);
-  const [data, setData] = useState<StudyData>(EMPTY);
-  const [submitting, setSubmitting] = useState(false);
-  const [brandInput, setBrandInput] = useState("");
   const router = useRouter();
+  const [phase, setPhase] = useState<Phase>("write");
+  const [text, setText] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [draft, setDraft] = useState<BriefDraft>(EMPTY_DRAFT);
+  const [source, setSource] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [moments, setMoments] = useState<string[]>(["matin", "apres-midi"]);
+  const [sending, setSending] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
-  // Estimation par palier, pour un profil moyen (à moitié certifié, sans
-  // demande particulière) : le prix réel s'affiche sur chaque profil proposé.
-  const budget = TIERS.slice(0, 2).map((tier) => ({
-    tier,
-    label: DEFAULT_PRICING.tiers[tier].label,
-    credits: quote(DEFAULT_PRICING, {
-      tier, durationMin: data.interviewDuration, focusGroup: data.studyType === "FOCUS_GROUP",
-      certScore: 50, ratings: [], signals: { brandsAccepted90d: 0, shortlisted90d: 0, peers: 30, panelSize: 0 }, overrideCredits: null,
-    }).credits,
-  }));
-  const budgetMin = budget[0].credits * data.targetCount;
-  const budgetMax = budget[1].credits * data.targetCount;
+  const canRead = text.trim().length >= 20 || !!file;
 
-  function update(patch: Partial<StudyData>) {
-    setData((prev) => ({ ...prev, ...patch }));
+  function pick(f: File | undefined | null) {
+    if (!f) return;
+    const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!["pdf", "docx", "pptx", "txt", "md"].includes(ext)) { setError("Format non pris en charge : PDF, Word (.docx), PowerPoint (.pptx) ou texte."); return; }
+    if (f.size > 10 * 1024 * 1024) { setError("Document trop lourd : 10 Mo au maximum."); return; }
+    setError(null);
+    setFile(f);
   }
 
-  function toggleArr<K extends keyof StudyData>(key: K, val: string) {
-    const arr = (data[key] as string[]);
-    const next = arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
-    update({ [key]: next } as Partial<StudyData>);
-  }
-
-  function addBrand(e: React.KeyboardEvent) {
-    if ((e.key === "Enter" || e.key === ",") && brandInput.trim()) {
-      e.preventDefault();
-      const b = brandInput.trim();
-      if (!data.brandAffinities.includes(b)) {
-        update({ brandAffinities: [...data.brandAffinities, b] });
-      }
-      setBrandInput("");
-    }
-  }
-
-  async function submit() {
-    setSubmitting(true);
+  async function read() {
+    if (!canRead) return;
+    setPhase("reading");
+    setError(null);
+    const fd = new FormData();
+    fd.set("text", text);
+    if (file) fd.set("file", file);
     try {
-      const { studyId } = await createStudy(data);
-      router.push(`/brand/studies/${studyId}`);
-    } catch (e: unknown) {
-      if (e instanceof Error && e.message === "preview_mode") {
-        router.push("/brand/account");
-      } else {
-        console.error(e);
-        setSubmitting(false);
-      }
+      const res = await fetch("/api/studies/read-brief", { method: "POST", body: fd });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.draft) throw new Error(json.error ?? "La lecture a échoué. Réessayez, ou remplissez la fiche à la main.");
+      setDraft(json.draft);
+      setSource(json.source ?? text);
+      setFileName(json.fileName ?? null);
+      setPhase("review");
+      window.scrollTo({ top: 0 });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "La lecture a échoué.");
+      setPhase("write");
     }
   }
 
-  const progress = ((step + 1) / STEPS.length) * 100;
+  function manual() {
+    setDraft({ ...EMPTY_DRAFT, objective: text.trim() });
+    setSource(text);
+    setFileName(null);
+    setPhase("review");
+    window.scrollTo({ top: 0 });
+  }
+
+  async function send() {
+    setSending(true);
+    setError(null);
+    const r = await createStudy({
+      brief: source,
+      briefFileName: fileName,
+      title: draft.title,
+      objective: draft.objective,
+      profiles: draft.profiles,
+      studyType: draft.studyType,
+      duration: draft.duration,
+      language: draft.language,
+      ageMin: draft.ageMin,
+      ageMax: draft.ageMax,
+      cities: draft.cities,
+      brandAffinities: draft.brandAffinities,
+      exclusions: draft.exclusions,
+      decisions: draft.decisions,
+      guide: draft.guide,
+      deadlineAt: draft.deadline,
+      availability: moments,
+    }).catch(() => ({ error: "L'envoi a échoué. Réessayez." }));
+    if ("studyId" in r) { router.push(`/brand/studies/${r.studyId}?nouveau=1`); return; }
+    if (r.error === "preview_mode") { router.push("/brand/account"); return; }
+    if (r.error === "session_expired") { setError("Votre session a expiré : reconnectez-vous dans un autre onglet, puis renvoyez."); setSending(false); return; }
+    setError(r.error);
+    setSending(false);
+  }
+
+  if (phase === "review") {
+    return <Review draft={draft} setDraft={setDraft} moments={moments} setMoments={setMoments} fileName={fileName}
+      onBack={() => setPhase("write")} onSend={send} sending={sending} error={error} />;
+  }
 
   return (
-    <div style={{ maxWidth: "660px", margin: "0 auto", padding: "40px 24px 80px" }}>
-      {/* Header */}
-      <div style={{ marginBottom: "32px" }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 4px" }}>
-          Nouvelle étude
-        </h1>
-        <p style={{ fontSize: "13px", color: "var(--color-text-tertiary)", margin: 0 }}>
-          Étape {step + 1} sur {STEPS.length} — {STEPS[step]}
-        </p>
-      </div>
+    <div className={`${s.page} ${s.pageWide}`}>
+      <p className={s.eyebrow}>Nouvelle étude</p>
+      <h1 className={s.h1}>Qui voulez-vous entendre&nbsp;?</h1>
+      <p className={s.lead}>Écrivez ce que vous cherchez comme à un collègue, ou déposez votre brief. Nous en tirons la fiche de l&apos;étude ; vous la relisez avant de l&apos;envoyer.</p>
 
-      {/* Progress */}
-      <div style={{ height: "4px", background: "var(--color-border-base)", borderRadius: "999px", marginBottom: "8px" }}>
-        <div style={{ height: "100%", width: `${progress}%`, background: "var(--color-accent)", borderRadius: "999px", transition: "width 0.3s" }} />
-      </div>
-      <div style={{ display: "flex", gap: "6px", marginBottom: "36px" }}>
-        {STEPS.map((s, i) => (
-          <span key={i} style={{ fontSize: "11px", color: i === step ? "var(--color-accent)" : i < step ? "var(--color-text-secondary)" : "var(--color-text-tertiary)", fontWeight: i === step ? 600 : 400, flex: 1, textAlign: "center" }}>
-            {s}
-          </span>
-        ))}
-      </div>
-
-      {/* STEP 1 — Basics */}
-      {step === 0 && (
-        <div>
-          <Field label="Titre de l'étude *">
-            <input value={data.title} onChange={(e) => update({ title: e.target.value })} placeholder="Ex : Perception du polo L.12.12 chez les 25–35 ans" style={inputStyle} />
-          </Field>
-
-          <Field label="Objectif de l'étude *">
-            <textarea
-              value={data.objective}
-              onChange={(e) => update({ objective: e.target.value })}
-              placeholder="Décrivez ce que vous cherchez à comprendre. Ex : Nous souhaitons explorer les perceptions de notre heritage Polo…"
-              rows={4}
-              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
-            />
-            {data.objective.length > 0 && data.objective.length < 50 && (
-              <span style={{ fontSize: "12px", color: "var(--color-error)" }}>Minimum 50 caractères ({data.objective.length}/50)</span>
-            )}
-          </Field>
-
-          <Field label="Type d'étude *">
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-              {[
-                { value: "ONE_ON_ONE", label: "Entretien 1:1", desc: "Un participant à la fois, 30–60 min" },
-                { value: "FOCUS_GROUP", label: "Focus group", desc: "4–8 participants ensemble, 90 min" },
-              ].map((t) => (
-                <button key={t.value} onClick={() => update({ studyType: t.value as "ONE_ON_ONE" | "FOCUS_GROUP" })}
-                  style={{ padding: "14px", border: "1px solid", borderRadius: "8px", textAlign: "left", cursor: "pointer", borderColor: data.studyType === t.value ? "var(--color-accent)" : "var(--color-border-base)", background: data.studyType === t.value ? "var(--color-accent-light)" : "var(--color-surface)" }}>
-                  <div style={{ fontSize: "14px", fontWeight: 600, color: data.studyType === t.value ? "var(--color-accent)" : "var(--color-text-primary)", marginBottom: "3px" }}>{t.label}</div>
-                  <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>{t.desc}</div>
-                </button>
-              ))}
-            </div>
-          </Field>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <Field label={`Nombre de participants cible : ${data.targetCount}`}>
-              <input type="range" min={1} max={20} value={data.targetCount} onChange={(e) => update({ targetCount: +e.target.value })} style={{ width: "100%" }} />
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--color-text-tertiary)" }}>
-                <span>1</span><span>20</span>
-              </div>
-            </Field>
-            <Field label="Langue préférée">
-              <select value={data.language} onChange={(e) => update({ language: e.target.value })} style={inputStyle}>
-                <option value="fr">Français</option>
-                <option value="en">Anglais</option>
-                <option value="both">Les deux</option>
-              </select>
-            </Field>
-          </div>
-
-          <NavButtons
-            onNext={() => setStep(1)}
-            nextDisabled={!data.title.trim() || data.objective.length < 50}
-            showBack={false}
-          />
-        </div>
-      )}
-
-      {/* STEP 2 — Participant Profile */}
-      {step === 1 && (
-        <div>
-          <Field label={`Tranche d'âge : ${data.ageMin}–${data.ageMax} ans`}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-              <div>
-                <label style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>Âge min</label>
-                <input type="range" min={18} max={data.ageMax - 1} value={data.ageMin} onChange={(e) => update({ ageMin: +e.target.value })} style={{ width: "100%" }} />
-              </div>
-              <div>
-                <label style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>Âge max</label>
-                <input type="range" min={data.ageMin + 1} max={65} value={data.ageMax} onChange={(e) => update({ ageMax: +e.target.value })} style={{ width: "100%" }} />
-              </div>
-            </div>
-          </Field>
-
-          <Field label="Villes / Régions (optionnel)">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {CITIES.map((c) => (
-                <Chip key={c} label={c} selected={data.cities.includes(c)} onToggle={() => toggleArr("cities", c)} />
-              ))}
-            </div>
-          </Field>
-
-          <Field label="Centres d'intérêt cibles">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {INTERESTS_LIST.map((i) => (
-                <Chip key={i} label={i} selected={data.interests.includes(i)} onToggle={() => toggleArr("interests", i)} />
-              ))}
-            </div>
-          </Field>
-
-          <Field label="Affinités marques requises">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", padding: "8px", border: "1px solid var(--color-border-base)", borderRadius: "8px", background: "var(--color-surface)", minHeight: "44px", alignItems: "center" }}>
-              {data.brandAffinities.map((b) => (
-                <span key={b} style={{ padding: "4px 10px", borderRadius: "999px", background: "var(--color-accent-light)", color: "var(--color-accent)", fontSize: "13px", fontWeight: 500, display: "flex", alignItems: "center", gap: "6px" }}>
-                  {b}
-                  <button onClick={() => update({ brandAffinities: data.brandAffinities.filter((x) => x !== b) })} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-accent)", fontSize: "14px", padding: 0 }}>×</button>
-                </span>
-              ))}
-              <input value={brandInput} onChange={(e) => setBrandInput(e.target.value)} onKeyDown={addBrand} placeholder={data.brandAffinities.length === 0 ? "Lacoste, Nike, Sézane… + Entrée" : ""} style={{ border: "none", outline: "none", fontSize: "14px", flex: 1, minWidth: "120px", background: "transparent", color: "var(--color-text-primary)" }} />
-            </div>
-          </Field>
-
-          <Field label="Type de profession (optionnel)">
-            <input value={data.profession} onChange={(e) => update({ profession: e.target.value })} placeholder="Ex : Cadre, étudiant, indépendant…" style={inputStyle} />
-          </Field>
-
-          <Field label="Critères spécifiques (optionnel)">
-            <textarea value={data.customCriteria} onChange={(e) => update({ customCriteria: e.target.value })} placeholder="Ex : Acheteurs Lacoste des 6 derniers mois, intéressés par le lifestyle tennis…" rows={3} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }} />
-          </Field>
-
-          <Field label="Critères d'exclusion (optionnel)">
-            <textarea value={data.exclusionCriteria} onChange={(e) => update({ exclusionCriteria: e.target.value })} placeholder="Ex : Exclure les participants ayant déjà participé à une étude Lacoste" rows={2} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }} />
-          </Field>
-
-          <NavButtons onNext={() => setStep(2)} onBack={() => setStep(0)} />
-        </div>
-      )}
-
-      {/* STEP 3 — Scheduling */}
-      {step === 2 && (
-        <div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <Field label="Date limite souhaitée *">
-              <input type="date" value={data.deadlineAt} onChange={(e) => update({ deadlineAt: e.target.value })} style={inputStyle} min={new Date().toISOString().split("T")[0]} />
-            </Field>
-            <Field label="Durée des entretiens">
-              <select value={data.interviewDuration} onChange={(e) => update({ interviewDuration: +e.target.value })} style={inputStyle}>
-                {[15, 30, 45, 60].map((d) => (
-                  <option key={d} value={d}>{d} minutes</option>
-                ))}
-              </select>
-            </Field>
-          </div>
-
-          <Field label="Créneaux proposés (optionnel)">
-            <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: "0 0 10px" }}>
-              Ajoutez des créneaux pour aider les participants à choisir leurs disponibilités. Notre équipe peut aussi vous aider à planifier.
-            </p>
-            <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-              <input
-                type="datetime-local"
-                id="slotInput"
-                style={{ ...inputStyle, flex: 1 }}
-                min={new Date().toISOString().slice(0, 16)}
+      <div className={b.writeGrid}>
+        <section className={b.composer} data-busy={phase === "reading"}>
+          {phase === "reading" ? (
+            <Reading withFile={!!file} />
+          ) : (
+            <>
+              <textarea
+                className={b.textarea}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                rows={7}
+                placeholder="Ex. : on lance une ligne de maroquinerie en cuir recyclé. On veut entendre des acheteuses de luxe qui achètent aussi en seconde main, et quelques vendeuses en boutique. Il faut décider du prix et du nombre de coloris."
+                aria-label="Votre brief"
               />
-              <button
-                onClick={() => {
-                  const input = document.getElementById("slotInput") as HTMLInputElement;
-                  if (input?.value && !data.timeSlots.includes(input.value)) {
-                    update({ timeSlots: [...data.timeSlots, input.value] });
-                    input.value = "";
-                  }
-                }}
-                style={{ padding: "10px 16px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "14px", whiteSpace: "nowrap" }}
+              <div className={b.examples}>
+                <span>Exemples :</span>
+                {EXAMPLES.map((x) => <button key={x.label} type="button" onClick={() => setText(x.text)}>{x.label}</button>)}
+              </div>
+
+              <div
+                className={b.drop}
+                data-over={dragging}
+                data-filled={!!file}
+                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => { e.preventDefault(); setDragging(false); pick(e.dataTransfer.files?.[0]); }}
               >
-                + Ajouter
-              </button>
-            </div>
-            {data.timeSlots.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                {data.timeSlots.map((slot) => (
-                  <div key={slot} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--color-surface-2)", borderRadius: "6px", fontSize: "13px" }}>
-                    <span style={{ color: "var(--color-text-primary)" }}>
-                      {new Date(slot).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} à {new Date(slot).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                {file ? (
+                  <span className={b.file}>
+                    <span className={b.fileIcon}>{file.name.split(".").pop()?.toUpperCase()}</span>
+                    <span><b>{file.name}</b><small>{(file.size / 1024 / 1024).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} Mo</small></span>
+                    <button type="button" className={b.remove} onClick={() => setFile(null)} aria-label="Retirer le document">×</button>
+                  </span>
+                ) : (
+                  <button type="button" className={b.dropBtn} onClick={() => fileInput.current?.click()}>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4 M7 9l5-5 5 5 M4 16v4h16v-4" /></svg>
+                    <span><b>Déposer un document</b><small>PDF, Word ou PowerPoint · 10 Mo au maximum</small></span>
+                  </button>
+                )}
+                <input ref={fileInput} type="file" accept={ACCEPT} hidden onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+              </div>
+
+              {error && <p className={s.error}>{error}</p>}
+
+              <div className={b.composerFoot}>
+                <button type="button" className={b.linkBtn} onClick={manual}>Remplir la fiche à la main</button>
+                <button type="button" className={s.btn} disabled={!canRead} onClick={read}>Lire mon brief <span aria-hidden="true">→</span></button>
+              </div>
+            </>
+          )}
+        </section>
+
+        <aside className={b.howto}>
+          <h2 className={s.h3}>Et ensuite</h2>
+          <ol>
+            <li><b>Vous relisez la fiche</b><span>Profils, format, questions à trancher, guide d&apos;entretien : tout se corrige.</span></li>
+            <li><b>Des profils sous 24 h</b><span>Proposés par le moteur, revus un par un par l&apos;équipe.</span></li>
+            <li><b>Vous gardez qui vous voulez</b><span>Chaque profil affiche son prix en crédits. Rien n&apos;est débité avant.</span></li>
+            <li><b>Ils proposent leurs créneaux</b><span>Vous choisissez ; salle de visio et rappels partent seuls.</span></li>
+            <li><b>Vidéo, transcription, synthèse</b><span>Après chaque entretien, puis la synthèse de l&apos;étude.</span></li>
+          </ol>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function Reading({ withFile }: { withFile: boolean }) {
+  return (
+    <div className={b.reading} role="status" aria-live="polite">
+      <span className={b.spinner} aria-hidden="true" />
+      <b>{withFile ? "Lecture de votre document…" : "Lecture de votre brief…"}</b>
+      <ul>
+        {READING_STEPS.map((step, i) => <li key={step} style={{ animationDelay: `${0.9 + i * 1.6}s` }}>{step}</li>)}
+      </ul>
+      <small>Une dizaine de secondes, un peu plus pour un long document.</small>
+    </div>
+  );
+}
+
+// ── Relecture de la fiche ──────────────────────────────────────
+function Review(p: {
+  draft: BriefDraft; setDraft: (d: BriefDraft) => void; moments: string[]; setMoments: (m: string[]) => void;
+  fileName: string | null; onBack: () => void; onSend: () => void; sending: boolean; error: string | null;
+}) {
+  const d = p.draft;
+  const set = (patch: Partial<BriefDraft>) => p.setDraft({ ...d, ...patch });
+  const total = d.profiles.reduce((n, x) => n + (x.count || 0), 0);
+  const credits = (tier: "averti" | "initie") => quote(DEFAULT_PRICING, {
+    tier, durationMin: d.duration, focusGroup: d.studyType === "FOCUS_GROUP",
+    certScore: 50, ratings: [], signals: { brandsAccepted90d: 0, shortlisted90d: 0, peers: 30, panelSize: 0 }, overrideCredits: null,
+  }).credits;
+  const low = credits("averti") * total;
+  const high = credits("initie") * total;
+  const ready = d.title.trim().length >= 3 && d.objective.trim().length >= 10 && d.profiles.some((x) => x.label.trim()) && total > 0 && total <= 30;
+
+  return (
+    <div className={`${s.page} ${s.pageWide}`}>
+      <button type="button" className={b.back} onClick={p.onBack}>← Revenir au brief</button>
+      <p className={s.eyebrow}>Nouvelle étude · relecture</p>
+      <h1 className={s.h1}>Voici ce que nous avons compris</h1>
+      <p className={s.lead}>Corrigez ce qui ne va pas : c&apos;est cette fiche que l&apos;équipe suivra pour vous proposer des profils{p.fileName ? `, avec votre document « ${p.fileName} »` : ""}.</p>
+
+      {d.missing.length > 0 && (
+        <div className={b.missing}>
+          <b>À préciser si vous le savez</b>
+          <ul>{d.missing.map((m) => <li key={m}>{m}</li>)}</ul>
+          <small>Répondez directement dans la fiche, par exemple dans « Qui écarter » ou dans la description d&apos;un profil.</small>
+        </div>
+      )}
+
+      <div className={b.reviewGrid}>
+        <div className={b.sections}>
+          <section className={s.card}>
+            <h2 className={s.h3}>L&apos;étude</h2>
+            <label className={s.label} htmlFor="title">Titre</label>
+            <input id="title" className={s.input} value={d.title} onChange={(e) => set({ title: e.target.value })} placeholder="Maroquinerie en cuir recyclé" />
+            <label className={s.label} htmlFor="objective" style={{ marginTop: 14 }}>Ce que vous voulez comprendre</label>
+            <textarea id="objective" className={s.input} rows={3} value={d.objective} onChange={(e) => set({ objective: e.target.value })} style={{ resize: "vertical" }} />
+          </section>
+
+          <section className={s.card}>
+            <div className={s.spread}><h2 className={s.h3}>Qui interroger</h2><span className={`${s.small} ${s.muted}`}>{total} entretien{total > 1 ? "s" : ""} au total</span></div>
+            <div className={b.profiles}>
+              {d.profiles.map((x, i) => (
+                <div key={i} className={b.profile}>
+                  <div className={b.profileTop}>
+                    <input className={s.input} value={x.label} placeholder="Acheteuses de luxe en seconde main" aria-label="Profil"
+                      onChange={(e) => set({ profiles: d.profiles.map((y, j) => (j === i ? { ...y, label: e.target.value } : y)) })} />
+                    <span className={b.stepper}>
+                      <button type="button" aria-label="Un de moins" onClick={() => set({ profiles: d.profiles.map((y, j) => (j === i ? { ...y, count: Math.max(1, y.count - 1) } : y)) })}>−</button>
+                      <b>{x.count}</b>
+                      <button type="button" aria-label="Un de plus" onClick={() => set({ profiles: d.profiles.map((y, j) => (j === i ? { ...y, count: Math.min(20, y.count + 1) } : y)) })}>+</button>
                     </span>
-                    <button onClick={() => update({ timeSlots: data.timeSlots.filter((s) => s !== slot) })} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)", fontSize: "16px" }}>×</button>
+                    {d.profiles.length > 1 && <button type="button" className={b.remove} aria-label="Retirer ce profil" onClick={() => set({ profiles: d.profiles.filter((_, j) => j !== i) })}>×</button>}
                   </div>
-                ))}
-              </div>
-            )}
-          </Field>
-
-          <NavButtons onNext={() => setStep(3)} onBack={() => setStep(1)} nextDisabled={!data.deadlineAt} />
-        </div>
-      )}
-
-      {/* STEP 4 — Budget : le prix se calcule par profil, Rarelyst paie les participants */}
-      {step === 3 && (
-        <div>
-          <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", lineHeight: 1.6, margin: "0 0 18px" }}>
-            Vous n&apos;avez pas de récompense à fixer : Rarelyst rémunère les participants. Chaque profil proposé affiche son prix
-            en crédits (1 crédit = 10 € HT) et vous l&apos;acceptez en connaissance de cause.
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "10px", marginBottom: "18px" }}>
-            {budget.map((b) => (
-              <div key={b.tier} style={{ padding: "14px", border: "1px solid var(--color-border-base)", borderRadius: "10px", background: "var(--color-surface)" }}>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-text-primary)" }}>{b.label}</div>
-                <div style={{ fontSize: "22px", fontWeight: 800, marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{b.credits} <span style={{ fontSize: "13px", fontWeight: 600 }}>crédits</span></div>
-                <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>par profil, {data.interviewDuration} min{data.studyType === "FOCUS_GROUP" ? ", en focus group" : ""}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ padding: "16px", background: "var(--color-surface-2)", borderRadius: "8px", marginBottom: "32px" }}>
-            <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "4px" }}>Budget estimé pour {data.targetCount} participants :</div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" }}>
-              {budgetMin} à {budgetMax} crédits
-            </div>
-            <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginTop: "2px" }}>
-              soit {(budgetMin * 10).toLocaleString("fr-FR")} à {(budgetMax * 10).toLocaleString("fr-FR")} € HT selon les profils retenus. Le prix exact de chacun dépend de sa demande, de sa rareté et de ses preuves.
-            </div>
-          </div>
-
-          <NavButtons onNext={() => setStep(4)} onBack={() => setStep(2)} />
-        </div>
-      )}
-
-      {/* STEP 5 — Review & Submit */}
-      {step === 4 && (
-        <div>
-          <p style={{ fontSize: "15px", color: "var(--color-text-secondary)", margin: "0 0 28px" }}>
-            Vérifiez les informations avant d'envoyer votre brief à notre équipe.
-          </p>
-
-          {/* Summary cards */}
-          {[
-            {
-              title: "Étude",
-              items: [
-                ["Titre", data.title],
-                ["Type", data.studyType === "ONE_ON_ONE" ? "Entretiens 1:1" : "Focus groups"],
-                ["Participants", `${data.targetCount}`],
-                ["Langue", data.language === "fr" ? "Français" : data.language === "en" ? "Anglais" : "Français & Anglais"],
-              ],
-            },
-            {
-              title: "Profil cible",
-              items: [
-                ["Âge", `${data.ageMin}–${data.ageMax} ans`],
-                ["Villes", data.cities.length > 0 ? data.cities.join(", ") : "Non spécifié"],
-                ["Intérêts", data.interests.length > 0 ? data.interests.join(", ") : "Non spécifié"],
-                ["Marques", data.brandAffinities.length > 0 ? data.brandAffinities.join(", ") : "Non spécifié"],
-              ],
-            },
-            {
-              title: "Planning",
-              items: [
-                ["Date limite", data.deadlineAt ? new Date(data.deadlineAt).toLocaleDateString("fr-FR") : "Non spécifiée"],
-                ["Durée", `${data.interviewDuration} min`],
-                ["Créneaux proposés", `${data.timeSlots.length} créneau(x)`],
-              ],
-            },
-            {
-              title: "Budget estimé",
-              items: [
-                ["Par profil", `${budget[0].credits} à ${budget[1].credits} crédits`],
-                ["Pour l'étude", `${budgetMin} à ${budgetMax} crédits`],
-                ["Participants", "Rémunérés par Rarelyst"],
-              ],
-            },
-          ].map((section) => (
-            <div key={section.title} style={{ marginBottom: "16px", padding: "16px", background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "10px" }}>
-              <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "12px" }}>{section.title}</div>
-              {section.items.map(([k, v]) => (
-                <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "6px" }}>
-                  <span style={{ color: "var(--color-text-tertiary)" }}>{k}</span>
-                  <span style={{ color: "var(--color-text-primary)", fontWeight: 500, maxWidth: "55%", textAlign: "right" }}>{v}</span>
+                  <input className={`${s.input} ${b.details}`} value={x.details} placeholder="Ce qui fait qu'une personne correspond"
+                    aria-label="Précisions sur ce profil"
+                    onChange={(e) => set({ profiles: d.profiles.map((y, j) => (j === i ? { ...y, details: e.target.value } : y)) })} />
                 </div>
               ))}
             </div>
-          ))}
+            {d.profiles.length < 4 && <button type="button" className={b.add} onClick={() => set({ profiles: [...d.profiles, { label: "", count: 2, details: "" }] })}>+ Ajouter un profil</button>}
 
-          <div style={{ padding: "14px 16px", background: "var(--color-warning-light)", border: "1px solid #9A670030", borderRadius: "8px", marginBottom: "28px" }}>
-            <p style={{ fontSize: "13px", color: "var(--color-warning)", margin: 0 }}>
-              <strong>1 crédit = 1 participant confirmé.</strong> Les crédits sont débités uniquement lorsque vous acceptez un profil proposé par notre équipe.
-            </p>
-          </div>
+            <div className={b.inline3}>
+              <div>
+                <label className={s.label}>Âge</label>
+                <span className={b.ages}>
+                  <input className={s.input} inputMode="numeric" value={d.ageMin ?? ""} placeholder="18" aria-label="Âge minimum"
+                    onChange={(e) => set({ ageMin: e.target.value ? Number(e.target.value.replace(/\D/g, "")) || null : null })} />
+                  <span>à</span>
+                  <input className={s.input} inputMode="numeric" value={d.ageMax ?? ""} placeholder="65" aria-label="Âge maximum"
+                    onChange={(e) => set({ ageMax: e.target.value ? Number(e.target.value.replace(/\D/g, "")) || null : null })} />
+                </span>
+              </div>
+              <div>
+                <label className={s.label} htmlFor="cities">Villes ou pays</label>
+                <input id="cities" className={s.input} value={d.cities.join(", ")} placeholder="Partout en France"
+                  onChange={(e) => set({ cities: e.target.value.split(",").map((x) => x.trimStart()) })} />
+              </div>
+              <div>
+                <label className={s.label} htmlFor="brands">Marques qu&apos;ils connaissent</label>
+                <input id="brands" className={s.input} value={d.brandAffinities.join(", ")} placeholder="Facultatif"
+                  onChange={(e) => set({ brandAffinities: e.target.value.split(",").map((x) => x.trimStart()) })} />
+              </div>
+            </div>
+            <label className={s.label} htmlFor="excl" style={{ marginTop: 14 }}>Qui écarter</label>
+            <input id="excl" className={s.input} value={d.exclusions} placeholder="Ex. : personnes travaillant pour une marque concurrente" onChange={(e) => set({ exclusions: e.target.value })} />
+          </section>
 
-          <div style={{ display: "flex", gap: "12px" }}>
-            <button onClick={() => setStep(3)} style={backBtnStyle}>← Modifier</button>
-            <button
-              onClick={submit}
-              disabled={submitting}
-              style={{ flex: 1, padding: "14px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "15px", fontWeight: 600, cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.7 : 1 }}
-            >
-              {submitting ? "Envoi en cours…" : "Envoyer le brief →"}
-            </button>
-          </div>
+          <section className={s.card}>
+            <h2 className={s.h3}>Le format</h2>
+            <div className={b.segment} role="radiogroup" aria-label="Type d'étude">
+              {[{ v: "ONE_ON_ONE", l: "Entretiens individuels" }, { v: "FOCUS_GROUP", l: "Focus group" }].map((o) => (
+                <button key={o.v} type="button" role="radio" aria-checked={d.studyType === o.v} data-on={d.studyType === o.v}
+                  onClick={() => set({ studyType: o.v as BriefDraft["studyType"] })}>{o.l}</button>
+              ))}
+            </div>
+            <div className={b.inline3} style={{ marginTop: 14 }}>
+              <div>
+                <label className={s.label}>Durée</label>
+                <div className={b.segment} role="radiogroup" aria-label="Durée">
+                  {DURATIONS.map((m) => <button key={m} type="button" role="radio" aria-checked={d.duration === m} data-on={d.duration === m} onClick={() => set({ duration: m })}>{m} min</button>)}
+                </div>
+              </div>
+              <div>
+                <label className={s.label} htmlFor="deadline">Terminé avant le</label>
+                <input id="deadline" type="date" className={s.input} value={d.deadline ?? ""} onChange={(e) => set({ deadline: e.target.value || null })} />
+              </div>
+              <div>
+                <label className={s.label}>Langue</label>
+                <div className={b.segment} role="radiogroup" aria-label="Langue">
+                  {[{ v: "fr", l: "Français" }, { v: "en", l: "Anglais" }].map((o) => <button key={o.v} type="button" role="radio" aria-checked={d.language === o.v} data-on={d.language === o.v} onClick={() => set({ language: o.v as "fr" | "en" })}>{o.l}</button>)}
+                </div>
+              </div>
+            </div>
+            <label className={s.label} style={{ marginTop: 14 }}>Quand pouvez-vous mener les entretiens ?</label>
+            <div className={b.chips}>
+              {MOMENTS.map((m) => {
+                const on = p.moments.includes(m.id);
+                return <button key={m.id} type="button" data-on={on} aria-pressed={on} onClick={() => p.setMoments(on ? p.moments.filter((x) => x !== m.id) : [...p.moments, m.id])}>{m.label}</button>;
+              })}
+            </div>
+            <p className={`${s.small} ${s.faint}`} style={{ margin: "8px 0 0" }}>Les participants proposeront leurs créneaux dans ces moments-là ; vous choisirez.</p>
+          </section>
+
+          <ListCard
+            title="Ce que la synthèse devra trancher"
+            hint="La synthèse de l'étude sera construite pour répondre à ces questions."
+            items={d.decisions} placeholder="Faut-il lancer en trois ou cinq coloris ?" max={5}
+            onChange={(decisions) => set({ decisions })}
+          />
+          <ListCard
+            title="Guide d'entretien"
+            hint="Il s'affichera à côté de la visio. Vous restez libre de vos questions."
+            items={d.guide} placeholder="Parlez-moi de votre dernier achat de maroquinerie." max={12} numbered
+            onChange={(guide) => set({ guide })}
+          />
         </div>
-      )}
+
+        <aside className={b.summary}>
+          <div className={b.summaryCard}>
+            <h2 className={s.h3}>Votre étude</h2>
+            <dl>
+              <div><dt>Entretiens</dt><dd>{total} × {d.duration} min{d.studyType === "FOCUS_GROUP" ? " · focus group" : ""}</dd></div>
+              <div><dt>Profils</dt><dd>{d.profiles.filter((x) => x.label.trim()).map((x) => `${x.count} ${x.label.trim()}`).join(" · ") || "À décrire"}</dd></div>
+              <div><dt>Budget estimé</dt><dd>{low} à {high} crédits<small>soit {(low * 10).toLocaleString("fr-FR")} à {(high * 10).toLocaleString("fr-FR")} € HT, selon les profils retenus</small></dd></div>
+            </dl>
+            <p className={b.promise}>Vos premiers profils sous 24 h, revus un par un par l&apos;équipe. Rien n&apos;est débité avant que vous gardiez un profil.</p>
+            {p.error && <p className={s.error}>{p.error}</p>}
+            <button type="button" className={`${s.btn} ${s.btnBlock}`} disabled={!ready || p.sending} onClick={p.onSend}>
+              {p.sending ? "Envoi…" : "Envoyer le brief →"}
+            </button>
+            {!ready && <p className={`${s.small} ${s.faint}`} style={{ margin: "8px 0 0" }}>Il manque un titre, l&apos;objectif ou au moins un profil.</p>}
+            <p className={`${s.small} ${s.faint}`} style={{ margin: "10px 0 0" }}>Une question ? <Link href="/brand/messages">Écrivez-nous</Link>.</p>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function ListCard(p: { title: string; hint: string; items: string[]; placeholder: string; max: number; numbered?: boolean; onChange: (v: string[]) => void }) {
   return (
-    <div style={{ marginBottom: "20px" }}>
-      <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: "8px" }}>{label}</label>
-      {children}
-    </div>
+    <section className={s.card}>
+      <h2 className={s.h3}>{p.title}</h2>
+      <p className={`${s.small} ${s.muted}`} style={{ margin: "0 0 12px" }}>{p.hint}</p>
+      <ol className={b.list} data-numbered={!!p.numbered}>
+        {p.items.map((item, i) => (
+          <li key={i}>
+            {p.numbered && <span className={b.num}>{i + 1}</span>}
+            <textarea className={`${s.input} ${b.listInput}`} rows={1} value={item} placeholder={p.placeholder} aria-label={`${p.title} ${i + 1}`}
+              onChange={(e) => p.onChange(p.items.map((x, j) => (j === i ? e.target.value : x)))} />
+            <button type="button" className={b.remove} aria-label="Retirer" onClick={() => p.onChange(p.items.filter((_, j) => j !== i))}>×</button>
+          </li>
+        ))}
+      </ol>
+      {p.items.length < p.max && <button type="button" className={b.add} onClick={() => p.onChange([...p.items, ""])}>+ Ajouter</button>}
+    </section>
   );
 }
-
-function Chip({ label, selected, onToggle }: { label: string; selected: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      style={{
-        padding: "6px 14px",
-        borderRadius: "999px",
-        border: "1px solid",
-        fontSize: "13px",
-        fontWeight: 500,
-        cursor: "pointer",
-        transition: "all 0.15s",
-        borderColor: selected ? "var(--color-accent)" : "var(--color-border-base)",
-        background: selected ? "var(--color-accent)" : "var(--color-surface)",
-        color: selected ? "#fff" : "var(--color-text-secondary)",
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-
-function NavButtons({ onNext, onBack, nextDisabled = false, showBack = true }: { onNext: () => void; onBack?: () => void; nextDisabled?: boolean; showBack?: boolean }) {
-  return (
-    <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
-      {showBack && onBack && (
-        <button onClick={onBack} style={backBtnStyle}>← Retour</button>
-      )}
-      <button onClick={onNext} disabled={nextDisabled} style={{ flex: 1, padding: "14px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "15px", fontWeight: 600, cursor: nextDisabled ? "not-allowed" : "pointer", opacity: nextDisabled ? 0.4 : 1 }}>
-        Continuer →
-      </button>
-    </div>
-  );
-}
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 12px",
-  border: "1px solid var(--color-border-base)",
-  borderRadius: "8px",
-  fontSize: "14px",
-  color: "var(--color-text-primary)",
-  background: "var(--color-surface)",
-  outline: "none",
-  boxSizing: "border-box",
-  fontFamily: "inherit",
-};
-
-const backBtnStyle: React.CSSProperties = {
-  padding: "14px 20px",
-  background: "transparent",
-  color: "var(--color-text-secondary)",
-  border: "1px solid var(--color-border-base)",
-  borderRadius: "8px",
-  fontSize: "15px",
-  cursor: "pointer",
-};

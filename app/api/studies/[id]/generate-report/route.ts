@@ -65,6 +65,7 @@ export async function POST(
       studyFormat,
       verbatims,
       additionalContext,
+      decisions: study.decisions,
     })
   );
 

@@ -28,6 +28,11 @@ export async function saveAdminPricing(input: PricingConfig) {
   if (cfg.packs.some((p) => bad(p.credits, 1, 1_000_000) || bad(p.priceCents, 100, 100_000_000) || !p.id)) {
     return { error: "Un pack est invalide." };
   }
+  const rf = cfg.referral;
+  if (bad(rf.firstCents, 0, 100_000) || bad(rf.perInterviewCents, 0, 100_000) || bad(rf.welcomeCents, 0, 100_000) || bad(rf.maxInterviews, 0, 100)) {
+    return { error: "Réglages de parrainage invalides." };
+  }
+  if (bad(cfg.payoutMinCents, 0, 100_000)) return { error: "Retrait minimum invalide." };
   await savePricingConfig(cfg);
   revalidatePath("/admin/prix");
   revalidatePath("/pricing");

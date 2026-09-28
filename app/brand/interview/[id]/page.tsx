@@ -15,7 +15,7 @@ export default async function BrandInterviewPage({ params }: { params: Promise<{
     include: {
       application: {
         include: {
-          study: { select: { id: true, title: true, brandProfileId: true, brandProfile: { select: { companyName: true } } } },
+          study: { select: { id: true, title: true, brandProfileId: true, guide: true, brandProfile: { select: { companyName: true } } } },
           participantProfile: { select: { firstName: true, lastName: true, city: true, profession: true, brandSummary: true } },
         },
       },
@@ -36,6 +36,7 @@ export default async function BrandInterviewPage({ params }: { params: Promise<{
       interviewId={interview.id}
       backHref={`/brand/studies/${study.id}`}
       status={interview.status}
+      guide={study.guide}
       person={{
         name: `${pp.firstName} ${pp.lastName.slice(0, 1)}.`,
         facts: [pp.profession, pp.city].filter(Boolean).join(" · "),

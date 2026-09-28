@@ -76,6 +76,10 @@ export default async function AdminStudyDetailPage({ params }: { params: Promise
     },
     exclusionCriteria: exclusion ? String(exclusion.text ?? JSON.stringify(exclusion)) : null,
     adminNotes: study.adminNotes,
+    brief: study.brief,
+    briefFileName: study.briefFileName,
+    decisions: study.decisions,
+    guide: study.guide,
     applications: study.applications.map((a) => ({
       id: a.id,
       status: a.status,

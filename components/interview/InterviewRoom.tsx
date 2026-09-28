@@ -17,6 +17,8 @@ type Props = {
   status: string;
   // Côté marque : la fiche du participant, visible pendant l'entretien.
   person?: { name: string; facts: string; summary: string | null; why: string | null };
+  /** Côté marque : le guide d'entretien de l'étude, à cocher au fil de l'appel. */
+  guide?: string[];
 };
 
 const TZ = "Europe/Paris";
@@ -64,6 +66,17 @@ export default function InterviewRoom(p: Props) {
   const day = new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(new Date(start));
   const hour = new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(start));
 
+  const guideKey = `rarelyst-guide-${p.interviewId}`;
+  const [asked, setAsked] = useState<number[]>(() => {
+    if (typeof window === "undefined") return [];
+    try { return JSON.parse(localStorage.getItem(guideKey) ?? "[]") as number[]; } catch { return []; }
+  });
+  function toggleAsked(i: number) {
+    const next = asked.includes(i) ? asked.filter((x) => x !== i) : [...asked, i];
+    setAsked(next);
+    try { localStorage.setItem(guideKey, JSON.stringify(next)); } catch { /* sans stockage, l'état reste dans la page */ }
+  }
+
   function saveNotes(v: string) {
     setNotes(v);
     try { localStorage.setItem(notesKey, v); } catch { /* stockage indisponible : les notes restent dans la page */ }
@@ -77,6 +90,25 @@ export default function InterviewRoom(p: Props) {
       </div>
       {p.person.why && <div className={s.cardSoft} style={{ padding: "12px 14px" }}><p className={s.eyebrow} style={{ fontSize: 13, margin: "0 0 4px" }}>Pourquoi ce profil</p><p style={{ margin: 0, fontSize: 14.5 }}>{p.person.why}</p></div>}
       {p.person.summary && <p className={s.muted} style={{ margin: 0, fontSize: 14.5 }}>{p.person.summary}</p>}
+      {(p.guide ?? []).length > 0 && t !== null && (
+        <div>
+          <p className={s.label} style={{ margin: "0 0 8px" }}>Votre guide</p>
+          <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 }}>
+            {p.guide!.map((q, i) => {
+              const done = asked.includes(i);
+              return (
+                <li key={i}>
+                  <button type="button" onClick={() => toggleAsked(i)} aria-pressed={done}
+                    style={{ display: "grid", gridTemplateColumns: "22px 1fr", gap: 8, width: "100%", textAlign: "left", padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line)", background: done ? "var(--soft)" : "var(--bg)", cursor: "pointer", color: done ? "var(--ink-3)" : "var(--ink)", fontSize: 14, lineHeight: 1.4 }}>
+                    <span style={{ display: "grid", placeItems: "center", width: 20, height: 20, borderRadius: "50%", fontSize: 11, fontWeight: 700, background: done ? "var(--ok)" : "var(--accent-soft)", color: done ? "#fff" : "var(--g2)" }}>{done ? "✓" : i + 1}</span>
+                    <span style={{ textDecoration: done ? "line-through" : "none" }}>{q}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
       {/* Les notes viennent du stockage du navigateur : affichées seulement une
           fois la page hydratée, pour que le rendu serveur et client coïncident. */}
       {t !== null && <div>

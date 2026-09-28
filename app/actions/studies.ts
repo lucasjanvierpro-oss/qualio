@@ -1,91 +1,104 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { assertAdmin, getSessionUser } from "@/lib/auth/guards";
 import { sendAvailabilityRequested } from "@/lib/resend/emails";
 import { sendStudySubmittedAdmin } from "@/lib/resend/emails";
-import { priceProfiles } from "@/lib/pricing/quotes";
+import { getPricingConfig, priceProfiles } from "@/lib/pricing/quotes";
+import { DURATIONS, type BriefProfile, type Duration } from "@/lib/studies/briefTypes";
 
-type StudyCreateData = {
+export type StudyInput = {
+  /** Le brief tel que donné : texte écrit, et texte du document s'il a pu être lu. */
+  brief: string;
+  briefFileName: string | null;
   title: string;
   objective: string;
+  profiles: BriefProfile[];
   studyType: "ONE_ON_ONE" | "FOCUS_GROUP";
-  targetCount: number;
-  language: string;
-  ageMin: number;
-  ageMax: number;
+  duration: number;
+  language: "fr" | "en";
+  ageMin: number | null;
+  ageMax: number | null;
   cities: string[];
-  interests: string[];
   brandAffinities: string[];
-  profession: string;
-  customCriteria: string;
-  exclusionCriteria: string;
-  deadlineAt: string;
-  interviewDuration: number;
-  timeSlots: string[];
-  rewardType: "CASH" | "VOUCHER";
-  rewardAmount: number;
-  voucherBrand: string;
+  exclusions: string;
+  decisions: string[];
+  guide: string[];
+  deadlineAt: string | null;
+  /** Moments où la marque peut mener les entretiens : matin, midi, après-midi, soir. */
+  availability: string[];
 };
 
-export async function createStudy(data: StudyCreateData) {
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) throw new Error("Not authenticated");
+const clean = (v: string, max: number) => v.trim().slice(0, max);
+const cleanList = (v: string[], max: number, len = 300) => v.map((x) => clean(x, len)).filter(Boolean).slice(0, max);
 
-  const dbUser = await prisma.user.findUnique({
-    where: { supabaseId: user.id },
-    include: { brandProfile: true },
+export async function createStudy(data: StudyInput): Promise<{ studyId: string } | { error: string }> {
+  const me = await getSessionUser();
+  if (!me?.brandProfileId) return { error: "session_expired" };
+  const brand = await prisma.brandProfile.findUnique({
+    where: { id: me.brandProfileId },
+    select: { id: true, isActivated: true, companyName: true },
   });
-  if (!dbUser?.brandProfile) throw new Error("Brand profile not found");
-  if (!dbUser.brandProfile.isActivated) throw new Error("preview_mode");
+  if (!brand) return { error: "session_expired" };
+  if (!brand.isActivated) return { error: "preview_mode" };
 
+  const profiles = data.profiles
+    .map((p) => ({ label: clean(p.label, 80), count: Math.max(1, Math.min(20, Math.round(p.count) || 1)), details: clean(p.details, 300) }))
+    .filter((p) => p.label)
+    .slice(0, 4);
+  const total = profiles.reduce((n, p) => n + p.count, 0);
+  const title = clean(data.title, 90);
+  const objective = clean(data.objective, 1200);
+  if (title.length < 3) return { error: "Donnez un titre à l'étude." };
+  if (objective.length < 10) return { error: "Dites en une ou deux phrases ce que vous voulez comprendre." };
+  if (profiles.length === 0) return { error: "Décrivez au moins un profil à interroger." };
+  if (total > 30) return { error: "30 entretiens au maximum par étude : écrivez-nous pour davantage." };
+  const duration = DURATIONS.includes(data.duration as Duration) ? data.duration : 45;
+  const deadline = data.deadlineAt ? new Date(data.deadlineAt) : null;
+
+  const cfg = await getPricingConfig();
   const study = await prisma.study.create({
     data: {
-      brandProfileId: dbUser.brandProfile.id,
-      title: data.title.trim(),
-      objective: data.objective.trim(),
-      studyType: data.studyType,
+      brandProfileId: brand.id,
+      title,
+      objective,
+      studyType: data.studyType === "FOCUS_GROUP" ? "FOCUS_GROUP" : "ONE_ON_ONE",
       status: "ACTIVE",
-      targetParticipantCount: data.targetCount,
-      preferredLanguage: data.language,
-      deadlineAt: data.deadlineAt ? new Date(data.deadlineAt) : null,
-      interviewDuration: data.interviewDuration,
-      rewardAmount: data.rewardAmount,
-      rewardType: data.rewardType,
-      voucherBrand: data.voucherBrand || null,
+      targetParticipantCount: total,
+      preferredLanguage: data.language === "en" ? "en" : "fr",
+      deadlineAt: deadline && !Number.isNaN(deadline.getTime()) ? deadline : null,
+      interviewDuration: duration,
+      // Montant de secours seulement : le vrai se fixe par profil au moment de la présélection.
+      rewardAmount: cfg.tiers.averti.participantPayCents,
+      rewardType: "CASH",
+      brief: clean(data.brief, 80_000) || null,
+      briefFileName: data.briefFileName ? clean(data.briefFileName, 160) : null,
+      decisions: cleanList(data.decisions, 5),
+      guide: cleanList(data.guide, 12),
+      // Mêmes clés qu'avant pour l'appariement admin, plus les groupes de profils.
       targetCriteria: {
-        ageMin: data.ageMin,
-        ageMax: data.ageMax,
-        cities: data.cities,
-        interests: data.interests,
-        brandAffinities: data.brandAffinities,
-        profession: data.profession,
-        custom: data.customCriteria,
+        ageMin: data.ageMin ?? undefined,
+        ageMax: data.ageMax ?? undefined,
+        cities: cleanList(data.cities, 8, 60),
+        interests: [],
+        brandAffinities: cleanList(data.brandAffinities, 10, 60),
+        profession: profiles.map((p) => p.label).join(" · "),
+        custom: profiles.map((p) => `${p.label} (${p.count}) : ${p.details}`).join("\n"),
+        profiles,
+        availability: cleanList(data.availability, 5, 20),
       },
-      exclusionCriteria: data.exclusionCriteria ? { text: data.exclusionCriteria } : undefined,
+      exclusionCriteria: data.exclusions.trim() ? { text: clean(data.exclusions, 400) } : undefined,
     },
   });
 
-  // Create time slots
-  if (data.timeSlots.length > 0) {
-    await prisma.studyTimeSlot.createMany({
-      data: data.timeSlots.map((slot) => ({
-        studyId: study.id,
-        startTime: new Date(slot),
-        endTime: new Date(new Date(slot).getTime() + data.interviewDuration * 60 * 1000),
-        capacity: data.studyType === "FOCUS_GROUP" ? 8 : 1,
-      })),
-    });
-  }
-
-  // Notify admin
-  await sendStudySubmittedAdmin(data.title, dbUser.brandProfile.companyName).catch(() => {});
+  after(async () => {
+    await sendStudySubmittedAdmin(title, brand.companyName).catch(() => {});
+  });
 
   revalidatePath("/brand/studies");
+  revalidatePath("/admin");
   return { studyId: study.id };
 }
 

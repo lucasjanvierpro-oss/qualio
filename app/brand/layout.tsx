@@ -35,7 +35,7 @@ export default async function BrandLayout({ children }: { children: ReactNode })
     <>
       <div className={s.spread}>
         <span className={`${s.small} ${s.muted}`}>Crédits disponibles</span>
-        <strong style={{ fontSize: 22, letterSpacing: "-0.03em", color: credits < 3 ? "var(--wait)" : undefined }}>{credits}</strong>
+        <strong style={{ fontSize: 22, letterSpacing: "-0.03em", color: credits < 40 ? "var(--wait)" : undefined }}>{credits}</strong>
       </div>
       <Link href="/brand/account" className={`${s.btn} ${s.btnGhost} ${s.btnSm} ${s.btnBlock}`}>Ajouter des crédits</Link>
     </>

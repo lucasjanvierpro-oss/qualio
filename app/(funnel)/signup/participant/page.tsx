@@ -12,6 +12,7 @@ import {
 import { computeBadges, computeTraits, proofsFromProfile, BADGES, TRAIT_LABELS, type EarnedBadge, type TraitState } from "@/lib/participants/badges";
 import type { LinksAnalysis } from "@/lib/participants/links";
 import { createFunnelAccount, saveFunnelStep, completeFunnel, funnelSession } from "@/app/actions/funnel";
+import { acceptInvite } from "@/app/actions/referral";
 import VoiceInput from "@/components/onboarding/VoiceInput";
 import BadgeUpload from "@/components/onboarding/BadgeUpload";
 import SocialSignIn from "@/components/auth/SocialSignIn";
@@ -428,6 +429,7 @@ export default function ParticipantFunnel() {
             {cur === "account" && (
               <>
                 <Head eyebrow={t.accountEyebrow} title={t.accountTitle} lead={t.accountLead} />
+                <Invited lang={lang} />
                 <div className={f.stack}>
                   {accountCreated ? (
                     <div className={f.signedAs}>✓ {t.signedAs} {signedEmail ?? account.email}</div>
@@ -771,6 +773,28 @@ export default function ParticipantFunnel() {
   );
 }
 
+// Arrivée par un lien de parrainage : on dit qui invite, et ce que ça rapporte.
+function Invited({ lang }: { lang: Lang }) {
+  const [inv, setInv] = useState<{ firstName: string; welcomeCents: number } | null>(null);
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("parrain");
+    if (code) acceptInvite(code).then(setInv).catch(() => {});
+  }, []);
+  if (!inv) return null;
+  const bonus = inv.welcomeCents > 0 ? `${Math.round(inv.welcomeCents / 100)} €` : null;
+  return (
+    <div className={f.invited}>
+      <span className={f.invitedAv}>{inv.firstName[0]?.toUpperCase()}</span>
+      <span>
+        <b>{lang === "fr" ? `${inv.firstName} vous invite sur Rarelyst` : `${inv.firstName} invited you to Rarelyst`}</b>
+        {bonus && (lang === "fr"
+          ? ` · votre premier entretien sera majoré de ${bonus}.`
+          : ` · your first interview comes with a ${bonus} bonus.`)}
+      </span>
+    </div>
+  );
+}
+
 type Dict = (typeof T)[Lang];
 
 /** La carte se remplit au fil des réponses : nom, univers, médailles. */
@@ -826,6 +850,13 @@ function Reveal({ badges, traits, lang, t, onGo }: { badges: EarnedBadge[]; trai
       <div className={f.nav} style={{ justifyContent: "center", marginTop: 40 }}>
         <button type="button" className={f.btn} style={{ flex: "none", padding: "14px 28px" }} onClick={onGo}>{t.goDashboard} →</button>
       </div>
+      <Link href="/participant/parrainage" className={f.referTeaser}>
+        <span className={f.referCoin}>50</span>
+        <span>
+          <b>{lang === "fr" ? "Vous connaissez un profil comme le vôtre ?" : "Know someone like you?"}</b>
+          {lang === "fr" ? " Invitez-le : 50 € à son premier entretien, puis 30 € aux suivants." : " Invite them: €50 on their first interview, then €30 for the next ones."}
+        </span>
+      </Link>
     </div>
   );
 }
