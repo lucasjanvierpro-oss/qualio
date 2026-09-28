@@ -1,25 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Familjen_Grotesk } from "next/font/google";
 import "./globals.css";
 
-// Une seule famille, classique et neutre : Inter — pour titres ET corps.
-// Titres = graisses lourdes (700/800), corps = 400/500. Comme Airpanel.
-const inter = Inter({
+// Une seule famille pour tout le site : Familjen Grotesk (les espaces marque,
+// participant et l'accueil la chargent aussi via components/rl/font). Les
+// anciennes variables --font-display et --font-mono-base pointent dessus :
+// plus d'Inter ni de chasse fixe.
+const familjen = Familjen_Grotesk({
   variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
-});
-
-const interDisplay = Inter({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono-base",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
@@ -70,7 +58,8 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${inter.variable} ${interDisplay.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${familjen.variable} h-full antialiased`}
+      style={{ ["--font-display" as string]: "var(--font-body)", ["--font-mono-base" as string]: "var(--font-body)" }}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
