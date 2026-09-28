@@ -12,6 +12,7 @@ import { REVIEW_TAGS, type Trust } from "@/lib/participants/trust";
 import type { EarnedBadge } from "@/lib/participants/badges";
 import { BadgeChips } from "@/components/badges/BadgeShelf";
 import TrustBlock from "@/components/badges/TrustBlock";
+import Tour from "@/components/tour/Tour";
 
 export type Candidate = {
   applicationId: string;
@@ -167,7 +168,7 @@ function ProfileCard({
   const hasScores = c.scores.expertise !== null || c.scores.vocabulaire !== null || c.scores.authenticite !== null;
 
   return (
-    <article className={p.card} data-busy={busy} data-tier={c.tier}>
+    <article className={p.card} data-busy={busy} data-tier={c.tier} data-tour="study-card">
       <div className={p.head}>
         <span className={p.portraitInitial} aria-hidden="true">{c.name[0]}</span>
         <div className={p.identity}>
@@ -181,7 +182,7 @@ function ProfileCard({
       </div>
 
       {(c.badges.length > 0 || c.traits.length > 0) && (
-        <div className={p.medals}>
+        <div className={p.medals} data-tour="study-medals">
           <div className={p.certRow}>
             <span className={p.certLabel}>Profil certifié à <b>{c.certScore} %</b></span>
             <span className={p.certGauge} aria-hidden="true"><i style={{ width: `${c.certScore}%` }} /></span>
@@ -263,14 +264,14 @@ function ProfileCard({
           </>
         ) : (
           <>
-            <button type="button" className={s.btn} disabled={busy || !c.price || credits < cost} onClick={onAccept}>
+            <button type="button" className={s.btn} disabled={busy || !c.price || credits < cost} onClick={onAccept} data-tour="study-accept">
               Je veux l&apos;entendre
             </button>
             <button type="button" className={`${s.btn} ${s.btnGhost}`} disabled={busy} onClick={onReject}>
               Décliner
             </button>
             {c.price && (
-              <button type="button" className={p.price} aria-expanded={openPrice} onClick={() => setOpenPrice((v) => !v)}>
+              <button type="button" className={p.price} aria-expanded={openPrice} onClick={() => setOpenPrice((v) => !v)} data-tour="study-price">
                 <b>{c.price.credits} crédits</b>
                 <span>{(c.price.euros / 100).toLocaleString("fr-FR")} € HT · {c.price.tierLabel}</span>
               </button>
@@ -428,7 +429,7 @@ export default function StudyDetailClient({ study, candidates, credits, isNew }:
       <section className={s.sectionGap}>
         <div className={s.spread}>
           <h2 className={s.h2}>Profils proposés <span className={s.faint}>({toReview.length})</span></h2>
-          <span className={`${s.small} ${s.muted}`}>Prix par profil selon son palier · <b>{credits} crédits</b> disponibles</span>
+          <span className={`${s.small} ${s.muted}`} data-tour="study-credits">Prix par profil selon son palier · <b>{credits} crédits</b> disponibles</span>
         </div>
         {toReview.length === 0 && candidates.length === 0 ? (
           <Waiting isNew={!!isNew} createdAt={study.createdAt} />
@@ -532,6 +533,16 @@ export default function StudyDetailClient({ study, candidates, credits, isNew }:
 
       <BriefRecap brief={study.brief} />
 
+      <Tour id="study" steps={[
+        { target: "study-waiting", title: "Votre sélection est en route", text: "L'équipe relit chaque profil avant de vous le proposer. Vous recevez un email dès qu'ils sont là, sous 24 h." },
+        { target: "study-card", title: "Un profil proposé", text: "Qui est cette personne, pourquoi elle correspond à votre brief, et ce qui a été vérifié chez elle." },
+        { target: "study-medals", title: "Les médailles", text: "Chacune est une preuve : identité, LinkedIn, emploi, CV… Plus un profil en a, plus vous pouvez lui faire confiance." },
+        { target: "study-price", title: "Son prix", text: "En crédits, avec le détail du calcul. Il est figé : il ne bougera plus." },
+        { target: "study-accept", title: "Gardez qui vous voulez", text: "Les crédits ne sont débités qu'ici. Le participant propose alors ses créneaux, et vous choisissez." },
+        { target: "study-credits", title: "Vos crédits", text: "Votre solde. Si une personne ne vient pas, ses crédits vous sont rendus automatiquement." },
+        { target: "study-brief", title: "Votre brief", text: "Ce que vous avez demandé, ce que la synthèse devra trancher et votre guide d'entretien, toujours à portée de main." },
+      ]} />
+
       {declined.length > 0 && (
         <section className={s.sectionGap}>
           <button type="button" className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} onClick={() => setShowDeclined((v) => !v)} aria-expanded={showDeclined}>
@@ -559,7 +570,7 @@ function Waiting({ isNew, createdAt }: { isNew: boolean; createdAt: string }) {
     { title: "Vos profils, avec leur prix", text: `Au plus tard ${dueText}. Vous recevez un email.`, done: false },
   ];
   return (
-    <div className={s.card} style={{ marginTop: 12 }}>
+    <div className={s.card} style={{ marginTop: 12 }} data-tour="study-waiting">
       <p className={s.eyebrow} style={{ margin: 0 }}>{isNew ? "Brief bien reçu" : "Sélection en cours"}</p>
       <h3 className={s.h3} style={{ marginTop: 4 }}>Vos premiers profils arrivent sous 24 h</h3>
       <ol style={{ listStyle: "none", margin: "16px 0 0", padding: 0, display: "grid", gap: 12 }}>
@@ -579,7 +590,7 @@ function BriefRecap({ brief }: { brief: Study["brief"] }) {
   const has = brief.decisions.length > 0 || brief.guide.length > 0 || brief.profiles.length > 0;
   if (!has) return null;
   return (
-    <details className={`${s.card} ${s.sectionGap}`}>
+    <details className={`${s.card} ${s.sectionGap}`} data-tour="study-brief">
       <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: 17 }}>Votre brief{brief.fileName ? ` · ${brief.fileName}` : ""}</summary>
       <div style={{ display: "grid", gap: 18, marginTop: 16 }}>
         <p className={s.muted} style={{ margin: 0 }}>{brief.objective}</p>

@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import Tour from "@/components/tour/Tour";
 import { useRouter } from "next/navigation";
 import s from "@/components/rl/rl.module.css";
 import type { Slot } from "@/lib/interviews/schedule";
@@ -135,7 +136,7 @@ export default function ParticipantStudyDetailClient(p: Props) {
   }
 
   const consentBox = (
-    <label className={s.check}>
+    <label className={s.check} data-tour="inv-consent">
       <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
       <span>J&apos;accepte que l&apos;entretien soit enregistré et transcrit pour produire la synthèse de l&apos;étude. Ma pièce d&apos;identité et mes coordonnées ne sont jamais transmises à la marque.</span>
     </label>
@@ -150,7 +151,7 @@ export default function ParticipantStudyDetailClient(p: Props) {
         <h1 className={s.h1}>{p.study.title}</h1>
         <div className={s.meta}>
           <span>{p.study.interviewDuration} min en visio</span>
-          <span>{reward} de récompense</span>
+          <span data-tour="inv-reward">{reward} de récompense</span>
           {p.study.deadlineAt && <span>Jusqu&apos;au {fmtDay(p.study.deadlineAt)}</span>}
         </div>
         {p.study.brandCert > 0 && (
@@ -186,7 +187,7 @@ export default function ParticipantStudyDetailClient(p: Props) {
               {!isClient ? <p className={s.faint}>Chargement des créneaux…</p> : choices.length === 0 ? (
                 <p className={s.faint}>Aucune suggestion pour le moment : ajoutez un créneau ci-dessous.</p>
               ) : (
-                <div className={s.slots} role="group" aria-label="Créneaux proposés">
+                <div className={s.slots} role="group" aria-label="Créneaux proposés" data-tour="inv-slots">
                   {choices.map((iso) => {
                     const on = selected.includes(iso);
                     return (
@@ -201,7 +202,7 @@ export default function ParticipantStudyDetailClient(p: Props) {
             </div>
 
             <div className={`${s.row} ${s.sectionGap}`}>
-              <div style={{ flex: "1 1 240px" }}>
+              <div style={{ flex: "1 1 240px" }} data-tour="inv-custom">
                 <label className={s.label} htmlFor="custom-slot">Un autre moment ?</label>
                 <input id="custom-slot" className={s.input} type="datetime-local" value={custom} onChange={(e) => setCustom(e.target.value)} />
               </div>
@@ -212,7 +213,7 @@ export default function ParticipantStudyDetailClient(p: Props) {
             {consentBox}
             {error && <p className={s.error}>{error}</p>}
             <div className={`${s.row} ${s.sectionGap}`}>
-              <button type="button" className={s.btn} onClick={sendAvailability} disabled={busy || selected.length === 0 || !consent}>
+              <button type="button" className={s.btn} onClick={sendAvailability} disabled={busy || selected.length === 0 || !consent} data-tour="inv-send">
                 {busy ? "Envoi…" : selected.length ? `Envoyer ${selected.length} créneau${selected.length > 1 ? "x" : ""}` : "Choisissez au moins un créneau"}
               </button>
               {editing && <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => { setEditing(false); setSelected([]); }}>Annuler</button>}
@@ -302,6 +303,13 @@ export default function ParticipantStudyDetailClient(p: Props) {
           <p className={s.muted} style={{ margin: 0, whiteSpace: "pre-line" }}>{p.study.objective}</p>
         </section>
       </div>
+      <Tour id="invitation" steps={[
+        { target: "inv-reward", title: "Ce que vous touchez", text: "Pour cet entretien, versé sur votre solde après l'appel. Vous pouvez le retirer dès 50 €." },
+        { target: "inv-slots", title: "Proposez vos créneaux", text: "Cochez jusqu'à cinq moments où vous êtes libre. La marque en retiendra un, vous serez prévenu par email." },
+        { target: "inv-custom", title: "Un autre moment ?", text: "Ajoutez le vôtre s'il n'est pas dans la liste, au moins douze heures à l'avance." },
+        { target: "inv-consent", title: "L'enregistrement", text: "L'entretien est enregistré pour écrire la synthèse. Vos coordonnées et votre pièce d'identité ne sont jamais transmises à la marque." },
+        { target: "inv-send", title: "Envoyez", text: "C'est tout. Le jour J, un lien ouvre la salle de visio dix minutes avant l'heure." },
+      ]} />
     </div>
   );
 }

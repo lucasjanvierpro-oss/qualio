@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import s from "@/components/rl/rl.module.css";
 import WherebyRoom from "@/components/shared/WherebyRoom";
+import Tour from "@/components/tour/Tour";
 
 type Props = {
   role: "brand" | "participant";
@@ -83,7 +84,7 @@ export default function InterviewRoom(p: Props) {
   }
 
   const fiche = p.role === "brand" && p.person && (
-    <aside className={s.card} style={{ display: "grid", gap: 14, alignContent: "start" }}>
+    <aside className={s.card} style={{ display: "grid", gap: 14, alignContent: "start" }} data-tour="room-person">
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         <span className={s.avatar} style={{ width: 42, height: 42, fontSize: 17 }}>{p.person.name[0]}</span>
         <span><strong style={{ fontSize: 17 }}>{p.person.name}</strong><span className={`${s.small} ${s.muted}`} style={{ display: "block" }}>{p.person.facts}</span></span>
@@ -91,7 +92,7 @@ export default function InterviewRoom(p: Props) {
       {p.person.why && <div className={s.cardSoft} style={{ padding: "12px 14px" }}><p className={s.eyebrow} style={{ fontSize: 13, margin: "0 0 4px" }}>Pourquoi ce profil</p><p style={{ margin: 0, fontSize: 14.5 }}>{p.person.why}</p></div>}
       {p.person.summary && <p className={s.muted} style={{ margin: 0, fontSize: 14.5 }}>{p.person.summary}</p>}
       {(p.guide ?? []).length > 0 && t !== null && (
-        <div>
+        <div data-tour="room-guide">
           <p className={s.label} style={{ margin: "0 0 8px" }}>Votre guide</p>
           <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 }}>
             {p.guide!.map((q, i) => {
@@ -111,7 +112,7 @@ export default function InterviewRoom(p: Props) {
       )}
       {/* Les notes viennent du stockage du navigateur : affichées seulement une
           fois la page hydratée, pour que le rendu serveur et client coïncident. */}
-      {t !== null && <div>
+      {t !== null && <div data-tour="room-notes">
         <label className={s.label} htmlFor="notes">Vos notes</label>
         <textarea id="notes" className={s.input} rows={7} value={notes} onChange={(e) => saveNotes(e.target.value)} placeholder="Ce qui vous marque, les relances à faire…" style={{ resize: "vertical" }} />
         <p className={`${s.small} ${s.faint}`} style={{ margin: "6px 0 0" }}>Enregistrées sur cet appareil uniquement.</p>
@@ -137,7 +138,7 @@ export default function InterviewRoom(p: Props) {
       <div className={s.sectionGap}>
         {phase === "before" && (
           <div className={p.role === "brand" ? s.grid2 : undefined} style={p.role === "brand" ? { gridTemplateColumns: "1.4fr 1fr" } : undefined}>
-            <section className={s.cardDark}>
+            <section className={s.cardDark} data-tour="room-wait">
               <p className={s.muted} style={{ margin: 0 }}>La salle ouvre 10 minutes avant le début.</p>
               <p className={s.h1} style={{ fontSize: 44, margin: "10px 0 0" }}>{t === null ? "Bientôt" : `Dans ${countdown(start - OPEN_BEFORE_MS - t)}`}</p>
               <ul className={s.muted} style={{ margin: "22px 0 0", paddingLeft: 18, display: "grid", gap: 6 }}>
@@ -166,7 +167,7 @@ export default function InterviewRoom(p: Props) {
                   ? "Vous allez pouvoir vérifier votre caméra et votre micro avant d'entrer. L'entretien est enregistré, comme vous l'avez accepté."
                   : "Vérifiez votre caméra et votre micro avant d'entrer. L'enregistrement démarre automatiquement dès que vous êtes deux."}
               </p>
-              <button type="button" className={`${s.btn} ${s.btnLight}`} onClick={() => setEntered(true)}>Entrer dans la salle →</button>
+              <button type="button" className={`${s.btn} ${s.btnLight}`} onClick={() => setEntered(true)} data-tour="room-enter">Entrer dans la salle →</button>
             </section>
           )
         )}
@@ -188,6 +189,18 @@ export default function InterviewRoom(p: Props) {
           </section>
         )}
       </div>
+      {phase !== "after" && (
+        <Tour id={`room-${p.role}`} steps={p.role === "brand" ? [
+          { target: "room-wait", title: "La salle ouvre dix minutes avant", text: "Revenez sur cette page à l'heure : le bouton pour entrer apparaîtra ici, comme pour le participant." },
+          { target: "room-enter", title: "Entrez dans la salle", text: "Vous vérifiez caméra et micro, puis vous entrez. L'enregistrement démarre dès que vous êtes deux." },
+          { target: "room-person", title: "La fiche du participant", text: "Pourquoi ce profil a été retenu, ce qu'il a prouvé : elle reste à côté de la visio pendant tout l'entretien." },
+          { target: "room-guide", title: "Votre guide", text: "Cochez chaque question au fil de l'entretien pour savoir où vous en êtes." },
+          { target: "room-notes", title: "Vos notes", text: "Ce qui vous marque, les relances à faire. La transcription complète arrive après l'appel." },
+        ] : [
+          { target: "room-wait", title: "La salle ouvre dix minutes avant", text: "Revenez sur cette page à l'heure prévue : un bouton vous fera entrer." },
+          { target: "room-enter", title: "Entrez dans la salle", text: "Vous vérifiez caméra et micro avant d'entrer. Parlez librement : il n'y a pas de bonne ou de mauvaise réponse." },
+        ]} />
+      )}
     </div>
   );
 }

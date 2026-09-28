@@ -8,6 +8,7 @@ import { createStudy } from "@/app/actions/studies";
 import { DEFAULT_PRICING } from "@/lib/pricing/config";
 import { quote } from "@/lib/pricing/engine";
 import { DURATIONS, EMPTY_DRAFT, type BriefDraft } from "@/lib/studies/briefTypes";
+import Tour from "@/components/tour/Tour";
 import b from "./brief.module.css";
 
 // Nouvelle étude, en deux temps. La marque écrit ce qu'elle cherche ou dépose
@@ -150,6 +151,7 @@ export default function NewStudyPage() {
           ) : (
             <>
               <textarea
+                data-tour="brief-text"
                 className={b.textarea}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -157,12 +159,13 @@ export default function NewStudyPage() {
                 placeholder="Ex. : on lance une ligne de maroquinerie en cuir recyclé. On veut entendre des acheteuses de luxe qui achètent aussi en seconde main, et quelques vendeuses en boutique. Il faut décider du prix et du nombre de coloris."
                 aria-label="Votre brief"
               />
-              <div className={b.examples}>
+              <div className={b.examples} data-tour="brief-examples">
                 <span>Exemples :</span>
                 {EXAMPLES.map((x) => <button key={x.label} type="button" onClick={() => setText(x.text)}>{x.label}</button>)}
               </div>
 
               <div
+                data-tour="brief-drop"
                 className={b.drop}
                 data-over={dragging}
                 data-filled={!!file}
@@ -189,13 +192,13 @@ export default function NewStudyPage() {
 
               <div className={b.composerFoot}>
                 <button type="button" className={b.linkBtn} onClick={manual}>Remplir la fiche à la main</button>
-                <button type="button" className={s.btn} disabled={!canRead} onClick={read}>Lire mon brief <span aria-hidden="true">→</span></button>
+                <button type="button" className={s.btn} disabled={!canRead} onClick={read} data-tour="brief-read">Lire mon brief <span aria-hidden="true">→</span></button>
               </div>
             </>
           )}
         </section>
 
-        <aside className={b.howto}>
+        <aside className={b.howto} data-tour="brief-next">
           <h2 className={s.h3}>Et ensuite</h2>
           <ol>
             <li><b>Vous relisez la fiche</b><span>Profils, format, questions à trancher, guide d&apos;entretien : tout se corrige.</span></li>
@@ -206,6 +209,13 @@ export default function NewStudyPage() {
           </ol>
         </aside>
       </div>
+      <Tour id="brief" steps={[
+        { target: "brief-text", title: "Dites qui vous voulez entendre", text: "Écrivez comme à un collègue : le projet, les personnes à interroger, ce qu'il faudra décider. Deux ou trois phrases suffisent." },
+        { target: "brief-examples", title: "Pas d'inspiration ?", text: "Un exemple remplit le champ : vous n'avez plus qu'à l'adapter." },
+        { target: "brief-drop", title: "Ou déposez votre brief", text: "PDF, Word ou PowerPoint : nous le lisons pour vous, rien n'est envoyé à la marque ou aux participants." },
+        { target: "brief-read", title: "Lisez-le avec nous", text: "En une dizaine de secondes, nous en tirons une fiche : profils, format, questions à trancher, guide d'entretien. Vous la corrigez avant d'envoyer." },
+        { target: "brief-next", title: "Et ensuite", text: "Vos premiers profils sous 24 h, chacun avec son prix. Rien n'est débité avant que vous gardiez quelqu'un." },
+      ]} />
     </div>
   );
 }
@@ -264,7 +274,7 @@ function Review(p: {
             <textarea id="objective" className={s.input} rows={3} value={d.objective} onChange={(e) => set({ objective: e.target.value })} style={{ resize: "vertical" }} />
           </section>
 
-          <section className={s.card}>
+          <section className={s.card} data-tour="review-profiles">
             <div className={s.spread}><h2 className={s.h3}>Qui interroger</h2><span className={`${s.small} ${s.muted}`}>{total} entretien{total > 1 ? "s" : ""} au total</span></div>
             <div className={b.profiles}>
               {d.profiles.map((x, i) => (
@@ -313,7 +323,7 @@ function Review(p: {
             <input id="excl" className={s.input} value={d.exclusions} placeholder="Ex. : personnes travaillant pour une marque concurrente" onChange={(e) => set({ exclusions: e.target.value })} />
           </section>
 
-          <section className={s.card}>
+          <section className={s.card} data-tour="review-format">
             <h2 className={s.h3}>Le format</h2>
             <div className={b.segment} role="radiogroup" aria-label="Type d'étude">
               {[{ v: "ONE_ON_ONE", l: "Entretiens individuels" }, { v: "FOCUS_GROUP", l: "Focus group" }].map((o) => (
@@ -350,12 +360,14 @@ function Review(p: {
           </section>
 
           <ListCard
+            tour="review-decisions"
             title="Ce que la synthèse devra trancher"
             hint="La synthèse de l'étude sera construite pour répondre à ces questions."
             items={d.decisions} placeholder="Faut-il lancer en trois ou cinq coloris ?" max={5}
             onChange={(decisions) => set({ decisions })}
           />
           <ListCard
+            tour="review-guide"
             title="Guide d'entretien"
             hint="Il s'affichera à côté de la visio. Vous restez libre de vos questions."
             items={d.guide} placeholder="Parlez-moi de votre dernier achat de maroquinerie." max={12} numbered
@@ -364,7 +376,7 @@ function Review(p: {
         </div>
 
         <aside className={b.summary}>
-          <div className={b.summaryCard}>
+          <div className={b.summaryCard} data-tour="review-send">
             <h2 className={s.h3}>Votre étude</h2>
             <dl>
               <div><dt>Entretiens</dt><dd>{total} × {d.duration} min{d.studyType === "FOCUS_GROUP" ? " · focus group" : ""}</dd></div>
@@ -381,13 +393,20 @@ function Review(p: {
           </div>
         </aside>
       </div>
+      <Tour id="brief-review" steps={[
+        { target: "review-profiles", title: "Qui nous allons chercher", text: "Chaque groupe de profils, avec le nombre d'entretiens. Précisez ce qui fait qu'une personne correspond : c'est ce que l'équipe suivra." },
+        { target: "review-format", title: "Le format", text: "Durée, date limite, et les moments où vous pouvez mener les entretiens : les participants proposeront leurs créneaux dedans." },
+        { target: "review-decisions", title: "Ce que la synthèse devra trancher", text: "Les choix que vous aurez à faire après l'étude. La synthèse y répondra directement, citations à l'appui." },
+        { target: "review-guide", title: "Votre guide d'entretien", text: "Il s'affichera à côté de la visio. Modifiez, ajoutez, supprimez : vous restez libre pendant l'entretien." },
+        { target: "review-send", title: "Envoyez", text: "Le budget est une estimation : le prix exact s'affiche sur chaque profil proposé." },
+      ]} />
     </div>
   );
 }
 
-function ListCard(p: { title: string; hint: string; items: string[]; placeholder: string; max: number; numbered?: boolean; onChange: (v: string[]) => void }) {
+function ListCard(p: { title: string; hint: string; items: string[]; placeholder: string; max: number; numbered?: boolean; tour?: string; onChange: (v: string[]) => void }) {
   return (
-    <section className={s.card}>
+    <section className={s.card} data-tour={p.tour}>
       <h2 className={s.h3}>{p.title}</h2>
       <p className={`${s.small} ${s.muted}`} style={{ margin: "0 0 12px" }}>{p.hint}</p>
       <ol className={b.list} data-numbered={!!p.numbered}>
