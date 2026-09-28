@@ -1,0 +1,43 @@
+/* « Comment ça marche » figé pendant le défilement (grand écran seulement).
+   Couleurs héritées de .page (landing). */
+
+.track { position: relative; margin-top: 36px; }
+
+.sticky {
+  position: sticky; top: 66px; height: calc(100vh - 66px);
+  display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: clamp(28px, 4vw, 56px);
+  align-items: center;
+}
+
+.steps { position: relative; list-style: none; margin: 0; padding: 0 0 0 26px; display: grid; gap: 4px; }
+.rail { position: absolute; left: 7px; top: 14px; bottom: 14px; width: 2px; border-radius: 2px; background: var(--line); }
+.rail i { display: block; width: 100%; border-radius: inherit; background: var(--accent); transition: height 0.12s linear; }
+
+.steps li { position: relative; }
+.steps li::before {
+  content: ""; position: absolute; left: -24px; top: 14px; width: 12px; height: 12px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--line); transition: border-color 0.3s, background 0.3s, transform 0.3s;
+}
+.steps li[data-state="past"]::before { background: var(--accent); border-color: var(--accent); }
+.steps li[data-state="now"]::before { border-color: var(--accent); transform: scale(1.25); box-shadow: 0 0 0 5px var(--accent-soft); }
+
+.steps button {
+  display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: baseline; width: 100%;
+  padding: 8px 0; border: 0; background: none; cursor: pointer; text-align: left; font: inherit; color: var(--ink-3);
+  transition: color 0.3s;
+}
+.steps li[data-state="now"] button, .steps button:hover { color: var(--ink); }
+.steps li[data-state="past"] button { color: var(--ink-2); }
+.num { font-size: 13px; font-weight: 700; }
+.steps li[data-state="now"] .num { color: var(--accent); }
+.stepTitle { font-size: clamp(17px, 1.5vw, 20px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.25; }
+
+/* Le texte de l'étape en cours s'ouvre, les autres restent fermés. */
+.more { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.more p { overflow: hidden; margin: 0; padding-left: 38px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.steps li[data-state="now"] .more { grid-template-rows: 1fr; }
+.steps li[data-state="now"] .more p { padding-bottom: 10px; }
+
+.win { min-width: 0; }
+.hint { margin: 14px 0 0; text-align: center; font-size: 14px; color: var(--ink-3); transition: opacity 0.4s; }
+.hint[data-hide="true"] { opacity: 0; }

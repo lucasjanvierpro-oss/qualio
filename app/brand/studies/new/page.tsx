@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import s from "@/components/rl/rl.module.css";
@@ -32,6 +32,8 @@ const MOMENTS = [
 const READING_STEPS = ["Qui interroger", "Le format", "Ce que la synthèse devra trancher", "Le guide d'entretien"];
 
 const ACCEPT = ".pdf,.docx,.pptx,.txt,.md";
+// Même clé que la boîte de brief de la page d'accueil (components/landing/Islands).
+const DRAFT_KEY = "rl-brief-draft";
 
 export default function NewStudyPage() {
   const router = useRouter();
@@ -46,6 +48,15 @@ export default function NewStudyPage() {
   const [moments, setMoments] = useState<string[]>(["matin", "apres-midi"]);
   const [sending, setSending] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // Brief tapé sur la page d'accueil avant l'inscription : il attend ici.
+  useEffect(() => {
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(DRAFT_KEY); } catch { /* stockage indisponible */ }
+    // Le brouillon vit dans le navigateur : le lire au rendu serveur casserait l'hydratation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (saved) setText((t) => t || saved);
+  }, []);
 
   const canRead = text.trim().length >= 20 || !!file;
 
@@ -110,7 +121,11 @@ export default function NewStudyPage() {
       deadlineAt: draft.deadline,
       availability: moments,
     }).catch(() => ({ error: "L'envoi a échoué. Réessayez." }));
-    if ("studyId" in r) { router.push(`/brand/studies/${r.studyId}?nouveau=1`); return; }
+    if ("studyId" in r) {
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* rien à nettoyer */ }
+      router.push(`/brand/studies/${r.studyId}?nouveau=1`);
+      return;
+    }
     if (r.error === "preview_mode") { router.push("/brand/account"); return; }
     if (r.error === "session_expired") { setError("Votre session a expiré : reconnectez-vous dans un autre onglet, puis renvoyez."); setSending(false); return; }
     setError(r.error);

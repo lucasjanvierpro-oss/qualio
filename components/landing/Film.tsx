@@ -15,41 +15,41 @@ import f from "./film.module.css";
 
 type Step = [at: number, target: string, click?: boolean];
 
-type Scene = { id: string; label: string; dur: number; caption: string; url: string; cursor: Step[] };
+type Scene = { id: string; label: string; step: string; dur: number; caption: string; url: string; cursor: Step[] };
 
-const SCENES: Scene[] = [
+export const SCENES: Scene[] = [
   {
-    id: "brief", label: "Brief", dur: 8,
+    id: "brief", step: "Écrivez ou déposez votre brief", label: "Brief", dur: 8,
     caption: "Vous écrivez ce que vous cherchez, ou vous déposez votre brief. L'IA en tire les profils, le format et ce que la synthèse devra trancher.",
     url: "rarelyst.co/marque/nouvelle-etude",
     cursor: [[0, "file"], [1.2, "text"], [6.7, "send"], [7.1, "send", true]],
   },
   {
-    id: "profils", label: "Profils", dur: 8.4,
+    id: "profils", step: "Gardez les profils qui vous parlent", label: "Profils", dur: 8.4,
     caption: "Des profils prouvés vous sont proposés, revus à la main par l'équipe. Chacun affiche son prix : vous ne payez que ceux que vous gardez.",
     url: "rarelyst.co/marque/etudes/maroquinerie",
     cursor: [[0.2, "keep-0"], [2.9, "keep-0", true], [3.3, "keep-2"], [3.8, "keep-2", true], [4.2, "keep-3"], [4.7, "keep-3", true], [5.9, "pay"], [6.5, "pay", true]],
   },
   {
-    id: "date", label: "Date", dur: 6,
+    id: "date", step: "Choisissez un créneau", label: "Date", dur: 6,
     caption: "Le participant propose ses créneaux, vous en choisissez un. La salle de visio, l'invitation et les rappels partent seuls.",
     url: "rarelyst.co/marque/etudes/maroquinerie",
     cursor: [[0.3, "slot-1"], [2.2, "slot-1", true]],
   },
   {
-    id: "visio", label: "Visio", dur: 11,
+    id: "visio", step: "Menez l'entretien", label: "Visio", dur: 11,
     caption: "Vous menez l'entretien, votre guide à côté. Il est enregistré et transcrit pendant que vous parlez.",
     url: "rarelyst.co/entretien/salle-privee",
     cursor: [],
   },
   {
-    id: "synthese", label: "Synthèse", dur: 8.4,
+    id: "synthese", step: "Récupérez tout, synthèse comprise", label: "Synthèse", dur: 8.4,
     caption: "La vidéo et la transcription sont prêtes à la fin de l'appel. La synthèse de l'étude suit, construite autour de vos questions.",
     url: "rarelyst.co/marque/etudes/maroquinerie/synthese",
     cursor: [[3.9, "doc"]],
   },
   {
-    id: "decision", label: "Décision", dur: 6.4,
+    id: "decision", step: "Décidez, preuves à l'appui", label: "Décision", dur: 6.4,
     caption: "Vous arrivez en comité avec des verbatims, pas des impressions. Chaque décision renvoie à ce qui a été dit.",
     url: "rarelyst.co/marque/etudes/maroquinerie/synthese",
     cursor: [],
@@ -83,13 +83,13 @@ const prog = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
 const typed = (text: string, t: number, start: number, cps: number) => text.slice(0, Math.max(0, Math.floor((t - start) * cps)));
 
 // Préférence « réduire les animations », lue sans effet.
-function subscribeReducedMotion(onChange: () => void) {
+export function subscribeReducedMotion(onChange: () => void) {
   const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
   mq.addEventListener("change", onChange);
   return () => mq.removeEventListener("change", onChange);
 }
-const getReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const getReducedMotionServer = () => false;
+export const getReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+export const getReducedMotionServer = () => false;
 
 export default function Film() {
   const reduced = useSyncExternalStore(subscribeReducedMotion, getReducedMotion, getReducedMotionServer);
@@ -98,7 +98,6 @@ export default function Film() {
   const [held, setHeld] = useState(false);
   const clock = useRef({ scene: 0, t: 0 });
   const rootRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
   const running = !reduced && visible && !held;
 
   // Le film ne tourne que visible à l'écran : inutile de chauffer un téléphone
@@ -167,26 +166,40 @@ export default function Film() {
         ))}
       </div>
 
-      <div className={f.window} onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)}>
-        <div className={f.chrome} aria-hidden="true">
-          <span className={f.dots}><i /><i /><i /></span>
-          <span className={f.url}>{scene.url}</span>
-          <span className={f.chromeRight}>{held && !reduced ? "En pause" : scene.label}</span>
-        </div>
-        <div className={f.stage} ref={stageRef} aria-hidden="true">
-          <div key={scene.id} className={f.scene}>
-            {scene.id === "brief" && <BriefScene t={t} />}
-            {scene.id === "profils" && <ProfilesScene t={t} />}
-            {scene.id === "date" && <DateScene t={t} />}
-            {scene.id === "visio" && <CallScene t={t} />}
-            {scene.id === "synthese" && <SynthesisScene t={t} />}
-            {scene.id === "decision" && <DecisionScene t={t} />}
-          </div>
-          {!reduced && <Cursor stage={stageRef} steps={scene.cursor} t={t} sceneKey={scene.id} />}
-        </div>
+      <div onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)}>
+        <FilmWindow sceneIndex={frame.scene} t={t} reduced={reduced} status={held && !reduced ? "En pause" : undefined} />
       </div>
 
       <p className={f.caption}><b>0{frame.scene + 1}</b>{scene.caption}</p>
+    </div>
+  );
+}
+
+/**
+ * La fenêtre seule, pilotée de l'extérieur : par l'horloge du film ci-dessus,
+ * ou par le défilement de la page (HowItWorks).
+ */
+export function FilmWindow({ sceneIndex, t, reduced = false, status }: { sceneIndex: number; t: number; reduced?: boolean; status?: string }) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const scene = SCENES[sceneIndex];
+  return (
+    <div className={f.window}>
+      <div className={f.chrome} aria-hidden="true">
+        <span className={f.dots}><i /><i /><i /></span>
+        <span className={f.url}>{scene.url}</span>
+        <span className={f.chromeRight}>{status ?? scene.label}</span>
+      </div>
+      <div className={f.stage} ref={stageRef} aria-hidden="true">
+        <div key={scene.id} className={f.scene}>
+          {scene.id === "brief" && <BriefScene t={t} />}
+          {scene.id === "profils" && <ProfilesScene t={t} />}
+          {scene.id === "date" && <DateScene t={t} />}
+          {scene.id === "visio" && <CallScene t={t} />}
+          {scene.id === "synthese" && <SynthesisScene t={t} />}
+          {scene.id === "decision" && <DecisionScene t={t} />}
+        </div>
+        {!reduced && <Cursor stage={stageRef} steps={scene.cursor} t={t} sceneKey={scene.id} />}
+      </div>
     </div>
   );
 }
