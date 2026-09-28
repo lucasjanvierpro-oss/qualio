@@ -114,6 +114,9 @@
 
 .inline3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
 @media (max-width: 760px) { .inline3 { grid-template-columns: 1fr; } }
+.formatRow { grid-template-columns: max-content minmax(0, 1fr) max-content; }
+@media (max-width: 760px) { .formatRow { grid-template-columns: 1fr; } }
+.formatRow .segment { flex-wrap: nowrap; }
 .ages { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; font-size: 14px; color: var(--ink-3); }
 
 .segment { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 12px; background: var(--soft); }

@@ -49,6 +49,8 @@ Règles :
 - missing : 0 à 3 questions, seulement pour ce qui changerait le recrutement (âge, pays, clients ou non de la marque…).`;
 
 function clampInt(v: unknown, min: number, max: number): number | null {
+  // Number(null) vaut 0 : sans ce garde-fou, un âge absent devenait « 18 ».
+  if (v === null || v === undefined || v === "") return null;
   const n = typeof v === "number" ? v : Number(v);
   if (!Number.isFinite(n)) return null;
   return Math.max(min, Math.min(max, Math.round(n)));

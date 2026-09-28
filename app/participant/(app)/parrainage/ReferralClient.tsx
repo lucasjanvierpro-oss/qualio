@@ -185,7 +185,7 @@ function Track({ rules }: { rules: Rules }) {
         setStep(k);
         if (k >= rules.maxInterviews - 1 && timer) clearInterval(timer);
       }, 380);
-    }, { threshold: 0.4 });
+    }, { threshold: 0.25 });
     io.observe(el);
     return () => { io.disconnect(); if (timer) clearInterval(timer); };
   }, [rules.maxInterviews]);

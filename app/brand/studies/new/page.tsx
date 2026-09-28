@@ -306,7 +306,7 @@ function Review(p: {
                   onClick={() => set({ studyType: o.v as BriefDraft["studyType"] })}>{o.l}</button>
               ))}
             </div>
-            <div className={b.inline3} style={{ marginTop: 14 }}>
+            <div className={`${b.inline3} ${b.formatRow}`} style={{ marginTop: 14 }}>
               <div>
                 <label className={s.label}>Durée</label>
                 <div className={b.segment} role="radiogroup" aria-label="Durée">
