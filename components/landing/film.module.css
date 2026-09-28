@@ -239,11 +239,13 @@
 .checklist li[data-on="true"] svg { background: var(--ok); color: #fff; }
 @container (max-width: 640px) {
   .date { grid-template-columns: 1fr; grid-template-rows: 1fr auto; gap: 10px; }
-  .slot small, .slotDay { display: none; }
+  .slot small { display: none; }
   .slot { min-height: 30px; padding: 5px; }
   .slot b { font-size: 10.5px; }
   .invite { display: none; }
 }
+
+@container (max-width: 760px) { .slotDay { display: none; } }
 
 /* ── 4. Visio ───────────────────────────────────────── */
 .call { height: 100%; display: grid; grid-template-columns: 1fr clamp(210px, 30cqi, 250px); gap: 14px; }

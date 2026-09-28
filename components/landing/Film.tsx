@@ -338,7 +338,7 @@ const SLOTS = [
   { day: 4, from: 17.5, label: "17 h 30" },
 ];
 const H0 = 9;
-const H1 = 19;
+const H1 = 20;
 
 function DateScene({ t }: { t: number }) {
   const chosen = at(t, 2.2);
