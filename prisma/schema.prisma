@@ -638,6 +638,41 @@ model ReferralBonus {
   @@map("referral_bonuses")
 }
 
+// Laboratoire : une marque inventée par Claude écrit un brief, notre lecteur
+// de brief le traite, puis la marque réagit. Sert à découvrir ce que Rarelyst
+// comprend mal ou ne sait pas encore faire.
+model LabRun {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  theme     String?
+  status    String   @default("done") // done | failed
+  brand     Json
+  brief     String   @db.Text
+  draft     Json?
+  review    Json?
+  error     String?
+
+  @@map("lab_runs")
+}
+
+// Demande observée : chaque profil réclamé par un brief (vrai ou simulé),
+// ramené à un type de profil normalisé. C'est ce qui apprend, au fil des
+// briefs, quels profils sont demandés et lesquels manquent au panel.
+model DemandSignal {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  source    String   // "study" | "lab"
+  sourceId  String
+  label     String
+  canonical String
+  category  String
+  tags      String[] @default([])
+  count     Int      @default(1)
+
+  @@index([canonical])
+  @@map("demand_signals")
+}
+
 model PricingConfig {
   id        String   @id
   data      Json

@@ -2,6 +2,7 @@ import { randomInt } from "node:crypto";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getPricingConfig } from "@/lib/pricing/quotes";
+import { recruitmentTargets } from "@/lib/lab/demand";
 
 // Parrainage. Principe : on ne paie jamais une inscription. Une prime ne naît
 // que lorsqu'un filleul termine un entretien qu'une marque a payé ; elle sort
@@ -139,6 +140,9 @@ export async function referralSummary(profileId: string): Promise<ReferralSummar
 
 /** Les profils que les marques cherchent en ce moment (libellés seulement). */
 export async function wantedProfiles(limit = 8): Promise<string[]> {
+  // D'abord la demande apprise : demandée par de vraies marques, rare dans le panel.
+  const learned = await recruitmentTargets(limit).catch(() => [] as string[]);
+  if (learned.length >= 3) return learned;
   const studies = await prisma.study.findMany({
     where: { status: { in: ["ACTIVE", "MATCHING", "IN_PROGRESS"] } },
     orderBy: { createdAt: "desc" },

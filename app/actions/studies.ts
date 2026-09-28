@@ -8,6 +8,7 @@ import { sendAvailabilityRequested } from "@/lib/resend/emails";
 import { sendStudySubmittedAdmin } from "@/lib/resend/emails";
 import { getPricingConfig, priceProfiles } from "@/lib/pricing/quotes";
 import { DURATIONS, type BriefProfile, type Duration } from "@/lib/studies/briefTypes";
+import { recordDemand } from "@/lib/lab/demand";
 
 export type StudyInput = {
   /** Le brief tel que donné : texte écrit, et texte du document s'il a pu être lu. */
@@ -95,6 +96,8 @@ export async function createStudy(data: StudyInput): Promise<{ studyId: string }
 
   after(async () => {
     await sendStudySubmittedAdmin(title, brand.companyName).catch(() => {});
+    // Ce que les vraies marques demandent : c'est ce qui apprend qui recruter.
+    await recordDemand("study", study.id, profiles).catch((e) => console.error("[demande]", e));
   });
 
   revalidatePath("/brand/studies");
