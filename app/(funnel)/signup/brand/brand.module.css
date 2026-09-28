@@ -39,7 +39,7 @@
 }
 
 .brand { font-size: 19px; font-weight: 700; letter-spacing: -0.03em; color: var(--ink); text-decoration: none; }
-.topLinks { display: flex; gap: 18px; font-size: 13.5px; color: var(--ink-2); }
+.topLinks { display: flex; align-items: center; gap: 18px; font-size: 13.5px; color: var(--ink-2); }
 .topLinks a { color: var(--ink); font-weight: 600; text-decoration: none; }
 
 .layout {

@@ -1,0 +1,108 @@
+/* Connexion : formulaire à gauche, les deux espaces à droite.
+   Mêmes couleurs que l'inscription marque (signup/brand). */
+
+.root {
+  --bg: #ffffff;
+  --app-bg: #fbfafc;
+  --ink: #1c1624;
+  --ink-2: #5f5868;
+  --ink-3: #9c95a4;
+  --line: #eae6ee;
+  --soft: #f6f4f8;
+  --accent: #6a43db;
+  --accent-soft: #efeafd;
+  --accent-dim: #cbbef5;
+  --ok: #1f7a4d;
+  --bad: #b3261e;
+  min-height: 100vh; background: var(--app-bg); color: var(--ink); -webkit-font-smoothing: antialiased;
+}
+
+.top { max-width: 1120px; margin: 0 auto; height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 9px; font-size: 19px; font-weight: 700; letter-spacing: -0.03em; color: var(--ink); text-decoration: none; }
+
+.layout {
+  max-width: 1120px; margin: 0 auto; padding: 28px 24px 80px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 64px; align-items: center;
+}
+.main { max-width: 440px; width: 100%; }
+
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
+.h1 { font-size: clamp(30px, 3.6vw, 42px); font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; margin: 0 0 12px; text-wrap: balance; }
+.lead { font-size: 16px; line-height: 1.55; color: var(--ink-2); margin: 0 0 24px; }
+
+.notice { margin: 0 0 16px; padding: 10px 12px; border-radius: 12px; background: #fbe9e7; color: var(--bad); font-size: 14px; line-height: 1.45; }
+
+/* Les boutons Google et LinkedIn, sans leur séparateur d'origine. */
+.socials > div > div:first-child { display: none !important; }
+.socials button { padding: 12px 14px !important; border-radius: 12px !important; font-size: 15px !important; font-weight: 600 !important; border-color: var(--line) !important; background: #fff !important; }
+.socials button:hover { border-color: var(--accent-dim) !important; }
+
+.divider { display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--ink-3); margin: 18px 0; }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+.form { display: grid; gap: 14px; }
+.label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
+.input {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 12px 14px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.error { margin: 0; font-size: 13.5px; color: var(--bad); }
+.btn {
+  font: inherit; font-size: 15px; font-weight: 700; padding: 14px 20px; border-radius: 12px; border: 0; cursor: pointer;
+  background: var(--ink); color: #fff; transition: transform 0.15s, opacity 0.15s; margin-top: 2px;
+}
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+.code { margin-top: 18px; padding: 14px 16px; border-radius: 14px; background: var(--soft); display: grid; gap: 8px; justify-items: start; }
+.code p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+.code input { border-radius: 10px !important; }
+.code > div { width: 100%; }
+
+.signup { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 22px; font-size: 14px; color: var(--ink-2); }
+.pill {
+  font-weight: 600; color: var(--ink); text-decoration: none; padding: 7px 13px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
+  transition: border-color 0.15s;
+}
+.pill:hover { border-color: var(--accent-dim); }
+
+/* ── Les deux espaces ─────────────────────────────── */
+.aside { position: relative; }
+.stack { position: relative; height: 470px; }
+.cardTop { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+.cardTitle { position: absolute; left: 22px; bottom: -30px; font-size: 13px; font-weight: 600; color: var(--ink-3); }
+.house {
+  position: absolute; top: 0; left: 0; width: 330px; padding: 22px; border-radius: 22px; color: #f1edf6;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(140, 104, 242, 0.5), transparent 60%),
+    radial-gradient(90% 70% at 0% 100%, rgba(75, 43, 181, 0.55), transparent 60%),
+    linear-gradient(160deg, #241636, #120b1d);
+  box-shadow: 0 30px 60px -34px rgba(40, 18, 80, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transform: rotate(-4deg); animation: floatA 7s ease-in-out infinite;
+}
+.house .cardTop { color: #bfaef5; }
+.houseRow { display: flex; align-items: center; gap: 16px; margin-top: 22px; }
+.houseRow b { display: block; font-size: 21px; letter-spacing: -0.03em; color: #fff; }
+.houseRow small { display: block; font-size: 13px; color: #cfc4e6; margin-top: 2px; }
+.member {
+  position: absolute; right: 0; bottom: 40px; width: 300px; padding: 22px; border-radius: 22px;
+  background: #fff; border: 1px solid var(--line); box-shadow: 0 30px 60px -36px rgba(40, 20, 90, 0.45);
+  transform: rotate(3deg); animation: floatB 8s ease-in-out infinite;
+}
+.member .cardTop { color: var(--accent); }
+.memberName { display: block; margin-top: 18px; font-size: 22px; letter-spacing: -0.03em; }
+.memberRole { font-size: 13.5px; color: var(--ink-2); }
+.medals { display: flex; gap: 4px; margin-top: 14px; }
+.next { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.next small { font-size: 12.5px; color: var(--ink-3); }
+.next b { font-size: 15px; }
+@keyframes floatA { 50% { transform: rotate(-3deg) translateY(-8px); } }
+@keyframes floatB { 50% { transform: rotate(2deg) translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .house, .member { animation: none; } }
+
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; gap: 28px; padding-top: 8px; }
+  .aside { display: none; }
+  .main { margin: 0 auto; }
+}

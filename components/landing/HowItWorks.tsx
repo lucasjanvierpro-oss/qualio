@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { Lang } from "@/lib/i18n/detect";
 import Film, { FilmWindow, SCENES, getReducedMotion, getReducedMotionServer, subscribeReducedMotion } from "./Film";
+import { FILM_COPY } from "./filmCopy";
 import h from "./how.module.css";
 
 // « Comment ça marche », joué au défilement. Sur grand écran, la section se
@@ -22,14 +24,15 @@ function subscribeWide(onChange: () => void) {
 const getWide = () => window.matchMedia(WIDE).matches;
 const getWideServer = () => false;
 
-export default function HowItWorks() {
+export default function HowItWorks({ lang = "fr" }: { lang?: Lang }) {
   const reduced = useSyncExternalStore(subscribeReducedMotion, getReducedMotion, getReducedMotionServer);
   const wide = useSyncExternalStore(subscribeWide, getWide, getWideServer);
-  if (!wide || reduced) return <Film />;
-  return <Pinned />;
+  if (!wide || reduced) return <Film lang={lang} />;
+  return <Pinned lang={lang} />;
 }
 
-function Pinned() {
+function Pinned({ lang }: { lang: Lang }) {
+  const copy = FILM_COPY[lang];
   const trackRef = useRef<HTMLDivElement>(null);
   const [frame, setFrame] = useState({ scene: 0, t: 0, p: 0 });
 
@@ -77,15 +80,15 @@ function Pinned() {
             <li key={sc.id} data-state={i < frame.scene ? "past" : i === frame.scene ? "now" : "next"}>
               <button type="button" onClick={() => go(i)}>
                 <span className={h.num}>0{i + 1}</span>
-                <span className={h.stepTitle}>{sc.step}</span>
+                <span className={h.stepTitle}>{copy.scenes[sc.id].step}</span>
               </button>
-              <div className={h.more}><p>{sc.caption}</p></div>
+              <div className={h.more}><p>{copy.scenes[sc.id].caption}</p></div>
             </li>
           ))}
         </ol>
         <div className={h.win}>
-          <FilmWindow sceneIndex={frame.scene} t={frame.t} />
-          <p className={h.hint} data-hide={frame.p > 0.04}>Faites défiler : le film avance avec vous.</p>
+          <FilmWindow lang={lang} sceneIndex={frame.scene} t={frame.t} />
+          <p className={h.hint} data-hide={frame.p > 0.04}>{copy.scrollHint}</p>
         </div>
       </div>
     </div>

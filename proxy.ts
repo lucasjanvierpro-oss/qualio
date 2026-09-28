@@ -1,10 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { LANG_COOKIE, isLang, langFromAcceptLanguage } from "@/lib/i18n/detect";
 
 // Les pages légales doivent être lisibles sans compte : un participant les
 // consulte avant de s'inscrire, et Google les vérifie pour publier
 // l'application de connexion. Sans cette ligne, elles redirigent vers /login.
 const PUBLIC_ROUTES = [
-  "/", "/login", "/signup/brand", "/signup/participant", "/pricing",
+  "/", "/en", "/login", "/signup/brand", "/signup/participant", "/pricing",
   "/mentions-legales", "/confidentialite", "/conditions",
   "/signup/confirmation",
 ];
@@ -15,6 +16,15 @@ export async function proxy(request: NextRequest) {
   // Skip if Supabase not configured yet
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.next({ request });
+  }
+
+  // Page d'accueil : un visiteur anglophone (ou qui a choisi l'anglais) part
+  // sur /en. Les robots n'envoient pas de langue : ils restent sur la version
+  // française, qui est la page de référence.
+  if (pathname === "/") {
+    const saved = request.cookies.get(LANG_COOKIE)?.value;
+    const wanted = isLang(saved) ? saved : langFromAcceptLanguage(request.headers.get("accept-language"));
+    if (wanted === "en") return NextResponse.redirect(new URL("/en", request.url));
   }
 
   const { updateSession } = await import("@/lib/supabase/middleware");

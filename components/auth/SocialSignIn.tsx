@@ -14,9 +14,11 @@ import { signInWithProvider, type OAuthProvider } from "@/app/actions/auth";
 export default function SocialSignIn({
   role,
   label = "ou",
+  lang = "fr",
 }: {
   role?: "BRAND" | "PARTICIPANT";
   label?: string;
+  lang?: "fr" | "en";
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export default function SocialSignIn({
           <path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33Z" />
           <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z" />
         </svg>
-        Continuer avec Google
+        {lang === "en" ? "Continue with Google" : "Continuer avec Google"}
       </button>
 
       <button type="button" style={button} disabled={pending} onClick={() => go("linkedin_oidc")}>
@@ -71,7 +73,7 @@ export default function SocialSignIn({
             d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05a3.74 3.74 0 0 1 3.37-1.85c3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13ZM7.12 20.45H3.55V9h3.57v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"
           />
         </svg>
-        Continuer avec LinkedIn
+        {lang === "en" ? "Continue with LinkedIn" : "Continuer avec LinkedIn"}
       </button>
 
       {error && (

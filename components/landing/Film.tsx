@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import Medallion from "@/components/badges/Medallion";
 import Hallmark from "@/components/brand/Hallmark";
 import type { BadgeId } from "@/lib/participants/badges";
+import type { Lang } from "@/lib/i18n/detect";
+import { FILM_COPY, type FilmCopy, type SceneId } from "./filmCopy";
 import f from "./film.module.css";
 
 // Le film de la page d'accueil : une étude entière, du brief à la décision,
@@ -15,65 +17,38 @@ import f from "./film.module.css";
 
 type Step = [at: number, target: string, click?: boolean];
 
-type Scene = { id: string; label: string; step: string; dur: number; caption: string; url: string; cursor: Step[] };
+type Scene = { id: SceneId; dur: number; cursor: Step[] };
 
+// Minutage et curseur ; les textes sont dans filmCopy.ts.
 export const SCENES: Scene[] = [
-  {
-    id: "brief", step: "Écrivez ou déposez votre brief", label: "Brief", dur: 8,
-    caption: "Vous écrivez ce que vous cherchez, ou vous déposez votre brief. L'IA en tire les profils, le format et ce que la synthèse devra trancher.",
-    url: "rarelyst.co/marque/nouvelle-etude",
-    cursor: [[0, "file"], [1.2, "text"], [6.7, "send"], [7.1, "send", true]],
-  },
-  {
-    id: "profils", step: "Gardez les profils qui vous parlent", label: "Profils", dur: 8.4,
-    caption: "Des profils prouvés vous sont proposés, revus à la main par l'équipe. Chacun affiche son prix : vous ne payez que ceux que vous gardez.",
-    url: "rarelyst.co/marque/etudes/maroquinerie",
-    cursor: [[0.2, "keep-0"], [2.9, "keep-0", true], [3.3, "keep-2"], [3.8, "keep-2", true], [4.2, "keep-3"], [4.7, "keep-3", true], [5.9, "pay"], [6.5, "pay", true]],
-  },
-  {
-    id: "date", step: "Choisissez un créneau", label: "Date", dur: 6,
-    caption: "Le participant propose ses créneaux, vous en choisissez un. La salle de visio, l'invitation et les rappels partent seuls.",
-    url: "rarelyst.co/marque/etudes/maroquinerie",
-    cursor: [[0.3, "slot-1"], [2.2, "slot-1", true]],
-  },
-  {
-    id: "visio", step: "Menez l'entretien", label: "Visio", dur: 11,
-    caption: "Vous menez l'entretien, votre guide à côté. Il est enregistré et transcrit pendant que vous parlez.",
-    url: "rarelyst.co/entretien/salle-privee",
-    cursor: [],
-  },
-  {
-    id: "synthese", step: "Récupérez tout, synthèse comprise", label: "Synthèse", dur: 8.4,
-    caption: "La vidéo et la transcription sont prêtes à la fin de l'appel. La synthèse de l'étude suit, construite autour de vos questions.",
-    url: "rarelyst.co/marque/etudes/maroquinerie/synthese",
-    cursor: [[3.9, "doc"]],
-  },
-  {
-    id: "decision", step: "Décidez, preuves à l'appui", label: "Décision", dur: 6.4,
-    caption: "Vous arrivez en comité avec des verbatims, pas des impressions. Chaque décision renvoie à ce qui a été dit.",
-    url: "rarelyst.co/marque/etudes/maroquinerie/synthese",
-    cursor: [],
-  },
+  { id: "brief", dur: 8, cursor: [[0, "file"], [1.2, "text"], [6.7, "send"], [7.1, "send", true]] },
+  { id: "profils", dur: 8.4, cursor: [[0.2, "keep-0"], [2.9, "keep-0", true], [3.3, "keep-2"], [3.8, "keep-2", true], [4.2, "keep-3"], [4.7, "keep-3", true], [5.9, "pay"], [6.5, "pay", true]] },
+  { id: "date", dur: 6, cursor: [[0.3, "slot-1"], [2.2, "slot-1", true]] },
+  { id: "visio", dur: 11, cursor: [] },
+  { id: "synthese", dur: 8.4, cursor: [[3.9, "doc"]] },
+  { id: "decision", dur: 6.4, cursor: [] },
 ];
 
-const BRIEF = "On lance une ligne de maroquinerie en cuir recyclé. On veut entendre des acheteuses de luxe qui achètent aussi en seconde main, et des vendeuses en boutique.";
+const Copy = createContext<FilmCopy>(FILM_COPY.fr);
+const useCopy = () => useContext(Copy);
 
-type Profile = { initial: string; name: string; role: string; why: string; tier: "averti" | "initie" | "rare"; tierLabel: string; credits: number; medals: BadgeId[]; tone: string };
+type Profile = { initial: string; tier: "averti" | "initie" | "rare"; credits: number; medals: BadgeId[]; tone: string };
 
 const PROFILES: Profile[] = [
-  { initial: "C", name: "Camille R.", role: "Acheteuse luxe · Paris · 34 ans", why: "Trois à quatre sacs par an, la moitié en seconde main.", tier: "initie", tierLabel: "Initiée", credits: 69, medals: ["verifie", "linkedin", "achat"], tone: "#c98e68" },
-  { initial: "I", name: "Inès B.", role: "Vendeuse en boutique de luxe · 8 ans", why: "Voit quarante clientes par semaine hésiter devant un prix.", tier: "rare", tierLabel: "Rare", credits: 130, medals: ["verifie", "emploi", "linkedin"], tone: "#8a6bd8" },
-  { initial: "S", name: "Sofia M.", role: "Revendeuse seconde main · Lyon", why: "Revend trente sacs par mois, connaît la cote de chaque modèle.", tier: "initie", tierLabel: "Initiée", credits: 69, medals: ["verifie", "reseaux", "portfolio"], tone: "#d07a5c" },
-  { initial: "J", name: "Jeanne L.", role: "Cliente avertie · Bordeaux · 29 ans", why: "A comparé cinq marques de cuir recyclé cette année.", tier: "averti", tierLabel: "Averti", credits: 39, medals: ["verifie", "cv"], tone: "#5d8f7a" },
+  { initial: "C", tier: "initie", credits: 69, medals: ["verifie", "linkedin", "achat"], tone: "#c98e68" },
+  { initial: "I", tier: "rare", credits: 130, medals: ["verifie", "emploi", "linkedin"], tone: "#8a6bd8" },
+  { initial: "S", tier: "initie", credits: 69, medals: ["verifie", "reseaux", "portfolio"], tone: "#d07a5c" },
+  { initial: "J", tier: "averti", credits: 39, medals: ["verifie", "cv"], tone: "#5d8f7a" },
 ];
 const KEPT_AT = [3.0, null, 3.9, 4.8];
 const START_BALANCE = 400;
 const SPENT = 69 + 69 + 39;
 
-const LINES: { who: "brand" | "camille"; from: number; to: number; text: string }[] = [
-  { who: "brand", from: 0.5, to: 2.8, text: "Qu'est-ce qui vous ferait payer un sac en cuir recyclé au prix du neuf ?" },
-  { who: "camille", from: 3.2, to: 6.4, text: "Qu'on ne le voie pas. Je l'achète pour la pièce, pas pour le discours." },
-  { who: "camille", from: 6.9, to: 9.9, text: "Et trois coloris, pas cinq : le noir partira, le reste finira en soldes." },
+// Qui parle et quand ; les répliques sont dans filmCopy.ts (call.lines).
+const LINES: { who: "brand" | "camille"; from: number; to: number }[] = [
+  { who: "brand", from: 0.5, to: 2.8 },
+  { who: "camille", from: 3.2, to: 6.4 },
+  { who: "camille", from: 6.9, to: 9.9 },
 ];
 
 // ── Petites fonctions de temps ─────────────────────────────────
@@ -91,7 +66,8 @@ export function subscribeReducedMotion(onChange: () => void) {
 export const getReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 export const getReducedMotionServer = () => false;
 
-export default function Film() {
+export default function Film({ lang = "fr" }: { lang?: Lang }) {
+  const copy = FILM_COPY[lang];
   const reduced = useSyncExternalStore(subscribeReducedMotion, getReducedMotion, getReducedMotionServer);
   const [frame, setFrame] = useState({ scene: 0, t: 0 });
   const [visible, setVisible] = useState(false);
@@ -148,7 +124,7 @@ export default function Film() {
 
   return (
     <div className={f.film} ref={rootRef}>
-      <div className={f.tabs} role="tablist" aria-label="Une étude, de bout en bout">
+      <div className={f.tabs} role="tablist" aria-label={copy.tablist}>
         {SCENES.map((s, i) => (
           <button
             key={s.id}
@@ -160,17 +136,17 @@ export default function Film() {
             onClick={() => jump(i)}
           >
             <span className={f.tabNum}>0{i + 1}</span>
-            <span className={f.tabLabel}>{s.label}</span>
+            <span className={f.tabLabel}>{copy.scenes[s.id].label}</span>
             <span className={f.tabTrack}><i style={{ width: `${i < frame.scene ? 100 : i === frame.scene ? (t / s.dur) * 100 : 0}%` }} /></span>
           </button>
         ))}
       </div>
 
       <div onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)}>
-        <FilmWindow sceneIndex={frame.scene} t={t} reduced={reduced} status={held && !reduced ? "En pause" : undefined} />
+        <FilmWindow lang={lang} sceneIndex={frame.scene} t={t} reduced={reduced} status={held && !reduced ? copy.paused : undefined} />
       </div>
 
-      <p className={f.caption}><b>0{frame.scene + 1}</b>{scene.caption}</p>
+      <p className={f.caption}><b>0{frame.scene + 1}</b>{copy.scenes[scene.id].caption}</p>
     </div>
   );
 }
@@ -179,15 +155,17 @@ export default function Film() {
  * La fenêtre seule, pilotée de l'extérieur : par l'horloge du film ci-dessus,
  * ou par le défilement de la page (HowItWorks).
  */
-export function FilmWindow({ sceneIndex, t, reduced = false, status }: { sceneIndex: number; t: number; reduced?: boolean; status?: string }) {
+export function FilmWindow({ lang = "fr", sceneIndex, t, reduced = false, status }: { lang?: Lang; sceneIndex: number; t: number; reduced?: boolean; status?: string }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const scene = SCENES[sceneIndex];
+  const copy = FILM_COPY[lang];
   return (
+    <Copy.Provider value={copy}>
     <div className={f.window}>
       <div className={f.chrome} aria-hidden="true">
         <span className={f.dots}><i /><i /><i /></span>
-        <span className={f.url}>{scene.url}</span>
-        <span className={f.chromeRight}>{status ?? scene.label}</span>
+        <span className={f.url}>{copy.scenes[scene.id].url}</span>
+        <span className={f.chromeRight}>{status ?? copy.scenes[scene.id].label}</span>
       </div>
       <div className={f.stage} ref={stageRef} aria-hidden="true">
         <div key={scene.id} className={f.scene}>
@@ -201,6 +179,7 @@ export function FilmWindow({ sceneIndex, t, reduced = false, status }: { sceneIn
         {!reduced && <Cursor stage={stageRef} steps={scene.cursor} t={t} sceneKey={scene.id} />}
       </div>
     </div>
+    </Copy.Provider>
   );
 }
 
@@ -246,36 +225,37 @@ function Pane({ title, aside, children, className }: { title: string; aside?: Re
 
 // ── 1. Brief ───────────────────────────────────────────────────
 function BriefScene({ t }: { t: number }) {
-  const text = typed(BRIEF, t, 1.4, 46);
+  const c = useCopy().brief;
+  const text = typed(c.text, t, 1.4, 46);
   const reading = at(t, 3.6) && !at(t, 5.0);
   const rows: { at: number; k: string; v: React.ReactNode }[] = [
-    { at: 5.0, k: "Profils", v: <span className={f.chips}><i>Acheteuses de luxe, aussi en seconde main</i><i>Vendeuses en boutique</i></span> },
-    { at: 5.4, k: "Format", v: "6 entretiens · 45 min · en visio" },
-    { at: 5.8, k: "À trancher", v: "Le prix de lancement · 3 ou 5 coloris" },
-    { at: 6.2, k: "Budget", v: <span>234 à 414 crédits <small>selon les profils retenus</small></span> },
+    { at: 5.0, k: c.rows.profiles, v: <span className={f.chips}><i>{c.rows.chips[0]}</i><i>{c.rows.chips[1]}</i></span> },
+    { at: 5.4, k: c.rows.format, v: c.rows.formatV },
+    { at: 5.8, k: c.rows.decide, v: c.rows.decideV },
+    { at: 6.2, k: c.rows.budget, v: <span>{c.rows.budgetV} <small>{c.rows.budgetSub}</small></span> },
   ];
   return (
     <div className={f.brief}>
-      <Pane title="Nouveau brief" aside={<span className={f.muted}>Écrivez, ou déposez un document</span>} className={f.composer}>
+      <Pane title={c.newBrief} aside={<span className={f.muted}>{c.newBriefHint}</span>} className={f.composer}>
         <div className={f.drop} data-cursor="file" data-filled={at(t, 0.5)}>
           {at(t, 0.5) ? (
             <span className={`${f.file} ${f.pop}`}>
               <span className={f.fileIcon}>PDF</span>
-              <span><b>brief-maroquinerie-FW27.pdf</b><small>2,4 Mo · 12 pages</small></span>
+              <span><b>{c.fileName}</b><small>{c.fileMeta}</small></span>
             </span>
-          ) : <span className={f.muted}>Glissez un PDF, un Word ou un PowerPoint</span>}
+          ) : <span className={f.muted}>{c.drop}</span>}
         </div>
         <div className={f.textarea} data-cursor="text">
           {text}{t < 5.6 && <i className={f.caret} />}
         </div>
         <div className={f.composerFoot}>
-          <span className={f.muted}>Ou quelques phrases suffisent.</span>
-          <span className={f.btnInk} data-cursor="send" data-pressed={at(t, 7.1)}>{at(t, 7.1) ? "Brief envoyé ✓" : "Envoyer le brief →"}</span>
+          <span className={f.muted}>{c.enough}</span>
+          <span className={f.btnInk} data-cursor="send" data-pressed={at(t, 7.1)}>{at(t, 7.1) ? c.sent : c.send}</span>
         </div>
       </Pane>
 
-      <Pane title="Ce que nous avons compris" className={f.extract}
-        aside={at(t, 5.0) ? <span className={f.ok}>Lu en 6 secondes</span> : reading ? <span className={f.reading}>Lecture du brief…</span> : null}>
+      <Pane title={c.understood} className={f.extract}
+        aside={at(t, 5.0) ? <span className={f.ok}>{c.readIn}</span> : reading ? <span className={f.reading}>{c.reading}</span> : null}>
         <dl className={f.facts}>
           {rows.map((r) => (
             <div key={r.k} className={f.fact}>
@@ -291,6 +271,7 @@ function BriefScene({ t }: { t: number }) {
 
 // ── 2. Profils ─────────────────────────────────────────────────
 function ProfilesScene({ t }: { t: number }) {
+  const { profiles: c, locale } = useCopy();
   const paid = at(t, 6.5);
   const balance = Math.round(START_BALANCE - SPENT * prog(t, 6.6, 7.4));
   const keptCount = KEPT_AT.filter((k) => k !== null && at(t, k)).length;
@@ -298,69 +279,70 @@ function ProfilesScene({ t }: { t: number }) {
   return (
     <div className={f.profiles}>
       <header className={f.listHead}>
-        <b>4 profils proposés</b>
-        <span className={f.review}><Check /> Sélection revue par l&apos;équipe</span>
-        <span className={f.balance} data-moving={at(t, 6.6) && !at(t, 7.4)}>Solde <b>{balance}</b> crédits</span>
+        <b>{c.proposed}</b>
+        <span className={f.review}><Check /> {c.reviewed}</span>
+        <span className={f.balance} data-moving={at(t, 6.6) && !at(t, 7.4)}>{c.balance} <b>{balance}</b> {c.credits}</span>
       </header>
       <div className={f.cards}>
         {PROFILES.map((p, i) => {
           const kept = KEPT_AT[i] !== null && at(t, KEPT_AT[i]!);
+          const txt = c.list[i];
           return at(t, 0.2 + i * 0.3) ? (
-            <article key={p.name} className={`${f.pcard} ${f.pop}`} data-kept={kept} data-dim={paid && !kept}>
+            <article key={txt.name} className={`${f.pcard} ${f.pop}`} data-kept={kept} data-dim={paid && !kept}>
               <div className={f.pTop}>
                 <span className={f.pAv} style={{ background: p.tone }}>{p.initial}</span>
-                <span className={f.pName}><b>{p.name}</b><small>{p.role}</small></span>
-                <span className={f.tier} data-tier={p.tier}>{p.tier === "rare" ? "◆ " : ""}{p.tierLabel}</span>
+                <span className={f.pName}><b>{txt.name}</b><small>{txt.role}</small></span>
+                <span className={f.tier} data-tier={p.tier}>{p.tier === "rare" ? "◆ " : ""}{txt.tierLabel}</span>
               </div>
-              <p className={f.pWhy}>{p.why}</p>
+              <p className={f.pWhy}>{txt.why}</p>
               <div className={f.pFoot}>
                 <span className={f.medals}>{p.medals.map((m) => <Medallion key={m} id={m} size={30} />)}</span>
-                <span className={f.price}><b>{p.credits}</b> cr.</span>
-                <span className={f.keep} data-on={kept} data-cursor={`keep-${i}`}>{kept ? "✓ Gardé" : "Garder"}</span>
+                <span className={f.price}><b>{p.credits}</b> {c.cr}</span>
+                <span className={f.keep} data-on={kept} data-cursor={`keep-${i}`}>{kept ? c.kept : c.keep}</span>
               </div>
             </article>
-          ) : <div key={p.name} className={f.pcardGhost} />;
+          ) : <div key={txt.name} className={f.pcardGhost} />;
         })}
       </div>
       <footer className={f.payBar} data-in={keptCount > 0}>
-        <span>{keptCount} profil{keptCount > 1 ? "s" : ""} gardé{keptCount > 1 ? "s" : ""} · <b>{keptCredits} crédits</b> <small>soit {(keptCredits * 10).toLocaleString("fr-FR")} € HT</small></span>
-        <span className={f.btnInk} data-cursor="pay" data-pressed={paid}>{paid ? "Payé ✓" : "Confirmer"}</span>
+        <span>{c.keptCount(keptCount)} · <b>{keptCredits} {c.credits}</b> <small>{c.worth((keptCredits * 10).toLocaleString(locale))}</small></span>
+        <span className={f.btnInk} data-cursor="pay" data-pressed={paid}>{paid ? c.paid : c.confirm}</span>
       </footer>
     </div>
   );
 }
 
 // ── 3. Date ────────────────────────────────────────────────────
-const DAYS = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven."];
 const SLOTS = [
-  { day: 1, from: 14, label: "14 h" },
-  { day: 3, from: 10, label: "10 h" },
-  { day: 4, from: 17.5, label: "17 h 30" },
+  { day: 1, from: 14 },
+  { day: 3, from: 10 },
+  { day: 4, from: 17.5 },
 ];
 const H0 = 9;
 const H1 = 20;
 
 function DateScene({ t }: { t: number }) {
+  const c = useCopy().date;
   const chosen = at(t, 2.2);
   const done = [
-    { at: 3.0, text: "Salle de visio privée créée" },
-    { at: 3.4, text: "Invitation envoyée à Camille" },
-    { at: 3.8, text: "Rappels la veille et une heure avant" },
+    { at: 3.0, text: c.checklist[0] },
+    { at: 3.4, text: c.checklist[1] },
+    { at: 3.8, text: c.checklist[2] },
   ];
   return (
     <div className={f.date}>
-      <Pane title="Camille propose trois créneaux" aside={<span className={f.muted}>Choisissez, c&apos;est confirmé</span>} className={f.calendar}>
+      <Pane title={c.title} aside={<span className={f.muted}>{c.hint}</span>} className={f.calendar}>
         <div className={f.week}>
-          <div className={f.hours}>{[10, 12, 14, 16, 18].map((h) => <span key={h} style={{ top: `${((h - H0) / (H1 - H0)) * 100}%` }}>{h} h</span>)}</div>
-          {DAYS.map((d, di) => (
+          <div className={f.hours}>{[10, 12, 14, 16, 18].map((h) => <span key={h} style={{ top: `${((h - H0) / (H1 - H0)) * 100}%` }}>{c.hour(h)}</span>)}</div>
+          {c.days.map((d, di) => (
             <div key={d} className={f.dayCol}>
               <span className={f.dayName}>{d}</span>
               <div className={f.dayBody}>
                 {SLOTS.map((s, si) => s.day === di && at(t, 0.2 + si * 0.25) ? (
-                  <span key={s.label} className={`${f.slot} ${f.pop}`} data-cursor={`slot-${si}`}
+                  <span key={si} className={`${f.slot} ${f.pop}`} data-cursor={`slot-${si}`}
                     data-state={chosen ? (si === 1 ? "chosen" : "gone") : "open"}
                     style={{ top: `${((s.from - H0) / (H1 - H0)) * 100}%` }}>
-                    <b><span className={f.slotDay}>{DAYS[s.day]} </span>{s.label}</b><small>{si === 1 && chosen ? "Confirmé" : "Proposé par Camille"}</small>
+                    <b><span className={f.slotDay}>{c.days[s.day]} </span>{c.slots[si]}</b><small>{si === 1 && chosen ? c.confirmed : c.proposedBy}</small>
                   </span>
                 ) : null)}
               </div>
@@ -368,11 +350,11 @@ function DateScene({ t }: { t: number }) {
           ))}
         </div>
       </Pane>
-      <Pane title={chosen ? "Entretien confirmé" : "En attente de votre choix"} className={f.confirm}
-        aside={chosen ? <span className={f.ok}>Jeudi · 10 h · 45 min</span> : null}>
+      <Pane title={chosen ? c.done : c.waiting} className={f.confirm}
+        aside={chosen ? <span className={f.ok}>{c.when}</span> : null}>
         <div className={f.invite} data-on={chosen}>
           <Hallmark level={3} size={78} initial="M" />
-          <span><b>Invitation d&apos;une maison vérifiée</b><small>Camille voit votre poinçon, pas votre nom, jusqu&apos;au jour J.</small></span>
+          <span><b>{c.inviteTitle}</b><small>{c.inviteText}</small></span>
         </div>
         <ul className={f.checklist}>
           {done.map((d) => <li key={d.text} data-on={at(t, d.at)}><Check />{d.text}</li>)}
@@ -383,16 +365,14 @@ function DateScene({ t }: { t: number }) {
 }
 
 // ── 4. Visio ───────────────────────────────────────────────────
-const GUIDE = [
-  { q: "Vos derniers achats de maroquinerie", done: 0 },
-  { q: "Le cuir recyclé : frein ou argument ?", done: 6.6 },
-  { q: "Combien de coloris ?", done: 10.2 },
-  { q: "Le prix juste pour ce sac", done: 99 },
-];
+// Moment où chaque question du guide est cochée.
+const GUIDE_DONE = [0, 6.6, 10.2, 99];
 
 function CallScene({ t }: { t: number }) {
+  const c = useCopy().call;
+  const GUIDE = GUIDE_DONE.map((done, i) => ({ q: c.guide[i], done }));
   const speaking = LINES.find((l) => t >= l.from && t <= l.to)?.who ?? null;
-  const shown = LINES.filter((l) => t >= l.from).slice(-2);
+  const shown = LINES.map((l, i) => ({ ...l, text: c.lines[i] })).filter((l) => t >= l.from).slice(-2);
   const secs = 31 + Math.floor(t);
   const clock = `00:${String(12 + Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
   const current = GUIDE.findIndex((g) => t < g.done);
@@ -402,11 +382,11 @@ function CallScene({ t }: { t: number }) {
         <div className={f.tile} data-speaking={speaking === "camille"}>
           <Portrait who="camille" speaking={speaking === "camille"} />
           <span className={f.rec}><i />REC {clock}</span>
-          <span className={f.tileName}><Bars on={speaking === "camille"} />Camille R. · Acheteuse luxe</span>
+          <span className={f.tileName}><Bars on={speaking === "camille"} />{c.who}</span>
           <div className={f.captions}>
             {shown.map((l) => (
               <p key={l.text} className={f.pop}>
-                <b>{l.who === "brand" ? "Vous" : "Camille"}</b>
+                <b>{l.who === "brand" ? c.you : c.speaker}</b>
                 {t <= l.to ? typed(l.text, t, l.from, 30) : l.text}
               </p>
             ))}
@@ -414,7 +394,7 @@ function CallScene({ t }: { t: number }) {
         </div>
         <div className={f.pip} data-speaking={speaking === "brand"}>
           <Portrait who="brand" speaking={speaking === "brand"} />
-          <span className={f.pipName}><Bars on={speaking === "brand"} />Vous</span>
+          <span className={f.pipName}><Bars on={speaking === "brand"} />{c.you}</span>
         </div>
         <div className={f.controls}>
           <span className={f.ctrl}><Icon d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v4" /></span>
@@ -424,7 +404,7 @@ function CallScene({ t }: { t: number }) {
         </div>
       </div>
       <aside className={f.guide}>
-        <b className={f.guideTitle}>Votre guide</b>
+        <b className={f.guideTitle}>{c.guideTitle}</b>
         <ol>
           {GUIDE.map((g, i) => (
             <li key={g.q} data-state={t >= g.done ? "done" : i === current ? "now" : "next"}>
@@ -433,8 +413,8 @@ function CallScene({ t }: { t: number }) {
           ))}
         </ol>
         <div className={f.person}>
-          <b>Pourquoi Camille</b>
-          <p>Trois à quatre sacs par an, la moitié en seconde main. Refuse de payer « l&apos;histoire » d&apos;un produit.</p>
+          <b>{c.whyTitle}</b>
+          <p>{c.whyText}</p>
           <span className={f.medalsRow}><Medallion id="verifie" size={26} /><Medallion id="linkedin" size={26} /><Medallion id="achat" size={26} /></span>
         </div>
       </aside>
@@ -448,47 +428,48 @@ function Bars({ on }: { on: boolean }) {
 
 // ── 5. Synthèse ────────────────────────────────────────────────
 function SynthesisScene({ t }: { t: number }) {
+  const { synth: c, quote: q } = useCopy();
   const p = prog(t, 1.4, 3.9);
   const ready = p >= 1;
   const insights = [
-    { at: 4.8, n: "1", text: "« Recyclé » rassure l'acheteuse de seconde main, pas la cliente du neuf." },
-    { at: 5.3, n: "2", text: "Cinq coloris diluent la collection : trois suffisent, le noir porte les ventes." },
-    { at: 5.8, n: "3", text: "Le prix du neuf passe si la finition est irréprochable." },
+    { at: 4.8, n: "1", text: c.insights[0] },
+    { at: 5.3, n: "2", text: c.insights[1] },
+    { at: 5.8, n: "3", text: c.insights[2] },
   ];
   return (
     <div className={f.after}>
-      <Pane title="Entretien avec Camille R." aside={<span className={f.muted}>Terminé · 44 min</span>} className={f.deliv}>
+      <Pane title={c.title} aside={<span className={f.muted}>{c.ended}</span>} className={f.deliv}>
         <ul className={f.files}>
-          <li data-on={at(t, 0.3)}><span className={f.fIcon}><Icon d="M3 6.5h12.5v11H3z M15.5 10.5l5-3v9l-5-3" /></span><span><b>Vidéo de l&apos;entretien</b><small>MP4 · 44 min</small></span><span className={f.dl}>{at(t, 0.3) ? "Télécharger" : "…"}</span></li>
-          <li data-on={at(t, 0.8)}><span className={f.fIcon}><Icon d="M6 3h9l3 3v15H6z M9 11h6 M9 14h6 M9 17h4" /></span><span><b>Transcription</b><small>6 820 mots · horodatée</small></span><span className={f.dl}>{at(t, 0.8) ? "Télécharger" : "…"}</span></li>
+          <li data-on={at(t, 0.3)}><span className={f.fIcon}><Icon d="M3 6.5h12.5v11H3z M15.5 10.5l5-3v9l-5-3" /></span><span><b>{c.video}</b><small>{c.videoMeta}</small></span><span className={f.dl}>{at(t, 0.3) ? c.download : "…"}</span></li>
+          <li data-on={at(t, 0.8)}><span className={f.fIcon}><Icon d="M6 3h9l3 3v15H6z M9 11h6 M9 14h6 M9 17h4" /></span><span><b>{c.transcript}</b><small>{c.transcriptMeta}</small></span><span className={f.dl}>{at(t, 0.8) ? c.download : "…"}</span></li>
           <li data-on={ready}>
             <span className={f.fIcon}><Icon d="M4 4h16v16H4z M8 9h8 M8 13h8 M8 17h5" /></span>
-            <span><b>Synthèse de l&apos;étude</b><small>{ready ? "6 entretiens sur 6 · prête" : at(t, 1.4) ? `Rédaction · ${Math.round(p * 100)} %` : "En attente des entretiens"}</small>
+            <span><b>{c.synthesis}</b><small>{ready ? c.ready : at(t, 1.4) ? c.writing(Math.round(p * 100)) : c.waiting}</small>
               <span className={f.meter}><i style={{ width: `${p * 100}%` }} /></span>
             </span>
-            <span className={f.dl}>{ready ? "Ouvrir" : ""}</span>
+            <span className={f.dl}>{ready ? c.open : ""}</span>
           </li>
         </ul>
         <div className={f.moments}>
-          <b>Extraits de la transcription</b>
+          <b>{c.excerpts}</b>
           {[
-            { at: 1.0, time: "12:36", text: "Je l'achète pour la pièce, pas pour le discours." },
-            { at: 1.3, time: "12:41", text: "Trois coloris, pas cinq : le noir partira." },
-            { at: 1.6, time: "31:08", text: "À ce prix, je veux voir la couture de près." },
-          ].map((m) => <p key={m.time} data-on={at(t, m.at)}><time>{m.time}</time>« {m.text} »</p>)}
+            { at: 1.0, time: "12:36", text: c.moments[0] },
+            { at: 1.3, time: "12:41", text: c.moments[1] },
+            { at: 1.6, time: "31:08", text: c.moments[2] },
+          ].map((m) => <p key={m.time} data-on={at(t, m.at)}><time>{m.time}</time>{q(m.text)}</p>)}
         </div>
       </Pane>
       <article className={f.doc} data-in={at(t, 4.1)} data-cursor="doc">
-        <span className={f.docKicker}>Synthèse · Maroquinerie en cuir recyclé</span>
-        <h4>Le recyclé se vend par la pièce, pas par le discours</h4>
+        <span className={f.docKicker}>{c.kicker}</span>
+        <h4>{c.heading}</h4>
         <ol className={f.insights}>
           {insights.map((i) => <li key={i.n} data-on={at(t, i.at)}><b>{i.n}</b>{i.text}</li>)}
         </ol>
         <blockquote className={f.verbatim} data-on={at(t, 6.4)}>
-          « Je l&apos;achète pour la pièce, pas pour le discours. »<cite>Acheteuse luxe, 34 ans</cite>
+          {q(c.verbatim)}<cite>{c.cite}</cite>
         </blockquote>
         <div className={f.themes} data-on={at(t, 6.9)}>
-          {[{ n: "Finition", v: 5 }, { n: "Prix", v: 4 }, { n: "Discours écologique", v: 2 }].map((x) => (
+          {[{ n: c.themes[0], v: 5 }, { n: c.themes[1], v: 4 }, { n: c.themes[2], v: 2 }].map((x) => (
             <span key={x.n}><small>{x.n}</small><i style={{ width: at(t, 6.9) ? `${x.v * 20}%` : 0 }} /></span>
           ))}
         </div>
@@ -499,35 +480,36 @@ function SynthesisScene({ t }: { t: number }) {
 
 // ── 6. Décision ────────────────────────────────────────────────
 function DecisionScene({ t }: { t: number }) {
+  const { decision: c, quote: q } = useCopy();
   const items = [
-    { at: 0.4, stamp: 1.0, text: "Lancer en trois coloris : noir, cognac, sable", source: "5 entretiens sur 6", tone: "ok", label: "Décidé" },
-    { at: 1.4, stamp: 2.0, text: "Ne pas écrire « recyclé » sur l'étiquette", source: "4 entretiens sur 6", tone: "ok", label: "Décidé" },
-    { at: 2.4, stamp: 3.0, text: "Tester 420 € auprès de six clientes", source: "Question ouverte de la synthèse", tone: "next", label: "À tester" },
+    { at: 0.4, stamp: 1.0, tone: "ok", ...c.items[0] },
+    { at: 1.4, stamp: 2.0, tone: "ok", ...c.items[1] },
+    { at: 2.4, stamp: 3.0, tone: "next", ...c.items[2] },
   ];
   return (
     <div className={f.decision}>
-      <Pane title="Comité produit" aside={<span className={f.muted}>Lundi · 9 h</span>} className={f.board}>
+      <Pane title={c.board} aside={<span className={f.muted}>{c.when}</span>} className={f.board}>
         <ul className={f.decisions}>
           {items.map((d) => at(t, d.at) ? (
             <li key={d.text} className={f.pop}>
-              <span><b>{d.text}</b><small>Source : {d.source}</small></span>
+              <span><b>{d.text}</b><small>{c.source} {d.source}</small></span>
               {at(t, d.stamp) && <span className={f.stamp} data-tone={d.tone}>{d.label}</span>}
             </li>
           ) : <li key={d.text} className={f.decGhost} />)}
         </ul>
         <div className={f.tally} data-on={at(t, 3.6)}>
-          <span><b>12 jours</b><small>du brief au comité</small></span>
-          <span><b>6</b><small>entretiens</small></span>
-          <span><b>3</b><small>décisions sourcées</small></span>
+          <span><b>{c.tally[0]}</b><small>{c.tally[1]}</small></span>
+          <span><b>6</b><small>{c.tally[2]}</small></span>
+          <span><b>3</b><small>{c.tally[3]}</small></span>
         </div>
       </Pane>
       <div className={f.quotes}>
         {[
-          { at: 3.4, q: "Trois coloris, pas cinq : le noir partira.", who: "Acheteuse luxe, 34 ans" },
-          { at: 3.9, q: "Si c'est écrit recyclé, je pense seconde main.", who: "Vendeuse en boutique, 8 ans" },
-          { at: 4.4, q: "À 420 €, je veux voir la couture de près.", who: "Cliente avertie, 29 ans" },
+          { at: 3.4, ...c.quotes[0] },
+          { at: 3.9, ...c.quotes[1] },
+          { at: 4.4, ...c.quotes[2] },
         ].map((v) => (
-          <blockquote key={v.q} className={f.qcard} data-on={at(t, v.at)}>« {v.q} »<cite>{v.who}</cite></blockquote>
+          <blockquote key={v.q} className={f.qcard} data-on={at(t, v.at)}>{q(v.q)}<cite>{v.who}</cite></blockquote>
         ))}
       </div>
     </div>

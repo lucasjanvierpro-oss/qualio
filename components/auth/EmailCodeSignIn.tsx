@@ -14,7 +14,17 @@ import { sendEmailCode, verifyEmailCode } from "@/app/actions/auth";
  * savoir qui est inscrit sur Rarelyst. Un email inconnu ne reçoit simplement
  * rien, et l'écran affiche le même message.
  */
-export default function EmailCodeSignIn() {
+const T = {
+  fr: { open: "Recevoir un code par email", placeholder: "vous@exemple.com", send: "M'envoyer un code", sending: "Envoi…",
+    sent: (e: string) => <>Si un compte existe pour <strong>{e}</strong>, un code à six chiffres vient d&apos;y être envoyé. Il est valable une heure.</>,
+    verify: "Me connecter", verifying: "Vérification…", change: "Changer d'adresse" },
+  en: { open: "Get a code by email", placeholder: "you@example.com", send: "Send me a code", sending: "Sending…",
+    sent: (e: string) => <>If an account exists for <strong>{e}</strong>, a six-digit code has just been sent. It is valid for one hour.</>,
+    verify: "Log in", verifying: "Checking…", change: "Use another address" },
+};
+
+export default function EmailCodeSignIn({ lang = "fr" }: { lang?: "fr" | "en" }) {
+  const t = T[lang];
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -43,7 +53,7 @@ export default function EmailCodeSignIn() {
           fontSize: 13, color: "var(--color-text-secondary)", textDecoration: "underline",
         }}
       >
-        Recevoir un code par email
+        {t.open}
       </button>
     );
   }
@@ -73,7 +83,7 @@ export default function EmailCodeSignIn() {
             type="email"
             inputMode="email"
             autoComplete="email"
-            placeholder="vous@exemple.com"
+            placeholder={t.placeholder}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && request()}
@@ -85,14 +95,13 @@ export default function EmailCodeSignIn() {
             disabled={pending || !email}
             onClick={request}
           >
-            {pending ? "Envoi…" : "M'envoyer un code"}
+            {pending ? t.sending : t.send}
           </button>
         </>
       ) : (
         <>
           <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>
-            Si un compte existe pour <strong>{email}</strong>, un code à six chiffres vient
-            d&apos;y être envoyé. Il est valable une heure.
+            {t.sent(email)}
           </p>
           <input
             inputMode="numeric"
@@ -110,7 +119,7 @@ export default function EmailCodeSignIn() {
             disabled={pending || code.length !== 6}
             onClick={confirm}
           >
-            {pending ? "Vérification…" : "Me connecter"}
+            {pending ? t.verifying : t.verify}
           </button>
           <button
             type="button"
@@ -120,7 +129,7 @@ export default function EmailCodeSignIn() {
               fontSize: 13, color: "var(--color-text-secondary)", textDecoration: "underline",
             }}
           >
-            Changer d&apos;adresse
+            {t.change}
           </button>
         </>
       )}

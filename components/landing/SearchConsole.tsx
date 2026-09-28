@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import styles from "./landing.module.css";
-import { BRIEFS, PANEL, RARITY_LABEL, type Brief, type ConsoleProfile } from "./content";
+import type { Lang } from "@/lib/i18n/detect";
+import { CONTENT, type Brief, type ConsoleProfile } from "./content";
 
 type Match = { profile: ConsoleProfile; score: number };
 
-function matchesFor(brief: Brief): Match[] {
-  return PANEL.map((profile) => ({
+function matchesFor(brief: Brief, panel: ConsoleProfile[]): Match[] {
+  return panel.map((profile) => ({
     profile,
     score: profile.signals.filter((s) => brief.signals.includes(s)).length,
   }))
@@ -26,16 +27,18 @@ function subscribeReducedMotion(onChange: () => void) {
 const getReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const getReducedMotionServer = () => false;
 
-function fitLabel(score: number) {
-  if (score >= 3) return "Très proche";
-  if (score === 2) return "Proche";
-  return "À considérer";
+function fitLabel(score: number, labels: [string, string, string]) {
+  if (score >= 3) return labels[0];
+  if (score === 2) return labels[1];
+  return labels[2];
 }
 
 // Une demande de marque s'écrit toute seule, puis les profils correspondants
 // apparaissent. Le premier brief est affiché complet dès le chargement : la
 // page est lisible avant que l'animation ne démarre.
-export default function SearchConsole() {
+export default function SearchConsole({ lang = "fr" }: { lang?: Lang }) {
+  const c = CONTENT[lang];
+  const BRIEFS = c.briefs;
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState(BRIEFS[0].text);
   const [shown, setShown] = useState(true);
@@ -80,10 +83,10 @@ export default function SearchConsole() {
     })();
 
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [reduced]);
+  }, [reduced, BRIEFS]);
 
   const brief = BRIEFS[index];
-  const matches = shown ? matchesFor(brief) : [];
+  const matches = shown ? matchesFor(brief, c.panel) : [];
 
   function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
     const box = boxRef.current;
@@ -94,13 +97,13 @@ export default function SearchConsole() {
   }
 
   return (
-    <div className={styles.console} ref={boxRef} onPointerMove={onPointerMove} aria-label="Démonstration de la recherche de profils">
+    <div className={styles.console} ref={boxRef} onPointerMove={onPointerMove} aria-label={c.console.aria}>
       <div className={styles.mesh} aria-hidden="true" />
       <div className={styles.spot} aria-hidden="true" />
 
       <div className={styles.consoleHead}>
-        <span>Brief d&apos;une marque</span>
-        <span><b>{shown ? matches.length : "…"}</b> profils correspondent</span>
+        <span>{c.console.head}</span>
+        <span><b>{shown ? matches.length : "…"}</b> {c.console.match}</span>
       </div>
 
       <p className={styles.brief} aria-live="polite">
@@ -127,22 +130,22 @@ export default function SearchConsole() {
                 {profile.name}
                 {profile.rarity && (
                   <span className={`${styles.tag} ${profile.rarity === "rare" ? styles.tagRare : styles.tagIntrouvable}`}>
-                    {profile.rarity === "rare" ? "◆" : "✦"} {RARITY_LABEL[profile.rarity]}
+                    {profile.rarity === "rare" ? "◆" : "✦"} {c.rarity[profile.rarity]}
                   </span>
                 )}
               </span>
               <span className={styles.rowRole}>{profile.role}</span>
             </span>
-            <span className={styles.fit}>{fitLabel(score)}</span>
+            <span className={styles.fit}>{fitLabel(score, c.console.fit)}</span>
           </div>
         ))}
       </div>
 
       <div className={styles.consoleFoot}>
-        <span>Démonstration sur des profils d&apos;exemple.</span>
+        <span>{c.console.demo}</span>
         {!reduced && (
           <button type="button" onClick={() => setPaused((p) => !p)}>
-            {paused ? "Reprendre" : "Mettre en pause"}
+            {paused ? c.console.resume : c.console.pause}
           </button>
         )}
       </div>
