@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 // Carte badge upload (CV / portfolio) : envoie le fichier à Supabase Storage,
 // analyse optionnelle par l'IA, puis marque le badge "Ajouté".
 export default function BadgeUpload({
-  label, kind, value, onChange, lang, accept = ".pdf,.doc,.docx,.jpg,.jpeg,.png",
+  label, kind, value, onChange, lang, accept = ".pdf,.docx,.jpg,.jpeg,.png,.webp",
 }: {
   label: string;
   kind: "cv" | "portfolio";
@@ -37,7 +37,9 @@ export default function BadgeUpload({
           body: JSON.stringify({ path: d.url }),
         }).catch(() => {});
       }
-      else setError(d.error === "too_large" ? (lang === "fr" ? "Trop volumineux (max 10 Mo)" : "Too large (max 10MB)") : (lang === "fr" ? "Erreur" : "Error"));
+      else setError(d.error === "too_large" ? (lang === "fr" ? "Trop volumineux (max 10 Mo)" : "Too large (max 10MB)")
+        : d.error === "invalid_type" ? (lang === "fr" ? "Format non pris en charge : PDF, Word ou photo" : "Unsupported format: PDF, Word or photo")
+        : (lang === "fr" ? "Erreur" : "Error"));
     } catch {
       setError(lang === "fr" ? "Erreur réseau" : "Network error");
     } finally {

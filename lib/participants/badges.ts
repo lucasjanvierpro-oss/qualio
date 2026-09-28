@@ -18,6 +18,7 @@
 // Pur : aucun accès base, utilisable côté serveur comme côté client.
 
 import { PROOF_MIN, TRAIT_CLAIMED, type Bi } from "../onboarding/questions";
+import { hasCvAnalysis } from "./docAnalysis";
 
 export type BadgeId =
   | "nouveau"
@@ -210,7 +211,7 @@ export function proofsFromProfile(p: {
     linkedinGiven: !!p.linkedinUrl,
     workVerified: !!p.workEmailVerifiedAt,
     workPending: !!p.workEmail && !p.workEmailVerifiedAt,
-    cvAnalyzed: !!p.cvUrl && !!p.cvAnalysis,
+    cvAnalyzed: !!p.cvUrl && hasCvAnalysis(p.cvAnalysis),
     cvGiven: !!p.cvUrl,
     portfolioOk: !!p.portfolioUrl || read("website"),
     portfolioGiven: !!p.websiteUrl,

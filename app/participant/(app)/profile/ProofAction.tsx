@@ -34,7 +34,7 @@ export default function ProofAction({ id, links }: { id: BadgeId; links: Links }
     return (
       <label className={css.btn} aria-disabled={pending}>
         {pending ? "Envoi…" : id === "cv" ? "Déposer mon CV" : "Déposer mon book"}
-        <input type="file" hidden accept=".pdf,.jpg,.jpeg,.png"
+        <input type="file" hidden accept=".pdf,.docx,.jpg,.jpeg,.png,.webp"
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (!file) return;
@@ -43,7 +43,7 @@ export default function ProofAction({ id, links }: { id: BadgeId; links: Links }
               fd.append("file", file);
               fd.append("kind", id);
               const r = await fetch("/api/onboarding/upload-doc", { method: "POST", body: fd }).then((x) => x.json()).catch(() => ({}));
-              if (!r.url) { setMsg({ ok: false, text: r.error === "too_large" ? "Fichier trop lourd (10 Mo max)." : "L'envoi a échoué." }); return; }
+              if (!r.url) { setMsg({ ok: false, text: r.error === "too_large" ? "Fichier trop lourd (10 Mo max)." : r.error === "invalid_type" ? "Format non pris en charge : PDF, Word ou photo." : "L'envoi a échoué." }); return; }
               // L'analyse nourrit le portrait vu par les marques.
               fetch("/api/onboarding/analyze-document", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: r.url }) }).catch(() => {});
               const saved = await saveProofDocument(id, r.url);

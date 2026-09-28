@@ -4,6 +4,8 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { prisma } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
 import { textFromMessage } from "@/lib/anthropic/text";
+import { officeText } from "@/lib/files/extractText";
+import { withDocSection } from "@/lib/participants/docAnalysis";
 
 // Analyse de document : un appel à Claude.
 // Sans cette ligne, Vercel coupe la fonction bien avant la réponse.
@@ -11,8 +13,9 @@ export const maxDuration = 120;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Analyse un CV / portfolio uploadé → synthèse professionnelle stockée dans
-// cvAnalysis (qui nourrit ensuite le résumé marque + le ghost file).
+// Analyse un CV ou un book déposé → synthèse professionnelle rangée dans
+// cvAnalysis, une section par document (le book ne remplace plus le CV).
+// Elle nourrit ensuite le résumé vu par les marques et le ghost file.
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   const dbUser = await prisma.user.findUnique({
     where: { supabaseId: user.id },
-    include: { participantProfile: { select: { id: true } } },
+    include: { participantProfile: { select: { id: true, cvAnalysis: true } } },
   });
   if (!dbUser?.participantProfile) return NextResponse.json({ error: "no_profile" }, { status: 404 });
   // Seuls ses propres documents : le chemin vient du navigateur, et le bucket
@@ -32,6 +35,7 @@ export async function POST(req: NextRequest) {
   if (!path.startsWith(`${dbUser.participantProfile.id}/`) || path.includes("..")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
+  const kind = path.split("/").pop()?.startsWith("portfolio") ? "portfolio" : "cv";
 
   // Récupère le fichier depuis le bucket privé
   const service = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -39,22 +43,31 @@ export async function POST(req: NextRequest) {
   if (error || !file) return NextResponse.json({ error: "download_failed" }, { status: 500 });
 
   const bytes = Buffer.from(await file.arrayBuffer());
-  const base64 = bytes.toString("base64");
   const ext = path.split(".").pop()?.toLowerCase() ?? "pdf";
   const isImage = ["jpg", "jpeg", "png", "webp"].includes(ext);
 
-  const promptText = `Analyse ce document (CV ou portfolio) et produis une synthèse professionnelle de 3-5 phrases : parcours, expertise mode/lifestyle, expériences marquantes, et ce qui rend ce profil intéressant pour des études qualitatives de marques mode/luxe. Ton factuel, 3e personne. Réponds uniquement avec la synthèse.`;
+  const promptText = kind === "cv"
+    ? "Analyse ce CV et produis une synthèse professionnelle de 3 à 5 phrases : parcours, expertise mode, luxe ou lifestyle, expériences marquantes, et ce qui rend ce profil intéressant pour des études qualitatives de marques. Ton factuel, troisième personne. Réponds uniquement avec la synthèse."
+    : "Analyse ce book (portfolio) et produis une synthèse de 3 à 5 phrases : type de travaux, univers esthétique, clients ou publications visibles, niveau de maîtrise, et ce qui rend ce profil intéressant pour des études qualitatives de marques. Ton factuel, troisième personne. Réponds uniquement avec la synthèse.";
 
   try {
-    const content: Anthropic.MessageParam["content"] = isImage
-      ? [
-          { type: "image", source: { type: "base64", media_type: `image/${ext === "jpg" ? "jpeg" : ext}` as "image/jpeg" | "image/png" | "image/webp", data: base64 } },
-          { type: "text", text: promptText },
-        ]
-      : [
-          { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } },
-          { type: "text", text: promptText },
-        ];
+    let content: Anthropic.MessageParam["content"];
+    if (isImage) {
+      content = [
+        { type: "image", source: { type: "base64", media_type: `image/${ext === "jpg" ? "jpeg" : ext}` as "image/jpeg" | "image/png" | "image/webp", data: bytes.toString("base64") } },
+        { type: "text", text: promptText },
+      ];
+    } else if (ext === "docx") {
+      // Word : on lit le texte nous-mêmes, Claude ne lit que les PDF et les images.
+      content = [{ type: "text", text: `<document>\n${officeText(bytes, "docx")}\n</document>\n\n${promptText}` }];
+    } else if (ext === "pdf") {
+      content = [
+        { type: "document", source: { type: "base64", media_type: "application/pdf", data: bytes.toString("base64") } },
+        { type: "text", text: promptText },
+      ];
+    } else {
+      return NextResponse.json({ ok: false, note: "unsupported_format" });
+    }
 
     const msg = await anthropic.messages.create({
       model: "claude-sonnet-5",
@@ -63,7 +76,10 @@ export async function POST(req: NextRequest) {
     });
     const analysis = textFromMessage(msg);
     if (analysis) {
-      await prisma.participantProfile.update({ where: { id: dbUser.participantProfile.id }, data: { cvAnalysis: analysis } });
+      await prisma.participantProfile.update({
+        where: { id: dbUser.participantProfile.id },
+        data: { cvAnalysis: withDocSection(dbUser.participantProfile.cvAnalysis, kind, analysis) },
+      });
     }
     return NextResponse.json({ ok: true });
   } catch (err) {

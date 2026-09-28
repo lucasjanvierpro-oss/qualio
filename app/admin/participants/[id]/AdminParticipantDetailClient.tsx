@@ -67,6 +67,8 @@ type Profile = {
   idVerificationStatus: string;
   idVerifiedAt: string | null;
   idDocumentUrl: string | null;
+  cvUrl: string | null;
+  portfolioUrl: string | null;
   participationCount: number;
   averageRating: number | null;
   isBlacklisted: boolean;
@@ -333,12 +335,18 @@ export default function AdminParticipantDetailClient({ profile, ghostFile }: { p
                 </span>
               )}
               {profile.idDocumentUrl && (
-                <a href={profile.idDocumentUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "var(--color-accent)", textDecoration: "none", fontWeight: 600 }}>
+                <a href={`/api/admin/document-url?open=1&path=${encodeURIComponent(profile.idDocumentUrl)}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "var(--color-accent)", textDecoration: "none", fontWeight: 600 }}>
                   Voir le document →
                 </a>
               )}
               {!profile.idDocumentUrl && <span style={{ fontSize: "13px", color: "var(--color-text-tertiary)" }}>Aucun document fourni</span>}
             </div>
+            {(profile.cvUrl || profile.portfolioUrl) && (
+              <div style={{ display: "flex", gap: "16px", marginTop: "10px" }}>
+                {profile.cvUrl && <a href={`/api/admin/document-url?open=1&bucket=docs&path=${encodeURIComponent(profile.cvUrl)}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "var(--color-accent)", textDecoration: "none", fontWeight: 600 }}>Voir le CV →</a>}
+                {profile.portfolioUrl && <a href={`/api/admin/document-url?open=1&bucket=docs&path=${encodeURIComponent(profile.portfolioUrl)}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "var(--color-accent)", textDecoration: "none", fontWeight: 600 }}>Voir le book →</a>}
+              </div>
+            )}
             {verificationStatus === "PENDING" && profile.idDocumentUrl && (
               <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
                 <button onClick={doVerify} disabled={isPending} style={{ padding: "8px 16px", background: "var(--color-success)", color: "#fff", border: "none", borderRadius: "7px", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>

@@ -58,6 +58,8 @@ export default async function AdminParticipantDetailPage({ params }: { params: P
     idVerificationStatus: profile.idVerificationStatus,
     idVerifiedAt: profile.idVerifiedAt?.toISOString() ?? null,
     idDocumentUrl: profile.idDocumentUrl,
+    cvUrl: profile.cvUrl,
+    portfolioUrl: profile.portfolioUrl,
     participationCount: profile.participationCount,
     averageRating: profile.averageRating,
     isBlacklisted: profile.isBlacklisted,
