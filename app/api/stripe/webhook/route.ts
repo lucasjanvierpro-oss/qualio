@@ -2,18 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe/client";
 import { prisma } from "@/lib/prisma";
 import type Stripe from "stripe";
+import { connectStatus } from "@/lib/stripe/connect";
+
+// Deux points d'arrivée côté Stripe peuvent viser cette adresse : un pour les
+// événements du compte Rarelyst (achats de crédits), un pour ceux des comptes
+// connectés des participants. Chacun a sa clé de signature.
+function verify(body: string, sig: string): Stripe.Event | null {
+  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET].filter(Boolean) as string[];
+  for (const secret of secrets) {
+    try { return stripe.webhooks.constructEvent(body, sig, secret); } catch { /* clé suivante */ }
+  }
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const sig = request.headers.get("stripe-signature");
   if (!sig) return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
 
-  let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-  } catch {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
-  }
+  const event = verify(body, sig);
+  if (!event) return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
 
   try {
     switch (event.type) {
@@ -25,26 +33,31 @@ export async function POST(request: NextRequest) {
         const brandProfileId = meta.brandProfileId;
         if (!brandProfileId) break;
 
-        if (meta.type === "credit_pack") {
+        if (meta.type === "credit_pack" && session.payment_status === "paid") {
           const credits = parseInt(meta.credits ?? "0");
-          const profile = await prisma.brandProfile.findUnique({ where: { id: brandProfileId } });
-          if (!profile) break;
-          await prisma.$transaction([
-            prisma.brandProfile.update({
+          if (!(credits > 0)) break;
+          // Stripe renvoie parfois deux fois le même événement : un paiement
+          // ne crédite qu'une fois.
+          const paymentRef = (typeof session.payment_intent === "string" ? session.payment_intent : null) ?? session.id;
+          await prisma.$transaction(async (tx) => {
+            const already = await tx.creditTransaction.findFirst({ where: { stripePaymentIntentId: paymentRef }, select: { id: true } });
+            if (already) return;
+            const updated = await tx.brandProfile.update({
               where: { id: brandProfileId },
               data: { credits: { increment: credits } },
-            }),
-            prisma.creditTransaction.create({
+              select: { credits: true },
+            });
+            await tx.creditTransaction.create({
               data: {
                 brandProfileId,
                 type: "PURCHASE",
                 amount: credits,
-                balanceAfter: profile.credits + credits,
+                balanceAfter: updated.credits,
                 description: `Pack ${credits} crédits acheté`,
-                stripePaymentIntentId: session.payment_intent as string ?? null,
+                stripePaymentIntentId: paymentRef,
               },
-            }),
-          ]);
+            });
+          });
         }
         break;
       }
@@ -55,16 +68,7 @@ export async function POST(request: NextRequest) {
       case "account.updated": {
         const account = event.data.object as Stripe.Account;
 
-        const isActive =
-          account.charges_enabled &&
-          account.payouts_enabled &&
-          account.details_submitted;
-
-        const newStatus = isActive
-          ? "active"
-          : account.details_submitted
-          ? "restricted"
-          : "pending";
+        const newStatus = connectStatus(account);
 
         await prisma.participantProfile.updateMany({
           where: { stripeConnectId: account.id },

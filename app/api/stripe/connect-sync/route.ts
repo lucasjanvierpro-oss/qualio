@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe/client";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { connectStatus } from "@/lib/stripe/connect";
 
 // Called when participant returns from Stripe Connect onboarding (?connect=success)
 // Fetches the real account status from Stripe and updates the DB.
@@ -22,12 +23,7 @@ export async function POST() {
 
   const account = await stripe.accounts.retrieve(profile.stripeConnectId);
 
-  const isActive =
-    account.charges_enabled &&
-    account.payouts_enabled &&
-    account.details_submitted;
-
-  const newStatus = isActive ? "active" : account.details_submitted ? "restricted" : "pending";
+  const newStatus = connectStatus(account);
 
   await prisma.participantProfile.update({
     where: { id: profile.id },
