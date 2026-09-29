@@ -24,6 +24,8 @@
 }
 .bubble[data-side="below"]::before { top: -7px; }
 .bubble[data-side="above"]::before { bottom: -7px; }
+.bubble[data-side="inside"] { box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(140, 104, 242, 0.5); }
+.bubble[data-side="inside"]::before { display: none; }
 
 .count { font-size: 12px; font-weight: 700; color: #6a43db; }
 .title { display: block; margin-top: 4px; font-size: 17px; letter-spacing: -0.02em; }

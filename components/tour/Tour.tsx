@@ -64,7 +64,8 @@ export default function Tour({ id, steps, lang = "fr", delay = 700 }: { id: stri
     if (!step) return;
     const el = find(step.target);
     if (!el) return;
-    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    // Un élément plus haut que l'écran se montre par son début.
+    el.scrollIntoView({ block: el.offsetHeight > window.innerHeight * 0.55 ? "start" : "center", behavior: "smooth" });
     let raf = 0;
     const measure = () => { raf = 0; setRect(el.getBoundingClientRect()); };
     const onMove = () => { if (!raf) raf = requestAnimationFrame(measure); };
@@ -97,10 +98,15 @@ export default function Tour({ id, steps, lang = "fr", delay = 700 }: { id: stri
   );
   if (!step || !rect) return createPortal(replay, document.body);
 
-  // La bulle se place sous l'élément, ou au-dessus s'il n'y a pas la place.
+  // La bulle se place sous l'élément, au-dessus s'il n'y a pas la place, ou en
+  // bas de l'écran quand l'élément le remplit : elle reste toujours cliquable.
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const below = rect.bottom + 180 < vh || rect.top < 200;
+  const BUBBLE_H = 210;
+  const tall = rect.height > vh * 0.55;
+  const side = !tall && rect.bottom + PAD + 14 + BUBBLE_H < vh ? "below"
+    : !tall && rect.top - PAD - 14 - BUBBLE_H > 0 ? "above"
+    : "inside";
   const bubbleW = Math.min(340, vw - 24);
   const left = Math.max(12, Math.min(vw - bubbleW - 12, rect.left + rect.width / 2 - bubbleW / 2));
   const arrowX = Math.max(18, Math.min(bubbleW - 18, rect.left + rect.width / 2 - left));
@@ -113,10 +119,10 @@ export default function Tour({ id, steps, lang = "fr", delay = 700 }: { id: stri
       />
       <div
         className={css.bubble}
-        data-side={below ? "below" : "above"}
+        data-side={side}
         style={{
           left, width: bubbleW,
-          ...(below ? { top: Math.min(vh - 20, rect.bottom + PAD + 14) } : { bottom: vh - rect.top + PAD + 14 }),
+          ...(side === "below" ? { top: rect.bottom + PAD + 14 } : side === "above" ? { bottom: vh - rect.top + PAD + 14 } : { bottom: 20 }),
           ["--ax" as string]: `${arrowX}px`,
         }}
       >
