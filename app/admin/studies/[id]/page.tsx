@@ -63,6 +63,7 @@ export default async function AdminStudyDetailPage({ params }: { params: Promise
     objective: study.objective,
     deadline: study.deadlineAt?.toISOString() ?? null,
     duration: study.interviewDuration,
+    mode: study.mode,
     rewardAmount: study.rewardAmount,
     rewardType: study.rewardType,
     criteria: {

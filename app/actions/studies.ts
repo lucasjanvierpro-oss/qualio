@@ -81,7 +81,9 @@ export async function createStudy(data: StudyInput): Promise<{ studyId: string }
       deadlineAt: deadline && !Number.isNaN(deadline.getTime()) ? deadline : null,
       interviewDuration: duration,
       // Montant de secours seulement : le vrai se fixe par profil au moment de la présélection.
-      rewardAmount: cfg.tiers.averti.participantPayCents,
+      rewardAmount: isAsync
+        ? Math.round((cfg.tiers.averti.participantPayCents * cfg.asyncFactor) / 500) * 500
+        : cfg.tiers.averti.participantPayCents,
       rewardType: "CASH",
       brief: clean(data.brief, 80_000) || null,
       briefFileName: data.briefFileName ? clean(data.briefFileName, 160) : null,

@@ -60,6 +60,8 @@ type Study = {
   objective: string;
   deadline: string | null;
   duration: number;
+  /** "async" : entretiens en autonomie (bêta). */
+  mode?: string;
   rewardAmount: number;
   rewardType: string;
   criteria: Criteria;
@@ -541,7 +543,7 @@ export default function AdminStudyDetailClient({
         {[
           { label: "Participants cible", value: `${confirmed}/${study.target}` },
           { label: "Date limite", value: study.deadline ? new Date(study.deadline).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "—" },
-          { label: "Durée entretien", value: `${study.duration} min` },
+          { label: study.mode === "async" ? "En autonomie · bêta" : "Durée entretien", value: study.mode === "async" ? `≈ ${study.duration} min` : `${study.duration} min` },
           { label: "Récompense", value: `${(study.rewardAmount / 100).toFixed(0)}€ ${study.rewardType === "CASH" ? "cash" : "voucher"}` },
         ].map((stat) => (
           <div key={stat.label} style={{ background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "8px", padding: "14px 18px" }}>
