@@ -140,11 +140,18 @@ export function Loupe({ lang }: { lang: Lang }) {
     return () => clearTimeout(t);
   }, [say]);
 
+  // La section suivante se cherche d'après la position réelle de la page,
+  // pas d'après la dernière bulle : on a pu remonter entre-temps.
   function next() {
-    const i = SECTIONS.indexOf(current.current);
-    const id = SECTIONS[i + 1];
-    if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    else window.scrollTo({ top: 0, behavior: "smooth" });
+    const y = window.scrollY + 120;
+    for (const id of SECTIONS) {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top + window.scrollY > y) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   if (reduced) return null;
