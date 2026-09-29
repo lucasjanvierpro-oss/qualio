@@ -237,6 +237,39 @@ export async function sendPayoutFailedAdmin(participantName: string, amountCents
   }));
 }
 
+/** Une demande de démo arrive depuis la page d'accueil. */
+export async function sendDemoRequestAdmin(d: { firstName: string; lastName?: string | null; email: string; company: string; role?: string | null; topic?: string | null; timing?: string | null; lang: string }) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return null;
+  const rows = [
+    ["Qui", `${d.firstName} ${d.lastName ?? ""}`.trim()],
+    ["Email", d.email],
+    ["Maison", d.company],
+    ["Fonction", d.role || "—"],
+    ["Quand", d.timing || "—"],
+    ["Langue", d.lang === "en" ? "anglais" : "français"],
+  ].map(([k, v]) => `<div><span style="color:${INK_2}">${k} :</span> <strong>${esc(v)}</strong></div>`).join("");
+  return send(adminEmail, `Démo demandée : ${d.company}`, layout({
+    title: `${esc(d.firstName)} veut une démo`,
+    body: d.topic ? `Son sujet : <strong style="color:${INK}">${esc(d.topic)}</strong>` : "Pas de sujet précisé.",
+    aside: rows,
+    cta: { label: "Voir les demandes", href: `${APP_URL}/admin/demos` },
+  }));
+}
+
+/** Accusé de réception envoyé à la personne qui demande une démo. */
+export async function sendDemoConfirmation(to: string, firstName: string, lang: "fr" | "en") {
+  return lang === "en"
+    ? send(to, "Your Rarelyst demo", layout({
+      title: `Thank you, ${esc(firstName)}.`,
+      body: "We've received your request. We'll write to you shortly to set a time for a twenty-minute video call, on your own topic.",
+    }))
+    : send(to, "Votre démo Rarelyst", layout({
+      title: `Merci, ${esc(firstName)}.`,
+      body: "Votre demande est bien arrivée. Nous vous écrivons très vite pour caler vingt minutes en visio, sur votre propre sujet.",
+    }));
+}
+
 export async function sendAvailabilityProposed(to: string, contactFirstName: string, participantFirstName: string, studyTitle: string, studyId: string, slots: Date[]) {
   const list = slots.map((d) => `<li style="margin:4px 0;text-transform:capitalize">${esc(fmtDateTime(d))}</li>`).join("");
   return send(to, `${participantFirstName} propose ses disponibilités`, layout({

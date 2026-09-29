@@ -668,6 +668,25 @@ model Payout {
   @@map("payouts")
 }
 
+// Une demande de démo laissée sur la page d'accueil.
+model DemoRequest {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String?
+  email     String
+  company   String
+  role      String?
+  topic     String?
+  timing    String?
+  lang      String   @default("fr")
+  status    String   @default("new") // new | contacted | done
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("demo_requests")
+}
+
 // Laboratoire : une marque inventée par Claude écrit un brief, notre lecteur
 // de brief le traite, puis la marque réagit. Sert à découvrir ce que Rarelyst
 // comprend mal ou ne sait pas encore faire.

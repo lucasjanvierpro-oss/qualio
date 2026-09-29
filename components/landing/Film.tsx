@@ -19,15 +19,19 @@ type Step = [at: number, target: string, click?: boolean];
 
 type Scene = { id: SceneId; dur: number; cursor: Step[] };
 
-// Minutage et curseur ; les textes sont dans filmCopy.ts.
+// Minutage et curseur ; les textes sont dans filmCopy.ts. Les durées sont en
+// « secondes de film » : l'horloge les parcourt SPEED fois plus vite.
 export const SCENES: Scene[] = [
-  { id: "brief", dur: 8, cursor: [[0, "file"], [1.2, "text"], [6.7, "send"], [7.1, "send", true]] },
-  { id: "profils", dur: 8.4, cursor: [[0.2, "keep-0"], [2.9, "keep-0", true], [3.3, "keep-2"], [3.8, "keep-2", true], [4.2, "keep-3"], [4.7, "keep-3", true], [5.9, "pay"], [6.5, "pay", true]] },
-  { id: "date", dur: 6, cursor: [[0.3, "slot-1"], [2.2, "slot-1", true]] },
-  { id: "visio", dur: 11, cursor: [] },
-  { id: "synthese", dur: 8.4, cursor: [[3.9, "doc"]] },
-  { id: "decision", dur: 6.4, cursor: [] },
+  { id: "brief", dur: 7, cursor: [[0, "file"], [0.9, "text"], [5.8, "send"], [6.2, "send", true]] },
+  { id: "profils", dur: 7.8, cursor: [[0.2, "keep-0"], [2.9, "keep-0", true], [3.3, "keep-2"], [3.8, "keep-2", true], [4.2, "keep-3"], [4.7, "keep-3", true], [5.9, "pay"], [6.5, "pay", true]] },
+  { id: "date", dur: 5.4, cursor: [[0.3, "slot-1"], [2.2, "slot-1", true]] },
+  { id: "visio", dur: 10.8, cursor: [] },
+  { id: "synthese", dur: 7.2, cursor: [[3.9, "doc"]] },
+  { id: "decision", dur: 5.4, cursor: [] },
 ];
+
+/** Le film entier dure une trentaine de secondes. */
+export const SPEED = 1.45;
 
 const Copy = createContext<FilmCopy>(FILM_COPY.fr);
 const useCopy = () => useContext(Copy);
@@ -35,11 +39,13 @@ const useCopy = () => useContext(Copy);
 type Profile = { initial: string; tier: "averti" | "initie" | "rare"; credits: number; medals: BadgeId[]; tone: string };
 
 const PROFILES: Profile[] = [
-  { initial: "C", tier: "initie", credits: 69, medals: ["verifie", "linkedin", "achat"], tone: "#c98e68" },
-  { initial: "I", tier: "rare", credits: 130, medals: ["verifie", "emploi", "linkedin"], tone: "#8a6bd8" },
-  { initial: "S", tier: "initie", credits: 69, medals: ["verifie", "reseaux", "portfolio"], tone: "#d07a5c" },
+  { initial: "C", tier: "initie", credits: 69, medals: ["verifie", "linkedin"], tone: "#c98e68" },
+  { initial: "I", tier: "rare", credits: 130, medals: ["verifie", "emploi"], tone: "#8a6bd8" },
+  { initial: "S", tier: "initie", credits: 69, medals: ["verifie", "portfolio"], tone: "#d07a5c" },
   { initial: "J", tier: "averti", credits: 39, medals: ["verifie", "cv"], tone: "#5d8f7a" },
 ];
+// Trois cartes à l'écran, pas quatre : on lit mieux ce qui se passe.
+const SHOWN = [0, 2, 3];
 const KEPT_AT = [3.0, null, 3.9, 4.8];
 const START_BALANCE = 400;
 const SPENT = 69 + 69 + 39;
@@ -66,8 +72,12 @@ export function subscribeReducedMotion(onChange: () => void) {
 export const getReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 export const getReducedMotionServer = () => false;
 
-export default function Film({ lang = "fr" }: { lang?: Lang }) {
-  const copy = FILM_COPY[lang];
+/**
+ * L'horloge du film : elle ne tourne que lorsque le film est à l'écran, et se
+ * met en pause au survol. Partagée par la version à onglets (téléphone) et la
+ * version à étapes (grand écran, HowItWorks).
+ */
+export function useFilmClock() {
   const reduced = useSyncExternalStore(subscribeReducedMotion, getReducedMotion, getReducedMotionServer);
   const [frame, setFrame] = useState({ scene: 0, t: 0 });
   const [visible, setVisible] = useState(false);
@@ -76,8 +86,7 @@ export default function Film({ lang = "fr" }: { lang?: Lang }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const running = !reduced && visible && !held;
 
-  // Le film ne tourne que visible à l'écran : inutile de chauffer un téléphone
-  // pour une scène que personne ne regarde.
+  // Inutile de chauffer un téléphone pour une scène que personne ne regarde.
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
@@ -92,7 +101,7 @@ export default function Film({ lang = "fr" }: { lang?: Lang }) {
     let last = performance.now();
     let acc = 0;
     const loop = (now: number) => {
-      const dt = Math.min(0.1, (now - last) / 1000);
+      const dt = Math.min(0.1, (now - last) / 1000) * SPEED;
       last = now;
       const c = clock.current;
       c.t += dt;
@@ -103,7 +112,7 @@ export default function Film({ lang = "fr" }: { lang?: Lang }) {
         acc = 1;
       }
       // Vingt images par seconde suffisent : le reste est porté par les transitions CSS.
-      if (acc >= 0.05) {
+      if (acc >= 0.05 * SPEED) {
         acc = 0;
         setFrame({ scene: c.scene, t: c.t });
       }
@@ -121,6 +130,13 @@ export default function Film({ lang = "fr" }: { lang?: Lang }) {
   const scene = SCENES[frame.scene];
   // Sans animation, chaque scène s'affiche dans son état final.
   const t = reduced ? scene.dur : frame.t;
+  return { sceneIndex: frame.scene, t, reduced, held, setHeld, jump, rootRef };
+}
+
+export default function Film({ lang = "fr" }: { lang?: Lang }) {
+  const copy = FILM_COPY[lang];
+  const { sceneIndex, t, reduced, held, setHeld, jump, rootRef } = useFilmClock();
+  const scene = SCENES[sceneIndex];
 
   return (
     <div className={f.film} ref={rootRef}>
@@ -130,23 +146,23 @@ export default function Film({ lang = "fr" }: { lang?: Lang }) {
             key={s.id}
             type="button"
             role="tab"
-            aria-selected={i === frame.scene}
+            aria-selected={i === sceneIndex}
             className={f.tab}
-            data-state={i < frame.scene ? "past" : i === frame.scene ? "now" : "next"}
+            data-state={i < sceneIndex ? "past" : i === sceneIndex ? "now" : "next"}
             onClick={() => jump(i)}
           >
             <span className={f.tabNum}>0{i + 1}</span>
             <span className={f.tabLabel}>{copy.scenes[s.id].label}</span>
-            <span className={f.tabTrack}><i style={{ width: `${i < frame.scene ? 100 : i === frame.scene ? (t / s.dur) * 100 : 0}%` }} /></span>
+            <span className={f.tabTrack}><i style={{ width: `${i < sceneIndex ? 100 : i === sceneIndex ? (t / s.dur) * 100 : 0}%` }} /></span>
           </button>
         ))}
       </div>
 
       <div onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)}>
-        <FilmWindow lang={lang} sceneIndex={frame.scene} t={t} reduced={reduced} status={held && !reduced ? copy.paused : undefined} />
+        <FilmWindow lang={lang} sceneIndex={sceneIndex} t={t} reduced={reduced} status={held && !reduced ? copy.paused : undefined} />
       </div>
 
-      <p className={f.caption}><b>0{frame.scene + 1}</b>{copy.scenes[scene.id].caption}</p>
+      <p className={f.caption}><b>0{sceneIndex + 1}</b>{copy.scenes[scene.id].caption}</p>
     </div>
   );
 }
@@ -226,13 +242,12 @@ function Pane({ title, aside, children, className }: { title: string; aside?: Re
 // ── 1. Brief ───────────────────────────────────────────────────
 function BriefScene({ t }: { t: number }) {
   const c = useCopy().brief;
-  const text = typed(c.text, t, 1.4, 46);
-  const reading = at(t, 3.6) && !at(t, 5.0);
+  const text = typed(c.text, t, 1.0, 64);
+  const reading = at(t, 3.7) && !at(t, 4.6);
   const rows: { at: number; k: string; v: React.ReactNode }[] = [
-    { at: 5.0, k: c.rows.profiles, v: <span className={f.chips}><i>{c.rows.chips[0]}</i><i>{c.rows.chips[1]}</i></span> },
-    { at: 5.4, k: c.rows.format, v: c.rows.formatV },
-    { at: 5.8, k: c.rows.decide, v: c.rows.decideV },
-    { at: 6.2, k: c.rows.budget, v: <span>{c.rows.budgetV} <small>{c.rows.budgetSub}</small></span> },
+    { at: 4.6, k: c.rows.profiles, v: <span className={f.chips}><i>{c.rows.chips[0]}</i><i>{c.rows.chips[1]}</i></span> },
+    { at: 5.0, k: c.rows.format, v: c.rows.formatV },
+    { at: 5.4, k: c.rows.decide, v: c.rows.decideV },
   ];
   return (
     <div className={f.brief}>
@@ -246,16 +261,16 @@ function BriefScene({ t }: { t: number }) {
           ) : <span className={f.muted}>{c.drop}</span>}
         </div>
         <div className={f.textarea} data-cursor="text">
-          {text}{t < 5.6 && <i className={f.caret} />}
+          {text}{t < 4.4 && <i className={f.caret} />}
         </div>
         <div className={f.composerFoot}>
           <span className={f.muted}>{c.enough}</span>
-          <span className={f.btnInk} data-cursor="send" data-pressed={at(t, 7.1)}>{at(t, 7.1) ? c.sent : c.send}</span>
+          <span className={f.btnInk} data-cursor="send" data-pressed={at(t, 6.2)}>{at(t, 6.2) ? c.sent : c.send}</span>
         </div>
       </Pane>
 
       <Pane title={c.understood} className={f.extract}
-        aside={at(t, 5.0) ? <span className={f.ok}>{c.readIn}</span> : reading ? <span className={f.reading}>{c.reading}</span> : null}>
+        aside={at(t, 4.6) ? <span className={f.ok}>{c.readIn}</span> : reading ? <span className={f.reading}>{c.reading}</span> : null}>
         <dl className={f.facts}>
           {rows.map((r) => (
             <div key={r.k} className={f.fact}>
@@ -284,10 +299,11 @@ function ProfilesScene({ t }: { t: number }) {
         <span className={f.balance} data-moving={at(t, 6.6) && !at(t, 7.4)}>{c.balance} <b>{balance}</b> {c.credits}</span>
       </header>
       <div className={f.cards}>
-        {PROFILES.map((p, i) => {
+        {SHOWN.map((i, k) => {
+          const p = PROFILES[i];
           const kept = KEPT_AT[i] !== null && at(t, KEPT_AT[i]!);
           const txt = c.list[i];
-          return at(t, 0.2 + i * 0.3) ? (
+          return at(t, 0.2 + k * 0.3) ? (
             <article key={txt.name} className={`${f.pcard} ${f.pop}`} data-kept={kept} data-dim={paid && !kept}>
               <div className={f.pTop}>
                 <span className={f.pAv} style={{ background: p.tone }}>{p.initial}</span>
@@ -366,7 +382,7 @@ function DateScene({ t }: { t: number }) {
 
 // ── 4. Visio ───────────────────────────────────────────────────
 // Moment où chaque question du guide est cochée.
-const GUIDE_DONE = [0, 6.6, 10.2, 99];
+const GUIDE_DONE = [0, 6.6, 10.2];
 
 function CallScene({ t }: { t: number }) {
   const c = useCopy().call;
@@ -412,11 +428,6 @@ function CallScene({ t }: { t: number }) {
             </li>
           ))}
         </ol>
-        <div className={f.person}>
-          <b>{c.whyTitle}</b>
-          <p>{c.whyText}</p>
-          <span className={f.medalsRow}><Medallion id="verifie" size={26} /><Medallion id="linkedin" size={26} /><Medallion id="achat" size={26} /></span>
-        </div>
       </aside>
     </div>
   );
@@ -450,14 +461,6 @@ function SynthesisScene({ t }: { t: number }) {
             <span className={f.dl}>{ready ? c.open : ""}</span>
           </li>
         </ul>
-        <div className={f.moments}>
-          <b>{c.excerpts}</b>
-          {[
-            { at: 1.0, time: "12:36", text: c.moments[0] },
-            { at: 1.3, time: "12:41", text: c.moments[1] },
-            { at: 1.6, time: "31:08", text: c.moments[2] },
-          ].map((m) => <p key={m.time} data-on={at(t, m.at)}><time>{m.time}</time>{q(m.text)}</p>)}
-        </div>
       </Pane>
       <article className={f.doc} data-in={at(t, 4.1)} data-cursor="doc">
         <span className={f.docKicker}>{c.kicker}</span>
@@ -465,14 +468,9 @@ function SynthesisScene({ t }: { t: number }) {
         <ol className={f.insights}>
           {insights.map((i) => <li key={i.n} data-on={at(t, i.at)}><b>{i.n}</b>{i.text}</li>)}
         </ol>
-        <blockquote className={f.verbatim} data-on={at(t, 6.4)}>
+        <blockquote className={f.verbatim} data-on={at(t, 6.2)}>
           {q(c.verbatim)}<cite>{c.cite}</cite>
         </blockquote>
-        <div className={f.themes} data-on={at(t, 6.9)}>
-          {[{ n: c.themes[0], v: 5 }, { n: c.themes[1], v: 4 }, { n: c.themes[2], v: 2 }].map((x) => (
-            <span key={x.n}><small>{x.n}</small><i style={{ width: at(t, 6.9) ? `${x.v * 20}%` : 0 }} /></span>
-          ))}
-        </div>
       </article>
     </div>
   );
@@ -497,17 +495,11 @@ function DecisionScene({ t }: { t: number }) {
             </li>
           ) : <li key={d.text} className={f.decGhost} />)}
         </ul>
-        <div className={f.tally} data-on={at(t, 3.6)}>
-          <span><b>{c.tally[0]}</b><small>{c.tally[1]}</small></span>
-          <span><b>6</b><small>{c.tally[2]}</small></span>
-          <span><b>3</b><small>{c.tally[3]}</small></span>
-        </div>
       </Pane>
       <div className={f.quotes}>
         {[
-          { at: 3.4, ...c.quotes[0] },
-          { at: 3.9, ...c.quotes[1] },
-          { at: 4.4, ...c.quotes[2] },
+          { at: 3.2, ...c.quotes[0] },
+          { at: 3.7, ...c.quotes[1] },
         ].map((v) => (
           <blockquote key={v.q} className={f.qcard} data-on={at(t, v.at)}>{q(v.q)}<cite>{v.who}</cite></blockquote>
         ))}

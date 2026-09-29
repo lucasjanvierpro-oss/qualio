@@ -121,3 +121,10 @@ const EN: Content = {
 };
 
 export const CONTENT: Record<Lang, Content> = { fr: FR, en: EN };
+
+/**
+ * Logos des maisons clientes, affichés sous l'ouverture. Vide tant qu'aucune
+ * maison n'a donné son accord écrit : un logo sans accord laisserait croire à
+ * un partenariat qui n'existe pas. Fichiers dans /public/clients/.
+ */
+export const TRUSTED: { name: string; logo: string; width: number; height: number }[] = [];

@@ -30,6 +30,23 @@ export type LandingCopy = {
   faqTitle: { kicker: string; h2: string };
   faq: (tiers: LandingTier[]) => Faq[];
   footer: { h2: string; lead: string; links: { pricing: string; login: string; contact: string; privacy: string; terms: string; legal: string } };
+  announce: { text: string; link: string; close: string };
+  demoNav: string;
+  /** Ce que dit la loupe en arrivant sur chaque section (clé : id de la section). */
+  loupe: Record<string, string>;
+  loupeAria: string;
+  compare: { kicker: string; h2: string; lead: string; without: string; with: string; rows: [string, string, string][]; cta: string };
+  langs: { kicker: string; h2: string; lead: string; live: string; soon: string; ask: string; names: Record<string, string> };
+  demo: {
+    kicker: string; h2: string; lead: string; points: string[];
+    form: {
+      first: string; last: string; email: string; company: string; role: string; topic: string;
+      when: string; whenOpts: [string, string, string]; submit: string; sending: string;
+      sent: string; error: string; consent: string; required: string;
+    };
+  };
+  faqAside: { title: string; text: string; demo: string };
+  trust: string;
 };
 
 const FR: LandingCopy = {
@@ -43,11 +60,11 @@ const FR: LandingCopy = {
   },
   lanes: { foot: "Le genre de profils que nous recrutons.", rare: "Rare", unfindable: "Introuvable", aria: "Le genre de profils que nous recrutons" },
   how: {
-    kicker: "Comment ça marche", h2: "Du brief à la décision, sans rien organiser.",
+    kicker: "Comment ça marche", h2: "Du brief à la décision,|sans rien organiser.",
     lead: "Vous dites qui vous voulez entendre. Nous trouvons les personnes, organisons les visios et vous rendons une synthèse qui répond à vos questions.",
   },
   profiles: {
-    kicker: "Les profils", h2: "Un panel vous donne une tranche d'âge. Nous, une personne.",
+    kicker: "Les profils", h2: "Un panel vous donne une tranche d'âge.|Nous, une personne.",
     lead: "Chaque profil arrive avec ses preuves : ce qui a été vérifié, et pourquoi il répond à votre brief.",
     usual: "Ce qu'on vous livre d'habitude", boxes: ["Femme", "25–35 ans", "CSP+", "Île-de-France", "Intéressée par la mode"],
     verdict: "Cinq cases cochées. Aucune idée de ce que cette personne sait, achète ou pense.",
@@ -56,7 +73,7 @@ const FR: LandingCopy = {
     proofsLead: "Un profil ne se déclare pas certifié : il le devient, preuve après preuve. Plus il est prouvé, plus il est demandé.",
   },
   deliver: {
-    kicker: "Le livrable", h2: "Une synthèse qui répond à vos questions.",
+    kicker: "Le livrable", h2: "Une synthèse qui répond|à vos questions.",
     lead: "Dans le brief, vous dites ce que l'étude doit trancher. La synthèse y répond, avec le nombre de personnes qui vont dans ce sens et leurs mots exacts.",
     included: [
       ["La vidéo de chaque entretien", "Disponible à la fin de l'appel."],
@@ -74,7 +91,7 @@ const FR: LandingCopy = {
     quote: (s) => `« ${s} »`,
   },
   pricing: {
-    kicker: "Tarifs", h2: "Vous payez un profil. Pas un abonnement.",
+    kicker: "Tarifs", h2: "Vous payez un profil.|Pas un abonnement.",
     lead: "Un client averti ne coûte pas ce que coûte une ancienne acheteuse de grand magasin. Le prix de chaque profil s'affiche avant que vous le gardiez.",
     credits: "crédits", euros: (e) => `soit ${e} € HT l'entretien de 45 min`,
     features: ["Profil vérifié et relu par l'équipe", "Visio enregistrée et transcrite", "Synthèse de l'étude comprise"],
@@ -82,7 +99,7 @@ const FR: LandingCopy = {
     cta: "Demander une étude pilote", all: "Tous les tarifs et les packs de crédits",
   },
   privacy: {
-    kicker: "Confidentialité", h2: "Vos projets restent entre vous et nous.",
+    kicker: "Confidentialité", h2: "Vos projets restent|entre vous et nous.",
     items: [
       ["Anonyme jusqu'à l'entretien.", "Les participants voient le poinçon d'une maison vérifiée, pas votre nom."],
       ["Votre brief n'entraîne aucune IA.", "Le service que nous utilisons l'exclut par contrat."],
@@ -90,12 +107,12 @@ const FR: LandingCopy = {
     ],
   },
   people: {
-    kicker: "Pour les participants", h2: "Votre œil vaut quelque chose.",
+    kicker: "Pour les participants", h2: "Votre œil|vaut quelque chose.",
     lead: "Styliste, acheteuse, vendeuse en boutique, collectionneur : les marques vous paient pour votre regard, avant leurs lancements. Plus votre profil est prouvé et bien noté, mieux vous êtes payé.",
     pay: (a, b) => `${a} à ${b} €`, payLabel: "par entretien de 45 min", paid: "48 h", paidLabel: "pour être payé",
     ref: "50 €", refLabel: "par ami qui fait son premier entretien", cta: "Rejoindre le panel",
   },
-  faqTitle: { kicker: "Questions", h2: "Ce qu'on nous demande." },
+  faqTitle: { kicker: "Questions", h2: "Ce qu'on|nous demande." },
   faq: (tiers) => [
     { q: "Qui mène les entretiens ?", a: "Vous, avec votre guide d'entretien affiché à côté de la visio. Nous recrutons, organisons, enregistrons, transcrivons et rédigeons la synthèse." },
     { q: "Comment savez-vous qu'un profil est réel ?", a: "Chaque profil porte ses preuves : identité, LinkedIn, emploi confirmé par un code sur l'adresse professionnelle, CV, book. L'équipe relit chaque profil avant de vous le proposer." },
@@ -103,14 +120,69 @@ const FR: LandingCopy = {
     { q: "Et si un participant ne vient pas ?", a: "Vos crédits reviennent automatiquement sur votre compte, et nous vous proposons un autre profil." },
     { q: "Mes projets restent-ils confidentiels ?", a: "Les participants voient votre poinçon de maison vérifiée, pas votre nom, avant l'entretien. Votre brief ne sert jamais à entraîner une IA, et les vidéos ne sont plus accessibles après 90 jours." },
     { q: "En combien de temps ?", a: "Vos premiers profils sous 72 heures. Les participants proposent leurs créneaux, vous en choisissez un : l'entretien peut avoir lieu dans la semaine." },
-    { q: "Quels secteurs ?", a: "Mode, luxe, beauté, sneakers, seconde main, lifestyle. En français ou en anglais." },
+    { q: "Quels secteurs ?", a: "Mode, luxe, beauté, joaillerie, sneakers, seconde main, art de vivre." },
+    { q: "Dans quelles langues ?", a: "En français et en anglais aujourd'hui : entretiens, site et synthèses. Les autres langues ouvrent une à une ; dites-nous celle qu'il vous faut, elle passe en tête de liste." },
+    { q: "Où intervient l'IA ?", a: "Elle lit votre brief, prépare le guide d'entretien, analyse CV et books, transcrit et rédige la synthèse. Les entretiens se font avec de vraies personnes, et l'équipe relit chaque profil avant de vous le proposer." },
     { q: "Faut-il s'engager ?", a: "Non. Pas d'abonnement : vous achetez des crédits et ne les dépensez que sur les profils que vous gardez." },
+    { q: "Peut-on voir une démo ?", a: "Oui : vingt minutes en visio, sur votre propre sujet. Le formulaire est juste au-dessus." },
   ],
   footer: {
     h2: "Dites-nous qui vous voulez entendre.",
     lead: "Quelques phrases suffisent. Vous créez votre compte, votre brief vous attend, et vos premiers profils arrivent sous 72 heures.",
     links: { pricing: "Tarifs", login: "Connexion", contact: "Contact", privacy: "Confidentialité", terms: "Conditions", legal: "Mentions légales" },
   },
+  announce: { text: "Nouveau · Les entretiens en anglais sont ouverts, d'autres langues arrivent.", link: "Voir les langues", close: "Fermer" },
+  demoNav: "Réserver une démo",
+  loupe: {
+    top: "Bonjour ! Je vous fais visiter ?",
+    comment: "Une étude entière, en trente secondes.",
+    profils: "Chaque profil passe sous ma lentille.",
+    livrable: "Des réponses, pas un compte rendu.",
+    avec: "Moins de relances, plus de réponses.",
+    tarifs: "Vous ne payez que les profils gardés.",
+    confidentialite: "Motus : votre nom reste caché.",
+    langues: "Français, anglais… et bientôt d'autres.",
+    participer: "Vous avez l'œil ? Rejoignez le panel.",
+    demo: "Vingt minutes, sur votre propre sujet.",
+    questions: "Une question ? Je l'ai sûrement vue passer.",
+  },
+  loupeAria: "Aller à la section suivante",
+  compare: {
+    kicker: "Avant, après", h2: "Moins de relances.|Plus de réponses.",
+    lead: "Ce que demande aujourd'hui une série d'entretiens avec les bonnes personnes, et ce qu'il en reste avec Rarelyst.",
+    without: "Sans Rarelyst", with: "Avec Rarelyst",
+    rows: [
+      ["Trouver les profils", "Des semaines de réseau, de posts et de relances", "Vos premiers profils sous 72 h"],
+      ["Savoir qu'ils sont réels", "Sur parole", "Identité, emploi et LinkedIn vérifiés"],
+      ["Organiser", "E-mails, agendas, liens de visio", "Ils proposent leurs créneaux, tout part seul"],
+      ["Après l'entretien", "Des heures de retranscription", "Vidéo, transcription et synthèse prêtes"],
+      ["Payer", "Un recrutement facturé d'avance", "Seulement les profils que vous gardez"],
+    ],
+    cta: "Essayer sur une étude pilote",
+  },
+  langs: {
+    kicker: "Langues", h2: "Français et anglais.|Les autres arrivent.",
+    lead: "Entretiens, site et synthèses sont disponibles en français et en anglais. Nous ouvrons les autres langues une à une, en recrutant des participants dont c'est la langue maternelle.",
+    live: "Disponible", soon: "Bientôt", ask: "Une langue vous manque ? Dites-le-nous : elle passe en tête de liste.",
+    names: { fr: "Français", gb: "Anglais", it: "Italien", es: "Espagnol", de: "Allemand", cn: "Chinois", jp: "Japonais", kr: "Coréen", ae: "Arabe" },
+  },
+  demo: {
+    kicker: "Démo", h2: "Voyez Rarelyst|sur votre propre sujet.",
+    lead: "Vingt minutes en visio. Vous nous donnez un vrai sujet ; nous vous montrons comment nous le lisons, quels profils nous irions chercher et ce que vous recevriez à la fin.",
+    points: ["Votre sujet, pas une démo générique", "Les profils que nous trouverions pour vous", "Sans engagement"],
+    form: {
+      first: "Prénom", last: "Nom", email: "Email professionnel", company: "Maison ou entreprise", role: "Votre fonction",
+      topic: "Votre sujet, en une phrase (facultatif)",
+      when: "Quand vous arrange-t-il ?", whenOpts: ["Cette semaine", "La semaine prochaine", "Plus tard"],
+      submit: "Réserver ma démo", sending: "Envoi…",
+      sent: "C'est noté. Nous vous écrivons très vite pour caler le créneau.",
+      error: "L'envoi n'a pas abouti. Réessayez, ou écrivez-nous à contact@rarelyst.co.",
+      consent: "Vos coordonnées servent uniquement à vous recontacter.",
+      required: "Prénom, email et entreprise sont nécessaires.",
+    },
+  },
+  faqAside: { title: "Une autre question ?", text: "Écrivez-nous, ou prenons vingt minutes ensemble.", demo: "Réserver une démo" },
+  trust: "Ils nous font confiance",
 };
 
 const EN: LandingCopy = {
@@ -124,11 +196,11 @@ const EN: LandingCopy = {
   },
   lanes: { foot: "The kind of people we recruit.", rare: "Rare", unfindable: "Unfindable", aria: "The kind of people we recruit" },
   how: {
-    kicker: "How it works", h2: "From brief to decision, with nothing to organise.",
+    kicker: "How it works", h2: "From brief to decision,|with nothing to organise.",
     lead: "Tell us who you want to hear from. We find the people, set up the video calls and hand you a synthesis that answers your questions.",
   },
   profiles: {
-    kicker: "The profiles", h2: "A panel gives you an age bracket. We give you a person.",
+    kicker: "The profiles", h2: "A panel gives you an age bracket.|We give you a person.",
     lead: "Every profile comes with its proof: what was verified, and why it fits your brief.",
     usual: "What you usually get", boxes: ["Woman", "25–35", "Upper-middle class", "Paris region", "Interested in fashion"],
     verdict: "Five boxes ticked. No idea what this person knows, buys or thinks.",
@@ -137,7 +209,7 @@ const EN: LandingCopy = {
     proofsLead: "A profile doesn't claim to be certified: it earns it, one proof at a time. The more proven, the more in demand.",
   },
   deliver: {
-    kicker: "The deliverable", h2: "A synthesis that answers your questions.",
+    kicker: "The deliverable", h2: "A synthesis that answers|your questions.",
     lead: "In your brief, you say what the study must decide. The synthesis answers it, with how many people lean that way and their exact words.",
     included: [
       ["The video of every interview", "Ready when the call ends."],
@@ -155,7 +227,7 @@ const EN: LandingCopy = {
     quote: (s) => `“${s}”`,
   },
   pricing: {
-    kicker: "Pricing", h2: "You pay per profile. Not a subscription.",
+    kicker: "Pricing", h2: "You pay per profile.|Not a subscription.",
     lead: "A savvy customer doesn't cost what a former department store buyer does. Each profile's price is shown before you keep it.",
     credits: "credits", euros: (e) => `i.e. €${e} excl. VAT per 45-min interview`,
     features: ["Profile verified and reviewed by our team", "Recorded and transcribed video call", "Study synthesis included"],
@@ -168,7 +240,7 @@ const EN: LandingCopy = {
     },
   },
   privacy: {
-    kicker: "Confidentiality", h2: "Your projects stay between you and us.",
+    kicker: "Confidentiality", h2: "Your projects stay|between you and us.",
     items: [
       ["Anonymous until the interview.", "Participants see a verified house's hallmark, not your name."],
       ["Your brief trains no AI.", "Our provider rules it out contractually."],
@@ -176,12 +248,12 @@ const EN: LandingCopy = {
     ],
   },
   people: {
-    kicker: "For participants", h2: "Your eye is worth something.",
+    kicker: "For participants", h2: "Your eye|is worth something.",
     lead: "Stylist, buyer, boutique associate, collector: brands pay for your perspective before they launch. The more proven and well-rated your profile, the better you're paid.",
     pay: (a, b) => `€${a} to €${b}`, payLabel: "per 45-min interview", paid: "48 h", paidLabel: "to get paid",
     ref: "€50", refLabel: "per friend who does their first interview", cta: "Join the panel",
   },
-  faqTitle: { kicker: "FAQ", h2: "What people ask us." },
+  faqTitle: { kicker: "FAQ", h2: "What people|ask us." },
   faq: (tiers) => [
     { q: "Who runs the interviews?", a: "You do, with your interview guide shown next to the video call. We recruit, schedule, record, transcribe and write the synthesis." },
     { q: "How do you know a profile is real?", a: "Every profile carries its proof: ID, LinkedIn, employment confirmed by a code sent to a work email, CV, portfolio. Our team reviews each profile before suggesting it." },
@@ -189,14 +261,69 @@ const EN: LandingCopy = {
     { q: "What if a participant doesn't show up?", a: "Your credits come back to your account automatically, and we suggest another profile." },
     { q: "Do my projects stay confidential?", a: "Before the interview, participants see your verified house's hallmark, not your name. Your brief never trains an AI, and videos are no longer accessible after 90 days." },
     { q: "How fast?", a: "Your first profiles within 72 hours. Participants suggest time slots and you pick one: the interview can happen the same week." },
-    { q: "Which sectors?", a: "Fashion, luxury, beauty, sneakers, second-hand, lifestyle. In French or English." },
+    { q: "Which sectors?", a: "Fashion, luxury, beauty, jewellery, sneakers, second-hand, lifestyle." },
+    { q: "Which languages?", a: "French and English today: interviews, website and syntheses. Other languages open one by one; tell us which one you need and it moves to the top of the list." },
+    { q: "Where does AI come in?", a: "It reads your brief, drafts the interview guide, analyses CVs and portfolios, transcribes and writes the synthesis. The interviews are with real people, and our team reviews every profile before suggesting it." },
     { q: "Is there a commitment?", a: "No. No subscription: you buy credits and only spend them on the profiles you keep." },
+    { q: "Can we see a demo?", a: "Yes: twenty minutes on a video call, on your own topic. The form is just above." },
   ],
   footer: {
     h2: "Tell us who you want to hear from.",
     lead: "A few sentences will do. Create your account, your brief will be waiting, and your first profiles arrive within 72 hours.",
     links: { pricing: "Pricing", login: "Log in", contact: "Contact", privacy: "Privacy", terms: "Terms", legal: "Legal notice" },
   },
+  announce: { text: "New · Interviews in English are open, more languages are coming.", link: "See languages", close: "Close" },
+  demoNav: "Book a demo",
+  loupe: {
+    top: "Hello! Shall I show you around?",
+    comment: "A whole study, in thirty seconds.",
+    profils: "Every profile goes under my lens.",
+    livrable: "Answers, not minutes.",
+    avec: "Fewer follow-ups, more answers.",
+    tarifs: "You only pay for the profiles you keep.",
+    confidentialite: "Mum's the word: your name stays hidden.",
+    langues: "French, English… and more soon.",
+    participer: "Got the eye? Join the panel.",
+    demo: "Twenty minutes, on your own topic.",
+    questions: "A question? I've probably seen it before.",
+  },
+  loupeAria: "Go to the next section",
+  compare: {
+    kicker: "Before, after", h2: "Fewer follow-ups.|More answers.",
+    lead: "What a round of interviews with the right people takes today, and what's left of it with Rarelyst.",
+    without: "Without Rarelyst", with: "With Rarelyst",
+    rows: [
+      ["Finding the profiles", "Weeks of networking, posts and follow-ups", "Your first profiles within 72 h"],
+      ["Knowing they're real", "Taking their word for it", "ID, employment and LinkedIn verified"],
+      ["Organising", "Emails, calendars, video links", "They suggest slots, everything else is automatic"],
+      ["After the interview", "Hours of transcribing", "Video, transcript and synthesis ready"],
+      ["Paying", "Recruitment billed upfront", "Only for the profiles you keep"],
+    ],
+    cta: "Try it on a pilot study",
+  },
+  langs: {
+    kicker: "Languages", h2: "French and English.|More are coming.",
+    lead: "Interviews, website and syntheses are available in French and English. We open other languages one by one, recruiting participants who are native speakers.",
+    live: "Available", soon: "Soon", ask: "Missing a language? Tell us: it moves to the top of the list.",
+    names: { fr: "French", gb: "English", it: "Italian", es: "Spanish", de: "German", cn: "Chinese", jp: "Japanese", kr: "Korean", ae: "Arabic" },
+  },
+  demo: {
+    kicker: "Demo", h2: "See Rarelyst|on your own topic.",
+    lead: "Twenty minutes on a video call. Give us a real topic; we show you how we read it, which profiles we would look for and what you would receive at the end.",
+    points: ["Your topic, not a generic demo", "The profiles we would find for you", "No commitment"],
+    form: {
+      first: "First name", last: "Last name", email: "Work email", company: "House or company", role: "Your role",
+      topic: "Your topic, in one sentence (optional)",
+      when: "When suits you?", whenOpts: ["This week", "Next week", "Later"],
+      submit: "Book my demo", sending: "Sending…",
+      sent: "Got it. We'll write to you shortly to set a time.",
+      error: "That didn't go through. Try again, or email us at contact@rarelyst.co.",
+      consent: "Your details are only used to get back to you.",
+      required: "First name, email and company are required.",
+    },
+  },
+  faqAside: { title: "Another question?", text: "Write to us, or let's take twenty minutes together.", demo: "Book a demo" },
+  trust: "They trust us",
 };
 
 export const LANDING_COPY: Record<Lang, LandingCopy> = { fr: FR, en: EN };
