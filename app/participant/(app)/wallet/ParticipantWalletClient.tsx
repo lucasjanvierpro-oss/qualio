@@ -279,7 +279,7 @@ export default function ParticipantWalletClient({
       </a>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "4px", marginBottom: "24px", borderBottom: "1px solid var(--color-border)" }}>
+      <div style={{ display: "flex", gap: "4px", marginBottom: "24px", borderBottom: "1px solid var(--color-border)", overflowX: "auto", scrollbarWidth: "none" }}>
         {tabs.map(({ key, label, count }) => (
           <button
             key={key}
@@ -289,7 +289,7 @@ export default function ParticipantWalletClient({
               fontSize: "14px", fontWeight: tab === key ? 600 : 400,
               color: tab === key ? "var(--color-text-primary)" : "var(--color-text-secondary)",
               borderBottom: `2px solid ${tab === key ? "var(--color-accent)" : "transparent"}`,
-              marginBottom: "-1px", display: "flex", gap: "6px", alignItems: "center",
+              marginBottom: "-1px", display: "flex", gap: "6px", alignItems: "center", whiteSpace: "nowrap", flexShrink: 0,
             }}
           >
             {label}
