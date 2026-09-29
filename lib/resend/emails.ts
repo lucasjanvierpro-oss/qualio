@@ -270,6 +270,17 @@ export async function sendDemoConfirmation(to: string, firstName: string, lang: 
     }));
 }
 
+/** Entretien en autonomie : le participant répond quand il veut, face caméra. */
+export async function sendAsyncInvitation(to: string, firstName: string, studyTitle: string, interviewId: string, questions: number, deadline: Date | null) {
+  const until = deadline ? ` avant le ${new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(deadline)}` : "";
+  return send(to, "Une marque attend vos réponses", layout({
+    title: `À vous, ${esc(firstName)}.`,
+    body: `Une marque a retenu votre profil pour l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong>. Pas de rendez-vous à caler : vous répondez seul(e), face caméra, à ${questions} questions qui s'affichent une par une. Comptez une quinzaine de minutes, quand vous voulez${until}.`,
+    aside: "Installez-vous au calme, avec une bonne lumière. Vos réponses sont enregistrées et transcrites pour la marque.",
+    cta: { label: "Commencer quand je veux", href: `${APP_URL}/participant/interview/${interviewId}` },
+  }));
+}
+
 export async function sendAvailabilityProposed(to: string, contactFirstName: string, participantFirstName: string, studyTitle: string, studyId: string, slots: Date[]) {
   const list = slots.map((d) => `<li style="margin:4px 0;text-transform:capitalize">${esc(fmtDateTime(d))}</li>`).join("");
   return send(to, `${participantFirstName} propose ses disponibilités`, layout({

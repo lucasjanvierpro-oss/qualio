@@ -34,6 +34,9 @@ type Interview = {
   scheduledAt: string;
   status: string;
   videoLink: string | null;
+  /** "async" : entretien en autonomie (bêta), le participant répond seul. */
+  mode?: string;
+  transcriptStatus?: string | null;
 };
 
 type Application = {
@@ -305,10 +308,17 @@ function ShortlistedSection({
               {/* CONFIRMED: show interview info */}
               {isConfirmed && app.interview && (
                 <div style={{ padding: "10px 16px 12px", borderTop: "1px solid var(--color-success)", background: "rgba(26,122,74,0.04)", display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
-                    📅 {new Date(app.interview.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} à {new Date(app.interview.scheduledAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                  {app.interview.videoLink && (
+                  {app.interview.mode === "async" ? (
+                    <span style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
+                      En autonomie · {app.interview.status === "submitted" ? `réponse envoyée${app.interview.transcriptStatus === "done" ? ", transcrite" : ", transcription en cours"}` : app.interview.status === "in_progress" ? "en train de répondre" : "pas encore commencé"}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
+                      📅 {new Date(app.interview.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })} à {new Date(app.interview.scheduledAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  )}
+                  {/* Jamais de bouton pour rejoindre une salle en autonomie : un second participant fausserait l'enregistrement. */}
+                  {app.interview.videoLink && app.interview.mode !== "async" && (
                     <a href={app.interview.videoLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", padding: "5px 12px", background: "var(--color-accent)", color: "#fff", borderRadius: "6px", textDecoration: "none", fontWeight: 600 }}>
                       🎥 Rejoindre la visio
                     </a>

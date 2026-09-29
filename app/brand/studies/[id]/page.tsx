@@ -33,7 +33,7 @@ export default async function StudyDetailPage({ params, searchParams }: { params
         applications: {
           orderBy: { updatedAt: "desc" },
           include: {
-            interview: { select: { id: true, scheduledAt: true, status: true, transcriptStatus: true, brandRating: true, brandReviewTags: true, brandFeedback: true } },
+            interview: { select: { id: true, scheduledAt: true, status: true, transcriptStatus: true, brandRating: true, brandReviewTags: true, brandFeedback: true, mode: true } },
             participantProfile: {
               select: {
                 id: true,
@@ -68,6 +68,7 @@ export default async function StudyDetailPage({ params, searchParams }: { params
     priceProfiles(study.applications.map((a) => a.participantProfileId), {
       durationMin: study.interviewDuration,
       focusGroup: study.studyType === "FOCUS_GROUP",
+      asyncMode: study.mode === "async",
     }),
     getPricingConfig(),
   ]);
@@ -140,6 +141,7 @@ export default async function StudyDetailPage({ params, searchParams }: { params
         scheduledAt: a.interview.scheduledAt.toISOString(),
         status: a.interview.status,
         transcriptReady: a.interview.transcriptStatus === "done",
+        mode: a.interview.mode,
         review: a.interview.brandRating
           ? { rating: a.interview.brandRating, tags: a.interview.brandReviewTags, comment: a.interview.brandFeedback }
           : null,

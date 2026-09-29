@@ -10,6 +10,7 @@ import { quote } from "@/lib/pricing/engine";
 import { DURATIONS, EMPTY_DRAFT, type BriefDraft } from "@/lib/studies/briefTypes";
 import Tour from "@/components/tour/Tour";
 import { LoupeScan } from "@/components/brand/LoupeMascot";
+import { myBetaFeatures } from "@/app/actions/beta";
 import b from "./brief.module.css";
 
 // Nouvelle étude, en deux temps. La marque écrit ce qu'elle cherche ou dépose
@@ -36,6 +37,9 @@ const READING_STEPS = ["Qui interroger", "Le format", "Ce que la synthèse devra
 const ACCEPT = ".pdf,.docx,.pptx,.txt,.md";
 // Même clé que la boîte de brief de la page d'accueil (components/landing/Islands).
 const DRAFT_KEY = "rl-brief-draft";
+// Entretien en autonomie (bêta) : durée indicative et taille maximale d'une étude.
+const ASYNC_MINUTES = 15;
+const ASYNC_MAX = 100;
 
 export default function NewStudyPage() {
   const router = useRouter();
@@ -48,6 +52,9 @@ export default function NewStudyPage() {
   const [source, setSource] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [moments, setMoments] = useState<string[]>(["matin", "apres-midi"]);
+  // "async" (bêta) : le participant répond seul, face caméra, aux questions.
+  const [mode, setMode] = useState<"live" | "async">("live");
+  const [asyncAllowed, setAsyncAllowed] = useState(false);
   const [sending, setSending] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -58,6 +65,11 @@ export default function NewStudyPage() {
     // Le brouillon vit dans le navigateur : le lire au rendu serveur casserait l'hydratation.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (saved) setText((t) => t || saved);
+  }, []);
+
+  // Les fonctions bêta ouvertes à cette marque (l'entretien en autonomie).
+  useEffect(() => {
+    myBetaFeatures().then((f) => setAsyncAllowed(f.includes("async"))).catch(() => {});
   }, []);
 
   const canRead = text.trim().length >= 20 || !!file;
@@ -121,7 +133,8 @@ export default function NewStudyPage() {
       decisions: draft.decisions,
       guide: draft.guide,
       deadlineAt: draft.deadline,
-      availability: moments,
+      availability: mode === "async" ? [] : moments,
+      mode,
     }).catch(() => ({ error: "L'envoi a échoué. Réessayez." }));
     if ("studyId" in r) {
       try { localStorage.removeItem(DRAFT_KEY); } catch { /* rien à nettoyer */ }
@@ -136,6 +149,7 @@ export default function NewStudyPage() {
 
   if (phase === "review") {
     return <Review draft={draft} setDraft={setDraft} moments={moments} setMoments={setMoments} fileName={fileName}
+      mode={mode} setMode={setMode} asyncAllowed={asyncAllowed}
       onBack={() => setPhase("write")} onSend={send} sending={sending} error={error} />;
   }
 
@@ -238,17 +252,23 @@ function Reading({ withFile }: { withFile: boolean }) {
 function Review(p: {
   draft: BriefDraft; setDraft: (d: BriefDraft) => void; moments: string[]; setMoments: (m: string[]) => void;
   fileName: string | null; onBack: () => void; onSend: () => void; sending: boolean; error: string | null;
+  mode: "live" | "async"; setMode: (m: "live" | "async") => void; asyncAllowed: boolean;
 }) {
   const d = p.draft;
   const set = (patch: Partial<BriefDraft>) => p.setDraft({ ...d, ...patch });
+  const isAsync = p.mode === "async";
   const total = d.profiles.reduce((n, x) => n + (x.count || 0), 0);
+  const maxTotal = isAsync ? ASYNC_MAX : 30;
+  const maxPerProfile = isAsync ? 50 : 20;
+  const questions = d.guide.filter((q) => q.trim()).length;
   const credits = (tier: "averti" | "initie") => quote(DEFAULT_PRICING, {
-    tier, durationMin: d.duration, focusGroup: d.studyType === "FOCUS_GROUP",
+    tier, durationMin: isAsync ? ASYNC_MINUTES : d.duration, focusGroup: !isAsync && d.studyType === "FOCUS_GROUP", asyncMode: isAsync,
     certScore: 50, ratings: [], signals: { brandsAccepted90d: 0, shortlisted90d: 0, peers: 30, panelSize: 0 }, overrideCredits: null,
   }).credits;
   const low = credits("averti") * total;
   const high = credits("initie") * total;
-  const ready = d.title.trim().length >= 3 && d.objective.trim().length >= 10 && d.profiles.some((x) => x.label.trim()) && total > 0 && total <= 30;
+  const ready = d.title.trim().length >= 3 && d.objective.trim().length >= 10 && d.profiles.some((x) => x.label.trim()) && total > 0 && total <= maxTotal
+    && (!isAsync || questions >= 3);
 
   return (
     <div className={`${s.page} ${s.pageWide}`}>
@@ -286,7 +306,7 @@ function Review(p: {
                     <span className={b.stepper}>
                       <button type="button" aria-label="Un de moins" onClick={() => set({ profiles: d.profiles.map((y, j) => (j === i ? { ...y, count: Math.max(1, y.count - 1) } : y)) })}>−</button>
                       <b>{x.count}</b>
-                      <button type="button" aria-label="Un de plus" onClick={() => set({ profiles: d.profiles.map((y, j) => (j === i ? { ...y, count: Math.min(20, y.count + 1) } : y)) })}>+</button>
+                      <button type="button" aria-label="Un de plus" onClick={() => set({ profiles: d.profiles.map((y, j) => (j === i ? { ...y, count: Math.min(maxPerProfile, y.count + 1) } : y)) })}>+</button>
                     </span>
                     {d.profiles.length > 1 && <button type="button" className={b.remove} aria-label="Retirer ce profil" onClick={() => set({ profiles: d.profiles.filter((_, j) => j !== i) })}>×</button>}
                   </div>
@@ -326,18 +346,34 @@ function Review(p: {
 
           <section className={s.card} data-tour="review-format">
             <h2 className={s.h3}>Le format</h2>
-            <div className={b.segment} role="radiogroup" aria-label="Type d'étude">
-              {[{ v: "ONE_ON_ONE", l: "Entretiens individuels" }, { v: "FOCUS_GROUP", l: "Focus group" }].map((o) => (
-                <button key={o.v} type="button" role="radio" aria-checked={d.studyType === o.v} data-on={d.studyType === o.v}
-                  onClick={() => set({ studyType: o.v as BriefDraft["studyType"] })}>{o.l}</button>
-              ))}
-            </div>
+            {p.asyncAllowed && (
+              <div className={b.modes} role="radiogroup" aria-label="Déroulé">
+                <button type="button" role="radio" aria-checked={!isAsync} data-on={!isAsync} onClick={() => p.setMode("live")}>
+                  <b>En direct, en visio</b><span>Vous menez chaque entretien vous-même.</span>
+                </button>
+                <button type="button" role="radio" aria-checked={isAsync} data-on={isAsync} onClick={() => { p.setMode("async"); set({ studyType: "ONE_ON_ONE" }); }}>
+                  <b>En autonomie <em>bêta</em></b><span>Chacun répond seul, face caméra, à vos questions. Jusqu&apos;à {ASYNC_MAX} personnes, environ 3 fois moins cher.</span>
+                </button>
+              </div>
+            )}
+            {!isAsync && (
+              <div className={b.segment} role="radiogroup" aria-label="Type d'étude" style={p.asyncAllowed ? { marginTop: 14 } : undefined}>
+                {[{ v: "ONE_ON_ONE", l: "Entretiens individuels" }, { v: "FOCUS_GROUP", l: "Focus group" }].map((o) => (
+                  <button key={o.v} type="button" role="radio" aria-checked={d.studyType === o.v} data-on={d.studyType === o.v}
+                    onClick={() => set({ studyType: o.v as BriefDraft["studyType"] })}>{o.l}</button>
+                ))}
+              </div>
+            )}
             <div className={`${b.inline3} ${b.formatRow}`} style={{ marginTop: 14 }}>
               <div>
                 <label className={s.label}>Durée</label>
-                <div className={b.segment} role="radiogroup" aria-label="Durée">
-                  {DURATIONS.map((m) => <button key={m} type="button" role="radio" aria-checked={d.duration === m} data-on={d.duration === m} onClick={() => set({ duration: m })}>{m} min</button>)}
-                </div>
+                {isAsync ? (
+                  <p className={`${s.small} ${s.muted}`} style={{ margin: "6px 0 0" }}>Environ {ASYNC_MINUTES} min, à leur rythme.</p>
+                ) : (
+                  <div className={b.segment} role="radiogroup" aria-label="Durée">
+                    {DURATIONS.map((m) => <button key={m} type="button" role="radio" aria-checked={d.duration === m} data-on={d.duration === m} onClick={() => set({ duration: m })}>{m} min</button>)}
+                  </div>
+                )}
               </div>
               <div>
                 <label className={s.label} htmlFor="deadline">Terminé avant le</label>
@@ -350,14 +386,19 @@ function Review(p: {
                 </div>
               </div>
             </div>
-            <label className={s.label} style={{ marginTop: 14 }}>Quand pouvez-vous mener les entretiens ?</label>
-            <div className={b.chips}>
-              {MOMENTS.map((m) => {
-                const on = p.moments.includes(m.id);
-                return <button key={m.id} type="button" data-on={on} aria-pressed={on} onClick={() => p.setMoments(on ? p.moments.filter((x) => x !== m.id) : [...p.moments, m.id])}>{m.label}</button>;
-              })}
-            </div>
-            <p className={`${s.small} ${s.faint}`} style={{ margin: "8px 0 0" }}>Les participants proposeront leurs créneaux dans ces moments-là ; vous choisirez.</p>
+            {!isAsync && (
+              <>
+                <label className={s.label} style={{ marginTop: 14 }}>Quand pouvez-vous mener les entretiens ?</label>
+                <div className={b.chips}>
+                  {MOMENTS.map((m) => {
+                    const on = p.moments.includes(m.id);
+                    return <button key={m.id} type="button" data-on={on} aria-pressed={on} onClick={() => p.setMoments(on ? p.moments.filter((x) => x !== m.id) : [...p.moments, m.id])}>{m.label}</button>;
+                  })}
+                </div>
+                <p className={`${s.small} ${s.faint}`} style={{ margin: "8px 0 0" }}>Les participants proposeront leurs créneaux dans ces moments-là ; vous choisirez.</p>
+              </>
+            )}
+            {isAsync && <p className={`${s.small} ${s.faint}`} style={{ margin: "12px 0 0" }}>Aucun créneau à caler : chacun répond quand il veut, avant la date limite. Vous recevez la vidéo et la transcription de chaque réponse.</p>}
           </section>
 
           <ListCard
@@ -369,8 +410,10 @@ function Review(p: {
           />
           <ListCard
             tour="review-guide"
-            title="Guide d'entretien"
-            hint="Il s'affichera à côté de la visio. Vous restez libre de vos questions."
+            title={isAsync ? "Les questions" : "Guide d'entretien"}
+            hint={isAsync
+              ? `Elles s'afficheront une par une, en noir sur fond blanc ; le participant passe à la suivante quand il a répondu. Trois au minimum${questions < 3 ? ` (encore ${3 - questions})` : ""}.`
+              : "Il s'affichera à côté de la visio. Vous restez libre de vos questions."}
             items={d.guide} placeholder="Parlez-moi de votre dernier achat de maroquinerie." max={12} numbered
             onChange={(guide) => set({ guide })}
           />
@@ -380,7 +423,7 @@ function Review(p: {
           <div className={b.summaryCard} data-tour="review-send">
             <h2 className={s.h3}>Votre étude</h2>
             <dl>
-              <div><dt>Entretiens</dt><dd>{total} × {d.duration} min{d.studyType === "FOCUS_GROUP" ? " · focus group" : ""}</dd></div>
+              <div><dt>{isAsync ? "Réponses vidéo" : "Entretiens"}</dt><dd>{isAsync ? `${total} × environ ${ASYNC_MINUTES} min · en autonomie` : `${total} × ${d.duration} min${d.studyType === "FOCUS_GROUP" ? " · focus group" : ""}`}</dd></div>
               <div><dt>Profils</dt><dd>{d.profiles.filter((x) => x.label.trim()).map((x) => `${x.count} ${x.label.trim()}`).join(" · ") || "À décrire"}</dd></div>
               <div><dt>Budget estimé</dt><dd>{low} à {high} crédits<small>soit {(low * 10).toLocaleString("fr-FR")} à {(high * 10).toLocaleString("fr-FR")} € HT, selon les profils retenus</small></dd></div>
             </dl>
@@ -389,7 +432,9 @@ function Review(p: {
             <button type="button" className={`${s.btn} ${s.btnBlock}`} disabled={!ready || p.sending} onClick={p.onSend}>
               {p.sending ? "Envoi…" : "Envoyer le brief →"}
             </button>
-            {!ready && <p className={`${s.small} ${s.faint}`} style={{ margin: "8px 0 0" }}>Il manque un titre, l&apos;objectif ou au moins un profil.</p>}
+            {!ready && <p className={`${s.small} ${s.faint}`} style={{ margin: "8px 0 0" }}>
+              {total > maxTotal ? `${maxTotal} personnes au maximum par étude.` : isAsync && questions < 3 ? "Écrivez au moins trois questions." : "Il manque un titre, l'objectif ou au moins un profil."}
+            </p>}
             <p className={`${s.small} ${s.faint}`} style={{ margin: "10px 0 0" }}>Une question ? <Link href="/brand/messages">Écrivez-nous</Link>.</p>
           </div>
         </aside>

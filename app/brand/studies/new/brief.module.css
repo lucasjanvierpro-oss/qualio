@@ -151,3 +151,15 @@
 .summaryCard dd { margin: 0; font-size: 14.5px; font-weight: 600; }
 .summaryCard dd small { display: block; font-weight: 400; font-size: 12.5px; color: var(--ink-2); }
 .promise { margin: 12px 0 14px; padding: 10px 12px; border-radius: 12px; background: var(--ok-soft); color: var(--ok); font-size: 13.5px; font-weight: 600; line-height: 1.45; }
+
+/* Déroulé : en direct ou en autonomie (bêta) */
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 640px) { .modes { grid-template-columns: 1fr; } }
+.modes button {
+  display: grid; gap: 4px; text-align: left; padding: 14px 16px; border-radius: 14px; cursor: pointer;
+  border: 1px solid var(--line); background: #fff; font: inherit; color: var(--ink); transition: border-color 0.2s, box-shadow 0.2s;
+}
+.modes button b { font-size: 15px; letter-spacing: -0.015em; }
+.modes button em { font-style: normal; font-size: 11px; font-weight: 700; margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--g2); vertical-align: 2px; }
+.modes button span { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+.modes button[data-on="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }

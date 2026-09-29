@@ -48,7 +48,7 @@ export type Candidate = {
   step: "participant_to_propose" | "brand_to_choose" | "participant_to_choose" | null;
   proposals: string[];
   interview: {
-    id: string; scheduledAt: string; status: string; transcriptReady: boolean;
+    id: string; scheduledAt: string; status: string; transcriptReady: boolean; mode?: string;
     review: { rating: number; tags: string[]; comment: string | null } | null;
   } | null;
 };
@@ -506,7 +506,12 @@ export default function StudyDetailClient({ study, candidates, credits, isNew }:
                 <div className={s.spread}>
                   <Person c={c} />
                   <div className={s.row}>
-                    {c.interview && <span className={s.small} style={{ textTransform: "capitalize" }}>{fmtDay(c.interview.scheduledAt)} · {fmtTime(c.interview.scheduledAt)}</span>}
+                    {c.interview && c.interview.mode !== "async" && <span className={s.small} style={{ textTransform: "capitalize" }}>{fmtDay(c.interview.scheduledAt)} · {fmtTime(c.interview.scheduledAt)}</span>}
+                    {c.interview?.mode === "async" && c.status === "CONFIRMED" && (
+                      <span className={`${s.badge} ${c.interview.status === "submitted" ? s.badgeOk : s.badgeWait}`}>
+                        {c.interview.status === "submitted" ? "Réponse envoyée" : c.interview.status === "in_progress" ? "En train de répondre" : "Pas encore commencé"}
+                      </span>
+                    )}
                     {c.status === "NO_SHOW" && <span className={`${s.badge} ${s.badgeBad}`}>Absent</span>}
                     {c.status === "COMPLETED" && (
                       <span className={`${s.badge} ${c.interview?.transcriptReady ? s.badgeOk : s.badgeWait}`}>
@@ -518,8 +523,11 @@ export default function StudyDetailClient({ study, candidates, credits, isNew }:
                         {c.interview?.review ? `★ ${c.interview.review.rating}/5 · modifier` : "Laisser un avis"}
                       </button>
                     )}
-                    {c.status === "CONFIRMED" && c.interview && (
+                    {c.status === "CONFIRMED" && c.interview && c.interview.mode !== "async" && (
                       <Link href={`/brand/interview/${c.interview.id}`} className={`${s.btn} ${s.btnSm}`}>Ouvrir la salle</Link>
+                    )}
+                    {c.interview?.mode === "async" && (c.status === "COMPLETED" || c.interview.status === "submitted") && (
+                      <Link href={`/brand/interview/${c.interview.id}`} className={`${s.btn} ${s.btnSm}`}>Voir la réponse</Link>
                     )}
                   </div>
                 </div>

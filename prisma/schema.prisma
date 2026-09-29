@@ -130,6 +130,9 @@ model BrandProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Fonctions en bêta ouvertes à cette marque (ex. "async" : entretiens en autonomie).
+  betaFeatures String[] @default([])
+
   @@map("brand_profiles")
 }
 
@@ -389,6 +392,9 @@ model Study {
   briefFileName String?
   decisions     String[] @default([])
   guide         String[] @default([])
+  // "live" : entretiens en visio avec la marque. "async" (bêta) : le
+  // participant répond seul, face caméra, aux questions du guide.
+  mode          String   @default("live")
 
   timeSlots          StudyTimeSlot[]
   applications       Application[]
@@ -506,6 +512,13 @@ model Interview {
   transcript      String?   @db.Text
 
   completedAt   DateTime?
+  // Entretien en autonomie (mode "async") : quand le participant a commencé,
+  // envoyé, et à quel moment il est passé à chaque question ([{ i, at }], at en
+  // millisecondes depuis le début).
+  mode          String    @default("live")
+  prompts       Json?
+  startedAt     DateTime?
+  submittedAt   DateTime?
   brandRating     Int?
   brandFeedback   String?
   brandReviewTags String[]  @default([])

@@ -20,6 +20,11 @@ export type PricingConfig = {
   duration: { upTo: number; factor: number }[];
   /** Un participant de focus group coûte moins qu'un entretien seul. */
   focusGroupFactor: number;
+  /**
+   * Entretien en autonomie (bêta) : le participant répond seul, face caméra,
+   * sans la marque. Appliqué au prix et à la rémunération, hors bornes.
+   */
+  asyncFactor: number;
   /** Demande : bonus par marque qui a retenu le profil sur 90 jours, et par présélection. */
   demand: { perBrand: number; perShortlist: number; max: number };
   /** Rareté : moins il existe de profils comparables, plus le coefficient monte. */
@@ -65,6 +70,7 @@ export const DEFAULT_PRICING: PricingConfig = {
     { upTo: 999, factor: 1.6 },
   ],
   focusGroupFactor: 0.6,
+  asyncFactor: 0.35,
   demand: { perBrand: 0.05, perShortlist: 0.02, max: 0.2 },
   scarcity: [
     { minPeers: 30, factor: 1 },

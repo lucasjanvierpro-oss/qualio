@@ -4,11 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { assertAdmin, getSessionUser } from "@/lib/auth/guards";
-import { sendAvailabilityRequested } from "@/lib/resend/emails";
+import { sendAvailabilityRequested, sendAsyncInvitation } from "@/lib/resend/emails";
 import { sendStudySubmittedAdmin } from "@/lib/resend/emails";
 import { getPricingConfig, priceProfiles } from "@/lib/pricing/quotes";
 import { DURATIONS, type BriefProfile, type Duration } from "@/lib/studies/briefTypes";
 import { recordDemand } from "@/lib/lab/demand";
+import { brandHasBeta } from "@/lib/beta";
 
 export type StudyInput = {
   /** Le brief tel que donné : texte écrit, et texte du document s'il a pu être lu. */
@@ -30,6 +31,8 @@ export type StudyInput = {
   deadlineAt: string | null;
   /** Moments où la marque peut mener les entretiens : matin, midi, après-midi, soir. */
   availability: string[];
+  /** "async" (bêta) : chacun répond seul, face caméra, aux questions du guide. */
+  mode?: "live" | "async";
 };
 
 const clean = (v: string, max: number) => v.trim().slice(0, max);
@@ -45,8 +48,10 @@ export async function createStudy(data: StudyInput): Promise<{ studyId: string }
   if (!brand) return { error: "session_expired" };
   if (!brand.isActivated) return { error: "preview_mode" };
 
+  const isAsync = data.mode === "async";
+  if (isAsync && !(await brandHasBeta(brand.id, "async"))) return { error: "L'entretien en autonomie n'est pas encore ouvert pour votre compte." };
   const profiles = data.profiles
-    .map((p) => ({ label: clean(p.label, 80), count: Math.max(1, Math.min(20, Math.round(p.count) || 1)), details: clean(p.details, 300) }))
+    .map((p) => ({ label: clean(p.label, 80), count: Math.max(1, Math.min(isAsync ? 50 : 20, Math.round(p.count) || 1)), details: clean(p.details, 300) }))
     .filter((p) => p.label)
     .slice(0, 4);
   const total = profiles.reduce((n, p) => n + p.count, 0);
@@ -55,8 +60,11 @@ export async function createStudy(data: StudyInput): Promise<{ studyId: string }
   if (title.length < 3) return { error: "Donnez un titre à l'étude." };
   if (objective.length < 10) return { error: "Dites en une ou deux phrases ce que vous voulez comprendre." };
   if (profiles.length === 0) return { error: "Décrivez au moins un profil à interroger." };
-  if (total > 30) return { error: "30 entretiens au maximum par étude : écrivez-nous pour davantage." };
-  const duration = DURATIONS.includes(data.duration as Duration) ? data.duration : 45;
+  if (total > (isAsync ? 100 : 30)) return { error: isAsync ? "100 personnes au maximum par étude : écrivez-nous pour davantage." : "30 entretiens au maximum par étude : écrivez-nous pour davantage." };
+  const guide = cleanList(data.guide, 12);
+  if (isAsync && guide.length < 3) return { error: "Écrivez au moins trois questions : ce sont elles que les participants verront." };
+  // En autonomie, la durée est indicative : une quinzaine de minutes.
+  const duration = isAsync ? 15 : DURATIONS.includes(data.duration as Duration) ? data.duration : 45;
   const deadline = data.deadlineAt ? new Date(data.deadlineAt) : null;
 
   const cfg = await getPricingConfig();
@@ -65,7 +73,8 @@ export async function createStudy(data: StudyInput): Promise<{ studyId: string }
       brandProfileId: brand.id,
       title,
       objective,
-      studyType: data.studyType === "FOCUS_GROUP" ? "FOCUS_GROUP" : "ONE_ON_ONE",
+      studyType: !isAsync && data.studyType === "FOCUS_GROUP" ? "FOCUS_GROUP" : "ONE_ON_ONE",
+      mode: isAsync ? "async" : "live",
       status: "ACTIVE",
       targetParticipantCount: total,
       preferredLanguage: data.language === "en" ? "en" : "fr",
@@ -77,7 +86,7 @@ export async function createStudy(data: StudyInput): Promise<{ studyId: string }
       brief: clean(data.brief, 80_000) || null,
       briefFileName: data.briefFileName ? clean(data.briefFileName, 160) : null,
       decisions: cleanList(data.decisions, 5),
-      guide: cleanList(data.guide, 12),
+      guide,
       // Mêmes clés qu'avant pour l'appariement admin, plus les groupes de profils.
       targetCriteria: {
         ageMin: data.ageMin ?? undefined,
@@ -121,7 +130,7 @@ export async function acceptApplication(applicationId: string, expectedCredits?:
       priceCredits: true,
       participantPayCents: true,
       priceBreakdown: true,
-      study: { select: { brandProfileId: true, title: true, interviewDuration: true, studyType: true } },
+      study: { select: { brandProfileId: true, title: true, interviewDuration: true, studyType: true, mode: true, deadlineAt: true, guide: true } },
       participantProfile: { select: { firstName: true, accessTier: true, user: { select: { email: true } } } },
     },
   });
@@ -150,11 +159,16 @@ export async function acceptApplication(applicationId: string, expectedCredits?:
     const pricing = (await priceProfiles([application.participantProfileId], {
       durationMin: application.study.interviewDuration,
       focusGroup: application.study.studyType === "FOCUS_GROUP",
+      asyncMode: application.study.mode === "async",
     })).get(application.participantProfileId);
     if (!pricing) return { error: "not_found" };
     q = pricing.quote;
   }
   if (expectedCredits !== undefined && expectedCredits !== q.credits) return { error: "price_changed" };
+  // En autonomie, pas de créneau à caler : l'entretien existe dès l'acceptation
+  // et le participant y répond quand il veut.
+  const isAsync = application.study.mode === "async";
+  let asyncInterviewId: string | null = null;
 
   // Tout ou rien, et conditionné à l'état attendu : si deux clics arrivent en
   // même temps, un seul passe la condition et un seul prix est débité.
@@ -169,7 +183,7 @@ export async function acceptApplication(applicationId: string, expectedCredits?:
       where: { id: applicationId, status: { in: ["SHORTLISTED", "PENDING"] } },
       data: {
         brandAccepted: true,
-        status: "INVITED",
+        status: isAsync ? "CONFIRMED" : "INVITED",
         priceCredits: q.credits,
         participantPayCents: q.participantPayCents,
         priceBreakdown: { tier: q.tier, multiplier: q.multiplier, factors: q.factors as object, overridden: q.overridden, marginCents: q.marginCents },
@@ -191,6 +205,16 @@ export async function acceptApplication(applicationId: string, expectedCredits?:
         studyId: application.studyId,
       },
     });
+    if (isAsync) {
+      const iv = await tx.interview.create({
+        data: {
+          studyId: application.studyId, applicationId, scheduledAt: new Date(),
+          durationMinutes: application.study.interviewDuration, mode: "async", status: "scheduled",
+          recordingStatus: process.env.WHEREBY_RECORDING_ENABLED === "true" ? "pending" : null,
+        },
+      });
+      asyncInterviewId = iv.id;
+    }
     return "ok" as const;
   }).catch((e: Error) => (e.message === "already_decided" ? ("already_decided" as const) : Promise.reject(e)));
 
@@ -201,6 +225,17 @@ export async function acceptApplication(applicationId: string, expectedCredits?:
   // de s'adapter à ces profils rares. L'email part après la réponse — il ne doit
   // pas retarder l'affichage.
   after(async () => {
+    if (isAsync && asyncInterviewId) {
+      await sendAsyncInvitation(
+        application.participantProfile.user.email,
+        application.participantProfile.firstName,
+        application.study.title,
+        asyncInterviewId,
+        application.study.guide.length,
+        application.study.deadlineAt,
+      ).catch(() => null);
+      return;
+    }
     await sendAvailabilityRequested(
       application.participantProfile.user.email,
       application.participantProfile.firstName,
@@ -217,10 +252,11 @@ export async function shortlistParticipant(studyId: string, participantProfileId
   await assertAdmin();
   // Le prix est fixé au moment où le profil est proposé : la marque voit un
   // montant qui ne bouge plus, le participant sait ce qu'il touchera.
-  const study = await prisma.study.findUniqueOrThrow({ where: { id: studyId }, select: { interviewDuration: true, studyType: true } });
+  const study = await prisma.study.findUniqueOrThrow({ where: { id: studyId }, select: { interviewDuration: true, studyType: true, mode: true } });
   const q = (await priceProfiles([participantProfileId], {
     durationMin: study.interviewDuration,
     focusGroup: study.studyType === "FOCUS_GROUP",
+    asyncMode: study.mode === "async",
   })).get(participantProfileId)?.quote;
   const price = q ? {
     priceCredits: q.credits,

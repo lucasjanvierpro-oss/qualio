@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
 import InterviewRoom from "@/components/interview/InterviewRoom";
+import AsyncInterview from "@/components/interview/AsyncInterview";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function ParticipantInterviewPage({ params }: { params: Pro
     include: {
       application: {
         include: {
-          study: { select: { title: true } },
+          study: { select: { title: true, guide: true } },
           participantProfile: { select: { firstName: true } },
         },
       },
@@ -24,6 +25,23 @@ export default async function ParticipantInterviewPage({ params }: { params: Pro
   });
   // Le participant n'ouvre que son propre entretien.
   if (!interview || interview.application.participantProfileId !== me.participantProfileId) notFound();
+
+  // Entretien en autonomie (bêta) : seul face caméra, les questions à l'écran.
+  if (interview.mode === "async") {
+    const prompts = (Array.isArray(interview.prompts) ? interview.prompts : []) as { i: number; at: number }[];
+    return (
+      <AsyncInterview
+        interviewId={interview.id}
+        title={interview.application.study.title}
+        questions={interview.application.study.guide}
+        displayName={interview.application.participantProfile.firstName}
+        status={interview.status}
+        joined={!!interview.startedAt}
+        index={prompts.at(-1)?.i ?? 0}
+        backHref={`/participant/studies/${interview.applicationId}`}
+      />
+    );
+  }
 
   return (
     <InterviewRoom

@@ -60,6 +60,8 @@ export type PriceInput = {
   tier: Tier;
   durationMin: number;
   focusGroup: boolean;
+  /** Entretien en autonomie (bêta). */
+  asyncMode?: boolean;
   certScore: number;
   ratings: number[];
   signals: MarketSignals;
@@ -137,9 +139,13 @@ export function quote(cfg: PricingConfig, i: PriceInput): PriceQuote {
     };
   }
 
-  const credits = Math.max(1, Math.round(t.baseCredits * multiplier));
+  // Le format en autonomie s'applique après les bornes : un entretien sans la
+  // marque, plus court à mener, doit vraiment coûter moins cher.
+  const format = i.asyncMode ? cfg.asyncFactor : 1;
+  if (i.asyncMode) factors.push({ key: "autonomie", label: "Entretien en autonomie", factor: format });
+  const credits = Math.max(1, Math.round(t.baseCredits * multiplier * format));
   const priceCents = credits * cfg.creditValueCents;
-  const pay = round5(t.participantPayCents * multiplier);
+  const pay = round5(t.participantPayCents * multiplier * format);
   return {
     tier: i.tier, credits, priceCents, participantPayCents: pay, marginCents: priceCents - pay,
     factors, multiplier: Math.round(multiplier * 100) / 100, overridden: false,

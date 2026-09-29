@@ -57,6 +57,8 @@ export default function PricingForm({ initial }: { initial: PricingConfig }) {
             <input id="cv" className={a.input} value={cfg.creditValueCents / 100} onChange={(e) => set((c) => { c.creditValueCents = Math.round(num(e.target.value) * 100); return c; })} /></div>
           <div className={a.field}><label htmlFor="fg">Focus group (× par participant)</label>
             <input id="fg" className={a.input} value={cfg.focusGroupFactor} onChange={(e) => set((c) => { c.focusGroupFactor = num(e.target.value); return c; })} /></div>
+          <div className={a.field}><label htmlFor="af">Entretien en autonomie, bêta (× prix et rémunération)</label>
+            <input id="af" className={a.input} value={cfg.asyncFactor} onChange={(e) => set((c) => { c.asyncFactor = num(e.target.value); return c; })} /><small>0,35 = 35 % du prix d&apos;un entretien en direct</small></div>
           <div className={a.field}><label htmlFor="db">Demande : + par marque ayant retenu le profil</label>
             <input id="db" className={a.input} value={cfg.demand.perBrand} onChange={(e) => set((c) => { c.demand.perBrand = num(e.target.value); return c; })} /><small>0,05 = +5 %</small></div>
           <div className={a.field}><label htmlFor="ds">Demande : + par présélection</label>

@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { createInviteCode, activateBrandManually, setBrandCertified } from "@/app/actions/inviteCodes";
+import { setBrandBeta } from "@/app/actions/beta";
 import { useRouter } from "next/navigation";
 
 type Code = { id: string; code: string; label: string; usedAt: string | null; expiresAt: string | null; createdAt: string };
-type Brand = { id: string; companyName: string; email: string; createdAt: string; level?: number; certified?: boolean; legal?: string };
+type Brand = { id: string; companyName: string; email: string; createdAt: string; level?: number; certified?: boolean; legal?: string; beta?: string[] };
 
 export default function AdminAccessClient({
   codes,
@@ -171,6 +172,15 @@ return (
                   <span title="Titre du poinçon" style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "999px", background: "#D9A83E20", color: "#D9A83E", fontWeight: 700, fontFamily: "Georgia, serif" }}>
                     {["—", "I", "II", "III"][b.level ?? 0]}
                   </span>
+                  <button
+                    type="button"
+                    disabled={activating === b.id}
+                    title="Bêta : le participant répond seul, face caméra, aux questions du guide"
+                    onClick={async () => { setActivating(b.id); await setBrandBeta(b.id, "async", !b.beta?.includes("async")); setActivating(null); router.refresh(); }}
+                    style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "6px", border: "1px solid #3A3936", background: b.beta?.includes("async") ? "#6B4FA8" : "transparent", color: "#F9F8F6", cursor: "pointer" }}
+                  >
+                    {b.beta?.includes("async") ? "✓ Bêta autonomie" : "Ouvrir la bêta autonomie"}
+                  </button>
                   <button
                     type="button"
                     disabled={activating === b.id}

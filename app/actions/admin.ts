@@ -33,6 +33,7 @@ export async function saveAdminPricing(input: PricingConfig) {
     return { error: "Réglages de parrainage invalides." };
   }
   if (bad(cfg.payoutMinCents, 0, 100_000)) return { error: "Retrait minimum invalide." };
+  if (bad(cfg.asyncFactor, 0.05, 1)) return { error: "Coefficient de l'entretien en autonomie invalide (entre 0,05 et 1)." };
   await savePricingConfig(cfg);
   revalidatePath("/admin/prix");
   revalidatePath("/pricing");

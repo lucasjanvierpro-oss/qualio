@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
 import InterviewRoom from "@/components/interview/InterviewRoom";
+import AsyncResponse from "@/components/interview/AsyncResponse";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,25 @@ export default async function BrandInterviewPage({ params }: { params: Promise<{
   if (!interview || interview.application.study.brandProfileId !== me.brandProfileId) notFound();
 
   const { study, participantProfile: pp } = interview.application;
+
+  // Entretien en autonomie (bêta) : pas de salle à rejoindre, une réponse à lire.
+  if (interview.mode === "async") {
+    return (
+      <AsyncResponse
+        interviewId={interview.id}
+        title={study.title}
+        studyHref={`/brand/studies/${study.id}`}
+        person={{ name: `${pp.firstName} ${pp.lastName.slice(0, 1)}.`, facts: [pp.profession, pp.city].filter(Boolean).join(" · ") }}
+        questions={study.guide}
+        prompts={(Array.isArray(interview.prompts) ? interview.prompts : []) as { i: number; at: number }[]}
+        status={interview.status}
+        submittedAt={interview.submittedAt?.toISOString() ?? null}
+        hasRecording={!!interview.recordingId}
+        transcriptStatus={interview.transcriptStatus}
+        transcript={interview.transcript}
+      />
+    );
+  }
   return (
     <InterviewRoom
       role="brand"

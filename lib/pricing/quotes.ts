@@ -84,7 +84,7 @@ export type ProfilePricing = {
  */
 export async function priceProfiles(
   ids: string[],
-  study: { durationMin: number; focusGroup: boolean } = { durationMin: 45, focusGroup: false },
+  study: { durationMin: number; focusGroup: boolean; asyncMode?: boolean } = { durationMin: 45, focusGroup: false },
 ): Promise<Map<string, ProfilePricing>> {
   const out = new Map<string, ProfilePricing>();
   if (!ids.length) return out;
@@ -123,6 +123,7 @@ export async function priceProfiles(
       tier: tier.tier,
       durationMin: study.durationMin,
       focusGroup: study.focusGroup,
+      asyncMode: study.asyncMode,
       certScore,
       ratings: trust.ratings,
       signals: signals.get(p.id) ?? { brandsAccepted90d: 0, shortlisted90d: 0, peers: 99, panelSize: 0 },

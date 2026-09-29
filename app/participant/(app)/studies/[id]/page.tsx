@@ -56,6 +56,8 @@ export default async function ParticipantStudyDetailPage({ params }: { params: P
         scheduledAt: interview.scheduledAt.toISOString(),
         durationMinutes: interview.durationMinutes,
         status: interview.status,
+        mode: interview.mode,
+        questions: study.guide.length,
       } : null}
       reward={reward ? { amountCents: reward.amountCents, type: reward.type, status: reward.status } : null}
     />

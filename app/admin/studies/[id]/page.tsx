@@ -28,7 +28,7 @@ export default async function AdminStudyDetailPage({ params }: { params: Promise
               idVerificationStatus: true,
             },
           },
-          interview: { select: { id: true, scheduledAt: true, status: true, videoLink: true } },
+          interview: { select: { id: true, scheduledAt: true, status: true, videoLink: true, mode: true, transcriptStatus: true } },
         },
         orderBy: { appliedAt: "desc" },
       },
@@ -91,6 +91,8 @@ export default async function AdminStudyDetailPage({ params }: { params: Promise
         scheduledAt: a.interview.scheduledAt.toISOString(),
         status: a.interview.status,
         videoLink: a.interview.videoLink,
+        mode: a.interview.mode,
+        transcriptStatus: a.interview.transcriptStatus,
       } : null,
       participantProfile: {
         id: a.participantProfile.id,

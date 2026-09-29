@@ -27,7 +27,7 @@ type Props = {
   };
   slots: Slot[];
   availability: Record<string, string[]> | null;
-  interview: { id: string; scheduledAt: string; durationMinutes: number; status: string } | null;
+  interview: { id: string; scheduledAt: string; durationMinutes: number; status: string; mode?: string; questions?: number } | null;
   reward: { amountCents: number; type: string; status: string } | null;
 };
 
@@ -257,8 +257,31 @@ export default function ParticipantStudyDetailClient(p: Props) {
           </section>
         )}
 
+        {/* ── Entretien en autonomie (bêta) : à faire quand il veut ── */}
+        {p.status === "CONFIRMED" && p.interview?.mode === "async" && (
+          <section className={s.cardDark}>
+            <p className={s.eyebrow} style={{ color: "rgba(255,255,255,.7)" }}>Entretien en autonomie</p>
+            <h2 className={s.h1} style={{ fontSize: 30 }}>
+              {p.interview.status === "submitted" ? "Réponses envoyées" : `${p.interview.questions ?? ""} questions, face caméra`}
+            </h2>
+            <p className={s.muted} style={{ fontSize: 18, margin: "6px 0 0" }}>
+              {p.interview.status === "submitted"
+                ? "Merci ! La marque reçoit la vidéo et la transcription."
+                : `Environ ${p.interview.durationMinutes} min, quand vous voulez${p.study.deadlineAt ? ` avant le ${new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" }).format(new Date(p.study.deadlineAt))}` : ""}.`}
+            </p>
+            {p.interview.status !== "submitted" && (
+              <div className={`${s.row} ${s.sectionGap}`}>
+                <Link href={`/participant/interview/${p.interview.id}`} className={`${s.btn} ${s.btnLight}`}>
+                  {p.interview.status === "in_progress" ? "Reprendre →" : "Commencer →"}
+                </Link>
+              </div>
+            )}
+            <p className={`${s.small} ${s.muted}`} style={{ marginTop: 14 }}>Pas de rendez-vous : les questions s&apos;affichent une par une et vous répondez à voix haute. Tout est enregistré pour la marque.</p>
+          </section>
+        )}
+
         {/* ── Entretien confirmé ── */}
-        {p.status === "CONFIRMED" && p.interview && (
+        {p.status === "CONFIRMED" && p.interview && p.interview.mode !== "async" && (
           <section className={s.cardDark}>
             <p className={s.eyebrow} style={{ color: "rgba(255,255,255,.7)" }}>Entretien confirmé</p>
             <h2 className={s.h1} style={{ fontSize: 30, textTransform: "capitalize" }}>{fmtDay(p.interview.scheduledAt)}</h2>

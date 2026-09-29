@@ -52,6 +52,7 @@ export default async function AdminAccessPage() {
         }),
         legal: b.legalName ? `${b.legalName}${b.siren ? ` · SIREN ${b.siren}` : ""} · ${b.companyVerifyMethod ?? ""}` : "Société non renseignée",
         certified: b.isVerified,
+        beta: b.betaFeatures,
       }))}
     />
   );

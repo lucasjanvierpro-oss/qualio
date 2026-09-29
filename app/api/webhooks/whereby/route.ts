@@ -38,9 +38,12 @@ async function tryTranscriptAndReport(interviewId: string): Promise<string> {
   const text = await fetchWherebyTranscript(transcriptId);
   if (!text) return "transcript_not_ready";
 
+  // En autonomie, un participant qui quitte la salle avant d'avoir envoyé peut
+  // encore reprendre : on garde la transcription sans clore l'entretien.
+  const closes = iv.mode !== "async" || iv.status === "submitted";
   await prisma.interview.update({
     where: { id: interviewId },
-    data: { transcript: text, transcriptStatus: "done", status: "completed", completedAt: new Date() },
+    data: { transcript: text, transcriptStatus: "done", ...(closes ? { status: "completed", completedAt: new Date() } : {}) },
   });
 
   const result = await generateAndStoreReportFromTranscripts(iv.studyId, { requireAll: true });
