@@ -481,6 +481,9 @@
   line-height: 1.6;
   max-width: 320px;
 }
+/* La loupe de Rarelyst au-dessus d'un état vide. */
+.rl-empty-mascot { margin: 0 auto 14px; }
+@media (max-width: 720px) { .rl-hide-sm { display: none !important; } }
 
 /* ─── Hero face grid — responsive ─────────────────────────── */
 .hero-faces { flex-shrink: 0; }

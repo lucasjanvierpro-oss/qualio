@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import LoupeMascot from "@/components/brand/LoupeMascot";
 
 const TYPE_LABEL: Record<string, string> = {
   ONE_ON_ONE: "Entretien 1:1",
@@ -84,7 +85,7 @@ export default async function ParticipantStudiesPage() {
 
         {active.length === 0 ? (
           <div style={{ padding: "48px 32px", textAlign: "center", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px" }}>
-            <div style={{ fontSize: "32px", marginBottom: "12px" }}>🔍</div>
+            <LoupeMascot size={64} mood="search" className="rl-empty-mascot" />
             <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>Aucune étude pour le moment</div>
             <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: 0 }}>
               Complétez votre profil pour augmenter vos chances d'être sélectionné(e).

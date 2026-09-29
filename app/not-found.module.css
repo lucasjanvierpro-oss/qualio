@@ -1,0 +1,25 @@
+/* Page introuvable. */
+.page {
+  min-height: 100vh; box-sizing: border-box; display: grid; place-content: center; justify-items: center; gap: 0;
+  padding: 40px 16px; text-align: center; color: #1c1624;
+  background: radial-gradient(60% 50% at 50% 20%, #f1eaff, #ffffff 70%);
+}
+.stage { position: relative; display: grid; place-items: center; margin-bottom: 18px; }
+.loupe { animation: search 4.8s ease-in-out infinite; }
+@keyframes search {
+  0%, 100% { transform: translate(-26px, 0) rotate(-10deg); }
+  25% { transform: translate(0, -10px) rotate(0deg); }
+  50% { transform: translate(26px, 0) rotate(10deg); }
+  75% { transform: translate(0, -6px) rotate(0deg); }
+}
+.shadow { position: absolute; bottom: -6px; width: 110px; height: 14px; border-radius: 50%; background: rgba(75, 43, 181, 0.12); filter: blur(4px); }
+.kicker { margin: 0; font-size: 14px; font-weight: 700; color: #6a43db; }
+.title { margin: 8px 0 0; font-size: clamp(32px, 5vw, 52px); font-weight: 600; letter-spacing: -0.045em; line-height: 1.05; }
+.text { margin: 14px 0 0; max-width: 42ch; font-size: 17px; line-height: 1.5; color: #5f5868; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 26px; }
+.btn, .ghost { display: inline-flex; align-items: center; padding: 13px 20px; border-radius: 10px; font-size: 15.5px; font-weight: 600; text-decoration: none; }
+.btn { background: #1c1624; color: #fff; }
+.btn:hover { background: #4b2bb5; }
+.ghost { color: #1c1624; box-shadow: inset 0 0 0 1px #eae6ee; }
+.ghost:hover { background: #f6f4f8; }
+@media (prefers-reduced-motion: reduce) { .loupe { animation: none; } }

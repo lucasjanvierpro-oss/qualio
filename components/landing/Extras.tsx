@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Lang } from "@/lib/i18n/detect";
 import { requestDemo } from "@/app/actions/demo";
+import LoupeMascot, { type LoupeMood } from "@/components/brand/LoupeMascot";
 import { getReducedMotion, getReducedMotionServer, subscribeReducedMotion } from "./Film";
 import { LANDING_COPY } from "./copy";
 import x from "./extras.module.css";
@@ -60,6 +61,9 @@ export function Announce({ lang }: { lang: Lang }) {
 // sur téléphone, elle couvrirait le texte.
 
 const SECTIONS = ["comment", "profils", "livrable", "avec", "tarifs", "confidentialite", "langues", "participer", "demo", "questions"];
+// Son humeur selon la section : elle cherche sur les profils, s'émerveille
+// devant les prix, se gratte la tête devant les questions.
+const MOODS: Record<string, LoupeMood> = { profils: "search", tarifs: "wow", demo: "wow", questions: "puzzled" };
 
 export function Loupe({ lang }: { lang: Lang }) {
   const c = LANDING_COPY[lang];
@@ -161,32 +165,7 @@ export function Loupe({ lang }: { lang: Lang }) {
     <div className={x.loupe} ref={ref} data-away={away}>
       {line && <p key={`say-${say!.n}`} className={x.bubble} role="status">{line}</p>}
       <button type="button" className={x.lens} onClick={next} aria-label={c.loupeAria} key={`lens-${say?.n ?? 0}`}>
-        <svg viewBox="0 0 64 64" width="58" height="58" aria-hidden="true">
-          <defs>
-            <radialGradient id="rl-glass" cx=".36" cy=".3" r=".85"><stop offset="0" stopColor="#ffffff" /><stop offset=".55" stopColor="#f1ebff" /><stop offset="1" stopColor="#d6c8ff" /></radialGradient>
-            <linearGradient id="rl-rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#a585ff" /><stop offset="1" stopColor="#4b2bb5" /></linearGradient>
-            <clipPath id="rl-lens"><circle cx="26" cy="26" r="16.5" /></clipPath>
-          </defs>
-          <rect x="37.5" y="38" width="9.5" height="24" rx="4.75" transform="rotate(-45 42 50)" fill="#1c1624" />
-          <rect x="39.5" y="38.5" width="5.5" height="6" rx="2" transform="rotate(-45 42 50)" fill="#6a43db" />
-          <circle cx="26" cy="26" r="20.5" fill="url(#rl-rim)" />
-          <circle cx="26" cy="26" r="16.5" fill="url(#rl-glass)" />
-          <g clipPath="url(#rl-lens)">
-            <g ref={eyes}>
-              <g className={x.eyes}>
-                <ellipse cx="20.5" cy="25.5" rx="2.6" ry="3.4" fill="#1c1624" />
-                <ellipse cx="31.5" cy="25.5" rx="2.6" ry="3.4" fill="#1c1624" />
-                <circle cx="21.3" cy="24.4" r=".9" fill="#fff" />
-                <circle cx="32.3" cy="24.4" r=".9" fill="#fff" />
-              </g>
-            </g>
-            <circle cx="16.5" cy="31" r="2.4" fill="#ff9dc4" opacity=".55" />
-            <circle cx="35.5" cy="31" r="2.4" fill="#ff9dc4" opacity=".55" />
-            <path d="M22 32.5q4 3.4 8 0" fill="none" stroke="#1c1624" strokeWidth="1.7" strokeLinecap="round" />
-            <rect className={x.glint} x="2" y="-10" width="7" height="80" fill="#fff" opacity=".75" />
-          </g>
-          <ellipse cx="18.5" cy="16.5" rx="5" ry="2.6" fill="#fff" opacity=".85" transform="rotate(-32 18.5 16.5)" />
-        </svg>
+        <LoupeMascot size={58} eyesRef={eyes} mood={say ? MOODS[say.id] ?? "happy" : "happy"} />
       </button>
     </div>
   );

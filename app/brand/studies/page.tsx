@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import LoupeMascot from "@/components/brand/LoupeMascot";
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   DRAFT:       { label: "Brouillon",   color: "var(--color-text-tertiary)" },
@@ -63,7 +64,7 @@ export default async function BrandStudiesPage() {
 
       {studies.length === 0 ? (
         <div className="q-card q-empty">
-          <div style={{ fontSize: "24px", marginBottom: "14px", opacity: 0.2 }}>◫</div>
+          <LoupeMascot size={64} mood="search" className="rl-empty-mascot" />
           <p className="q-empty-title">Aucune étude pour le moment</p>
           <p className="q-empty-sub">Créez votre première étude pour recevoir des profils ciblés sous 72h.</p>
           <Link href="/brand/studies/new" className="q-btn q-btn-primary" style={{ marginTop: "20px" }}>

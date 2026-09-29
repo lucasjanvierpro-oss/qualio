@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import WithdrawPanel, { PayoutHistory, type WalletBalance } from "./WithdrawPanel";
+import LoupeMascot from "@/components/brand/LoupeMascot";
 
 type Reward = {
   id: string;
@@ -307,7 +308,7 @@ export default function ParticipantWalletClient({
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {rewards.length === 0 ? (
             <div style={{ textAlign: "center", padding: "64px 20px" }}>
-              <div style={{ fontSize: "40px", marginBottom: "16px" }}>🎁</div>
+              <LoupeMascot size={64} className="rl-empty-mascot" />
               <div style={{ fontSize: "16px", color: "var(--color-text-secondary)" }}>Aucune récompense pour le moment</div>
               <div style={{ fontSize: "14px", color: "var(--color-text-tertiary)", marginTop: "6px" }}>Participez à des études pour gagner des récompenses</div>
             </div>

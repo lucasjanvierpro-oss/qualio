@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import LoupeMascot from "@/components/brand/LoupeMascot";
 
 export default async function ParticipantDashboard() {
   const supabase = await createClient();
@@ -197,7 +198,7 @@ export default async function ParticipantDashboard() {
 
         {availableStudies.length === 0 ? (
           <div className="q-card q-empty">
-            <div style={{ fontSize: "24px", marginBottom: "12px", opacity: 0.25 }}>◎</div>
+            <LoupeMascot size={64} mood="search" className="rl-empty-mascot" />
             <p className="q-empty-title">Aucune étude pour le moment</p>
             <p className="q-empty-sub">
               Complétez votre profil et l'équipe Rarelyst vous sélectionnera pour les études qui correspondent à votre profil.

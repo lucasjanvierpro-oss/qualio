@@ -31,11 +31,6 @@
 @keyframes bob { 50% { transform: translateY(-5px) rotate(-3deg); } }
 @keyframes wiggle { 25% { transform: rotate(-12deg) scale(1.08); } 75% { transform: rotate(10deg) scale(1.08); } }
 
-.eyes { transform-box: view-box; transform-origin: 26px 25.5px; animation: blink 4.8s infinite; }
-@keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.12); } }
-.glint { transform: translateX(-26px) skewX(-22deg); animation: glint 4.2s ease-in-out infinite; }
-@keyframes glint { 0%, 72% { transform: translateX(-26px) skewX(-22deg); } 100% { transform: translateX(62px) skewX(-22deg); } }
-
 .bubble {
   position: absolute; right: 70px; top: 4px; width: max-content; max-width: 240px; margin: 0;
   padding: 10px 14px; border-radius: 14px 14px 4px 14px; background: #fff; color: var(--ink);

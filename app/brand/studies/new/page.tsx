@@ -9,6 +9,7 @@ import { DEFAULT_PRICING } from "@/lib/pricing/config";
 import { quote } from "@/lib/pricing/engine";
 import { DURATIONS, EMPTY_DRAFT, type BriefDraft } from "@/lib/studies/briefTypes";
 import Tour from "@/components/tour/Tour";
+import { LoupeScan } from "@/components/brand/LoupeMascot";
 import b from "./brief.module.css";
 
 // Nouvelle étude, en deux temps. La marque écrit ce qu'elle cherche ou dépose
@@ -223,7 +224,7 @@ export default function NewStudyPage() {
 function Reading({ withFile }: { withFile: boolean }) {
   return (
     <div className={b.reading} role="status" aria-live="polite">
-      <span className={b.spinner} aria-hidden="true" />
+      <LoupeScan variant="doc" />
       <b>{withFile ? "Lecture de votre document…" : "Lecture de votre brief…"}</b>
       <ul>
         {READING_STEPS.map((step, i) => <li key={step} style={{ animationDelay: `${0.9 + i * 1.6}s` }}>{step}</li>)}

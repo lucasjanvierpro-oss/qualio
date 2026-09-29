@@ -14,7 +14,7 @@
 }
 
 .bubble {
-  position: fixed; pointer-events: auto; padding: 16px 18px 14px; border-radius: 16px; background: #fff; color: #1c1624;
+  position: fixed; pointer-events: auto; padding: 16px 18px 14px 74px; border-radius: 16px; background: #fff; color: #1c1624;
   box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.45); animation: pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.98); } }
@@ -27,6 +27,9 @@
 .bubble[data-side="inside"] { box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(140, 104, 242, 0.5); }
 .bubble[data-side="inside"]::before { display: none; }
 
+/* La loupe qui explique, à gauche du texte ; elle rebondit à chaque étape. */
+.guide { position: absolute; left: 14px; top: 14px; animation: guideIn 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+@keyframes guideIn { 0% { transform: scale(0.6) rotate(-14deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
 .count { font-size: 12px; font-weight: 700; color: #6a43db; }
 .title { display: block; margin-top: 4px; font-size: 17px; letter-spacing: -0.02em; }
 .text { margin: 6px 0 0; font-size: 14.5px; line-height: 1.5; color: #5f5868; }
@@ -38,10 +41,12 @@
 
 /* Bouton pour revoir la visite */
 .replay {
-  position: fixed; right: 18px; bottom: 18px; z-index: 900; width: 38px; height: 38px; border-radius: 50%;
-  border: 1px solid #eae6ee; background: #fff; color: #5f5868; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
-  box-shadow: 0 8px 20px -10px rgba(20, 10, 40, 0.35);
+  position: fixed; right: 18px; bottom: 18px; z-index: 900; width: 46px; height: 46px; border-radius: 50%;
+  display: grid; place-items: center; padding: 0 0 2px 2px;
+  border: 1px solid #eae6ee; background: #fff; cursor: pointer;
+  box-shadow: 0 8px 20px -10px rgba(20, 10, 40, 0.35); transition: transform 0.2s, border-color 0.2s;
 }
-.replay:hover { color: #6a43db; border-color: #cbbef5; }
+.replay:hover { border-color: #cbbef5; transform: rotate(-10deg) scale(1.06); }
 
-@media (prefers-reduced-motion: reduce) { .spot, .bubble { animation: none; transition: none; } }
+@media (max-width: 420px) { .bubble { padding-left: 64px; } .guide { left: 10px; } }
+@media (prefers-reduced-motion: reduce) { .spot, .bubble, .guide { animation: none; transition: none; } }

@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import s from "@/components/rl/rl.module.css";
+import { LoupeScan } from "@/components/brand/LoupeMascot";
 import p from "./profile.module.css";
 import { acceptApplication, rejectApplication } from "@/app/actions/studies";
 import { requestProfile } from "@/app/actions/profileRequests";
@@ -570,7 +571,8 @@ function Waiting({ isNew, createdAt }: { isNew: boolean; createdAt: string }) {
     { title: "Vos profils, avec leur prix", text: `Au plus tard ${dueText}. Vous recevez un email.`, done: false },
   ];
   return (
-    <div className={s.card} style={{ marginTop: 12 }} data-tour="study-waiting">
+    <div className={s.card} style={{ marginTop: 12, position: "relative" }} data-tour="study-waiting">
+      <div style={{ position: "absolute", right: 18, top: 14 }} className="rl-hide-sm"><LoupeScan variant="profiles" size={0.9} /></div>
       <p className={s.eyebrow} style={{ margin: 0 }}>{isNew ? "Brief bien reçu" : "Sélection en cours"}</p>
       <h3 className={s.h3} style={{ marginTop: 4 }}>Vos premiers profils arrivent sous 24 h</h3>
       <ol style={{ listStyle: "none", margin: "16px 0 0", padding: 0, display: "grid", gap: 12 }}>

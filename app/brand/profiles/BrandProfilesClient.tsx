@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { EarnedBadge } from "@/lib/participants/badges";
 import { BadgeChips } from "@/components/badges/BadgeShelf";
+import LoupeMascot from "@/components/brand/LoupeMascot";
 
 type GhostSummary = {
   overallQualityScore: number | null;
@@ -371,7 +372,7 @@ export default function BrandProfilesClient() {
           ))}
           {!loading && profiles.length === 0 && (
             <div style={{ gridColumn: "1 / -1", padding: "60px", textAlign: "center", color: "var(--color-text-secondary)" }}>
-              <div style={{ fontSize: "32px", marginBottom: "12px" }}>🔍</div>
+              <LoupeMascot size={64} mood="puzzled" className="rl-empty-mascot" />
               <div style={{ fontSize: "15px", fontWeight: 600, marginBottom: "6px", color: "var(--color-text-primary)" }}>Aucun profil trouvé</div>
               <div style={{ fontSize: "13px" }}>Modifiez vos critères ou élargissez votre recherche.</div>
             </div>

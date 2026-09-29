@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import s from "./dashboard.module.css";
+import LoupeMascot from "@/components/brand/LoupeMascot";
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   ACTIVE:      { label: "Actif",      color: "var(--color-success)" },
@@ -158,7 +159,7 @@ export default async function BrandDashboard() {
 
         {studies.length === 0 ? (
           <div className="q-card q-empty">
-            <div style={{ fontSize: "28px", marginBottom: "14px", opacity: 0.3 }}>◫</div>
+            <LoupeMascot size={64} mood="search" className="rl-empty-mascot" />
             <p className="q-empty-title">Aucune étude pour le moment</p>
             <p className="q-empty-sub">Créez votre première étude pour recevoir des profils ciblés sous 72h.</p>
             <Link href="/brand/studies/new" className="q-btn q-btn-primary" style={{ marginTop: "20px" }}>
