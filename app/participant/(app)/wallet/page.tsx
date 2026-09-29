@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import ParticipantWalletClient from "./ParticipantWalletClient";
+import { participantBalance, stripeReady } from "@/lib/payouts/payouts";
 
 export default async function ParticipantWalletPage() {
   const supabase = await createClient();
@@ -50,12 +51,24 @@ export default async function ParticipantWalletPage() {
     select: { id: true, kind: true, amountCents: true, status: true, createdAt: true },
   })).map((b) => ({ ...b, createdAt: b.createdAt.toISOString() }));
 
+  const [balance, payouts] = await Promise.all([
+    participantBalance(profile.id),
+    prisma.payout.findMany({
+      where: { participantProfileId: profile.id },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      select: { id: true, amountCents: true, status: true, createdAt: true, paidAt: true },
+    }),
+  ]);
+
   return (
     <ParticipantWalletClient
       rewards={rewards}
       bonuses={bonuses}
       stripeConnectStatus={profile.stripeConnectStatus}
-      participantId={profile.id}
+      balance={balance}
+      payouts={payouts.map((p) => ({ ...p, createdAt: p.createdAt.toISOString(), paidAt: p.paidAt?.toISOString() ?? null }))}
+      stripeReady={stripeReady()}
     />
   );
 }

@@ -277,7 +277,9 @@ export default function ParticipantStudyDetailClient(p: Props) {
             <h2 className={s.h2} style={{ marginTop: 12 }}>Merci pour votre regard.</h2>
             <p className={s.muted}>
               {p.reward
-                ? `Votre récompense de ${(p.reward.amountCents / 100).toLocaleString("fr-FR")} € ${p.reward.status === "PAID" || p.reward.status === "REVEALED" ? "est disponible." : "est en cours de traitement."}`
+                ? `Votre récompense de ${(p.reward.amountCents / 100).toLocaleString("fr-FR")} € ${p.reward.type === "CASH"
+                  ? p.reward.status === "PAID" ? "vous a été versée." : p.reward.status === "PROCESSING" ? "est en route vers votre banque." : "est dans votre solde, prête à être retirée."
+                  : p.reward.status === "PAID" || p.reward.status === "REVEALED" ? "est disponible." : "est en préparation."}`
                 : "Votre récompense sera créditée après validation de l'entretien."}
             </p>
             <Link href="/participant/wallet" className={`${s.btn} ${s.btnGhost} ${s.sectionGap}`}>Voir mes gains</Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import PayoutsPanel from "./PayoutsPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -58,27 +59,6 @@ export default function AdminPaymentsPage() {
   const pendingVoucher = rewards.filter((r) => r.status === "PENDING" && r.type === "VOUCHER");
   const totalPending   = pendingCash.reduce((s, r) => s + r.amountCents, 0);
 
-  async function processTransfer(reward: Reward) {
-    setProcessing(reward.id);
-    try {
-      const res = await fetch(`/api/rewards/${reward.id}/process-transfer`, { method: "POST" });
-      const data = await res.json() as { note?: string };
-      if (res.ok) {
-        setFeedback((prev) => ({
-          ...prev,
-          [reward.id]: data.note === "no_connect_account"
-            ? "⚠ Pas de compte Stripe Connect — statut mis à PROCESSING"
-            : "✓ Virement Stripe déclenché",
-        }));
-        await load();
-      } else {
-        setFeedback((prev) => ({ ...prev, [reward.id]: `Erreur Stripe` }));
-      }
-    } finally {
-      setProcessing(null);
-    }
-  }
-
   async function assignVoucher(reward: Reward) {
     const code = voucherInputs[reward.id]?.trim();
     if (!code) return;
@@ -122,10 +102,12 @@ export default function AdminPaymentsPage() {
         </h1>
       </div>
 
+      <PayoutsPanel />
+
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "32px" }}>
         {[
-          { label: "Virements en attente", value: pendingCash.length, sub: pendingCash.length > 0 ? `${(totalPending / 100).toFixed(0)}€ à déclencher` : "Aucun" },
+          { label: "Gains dans les soldes", value: pendingCash.length, sub: pendingCash.length > 0 ? `${(totalPending / 100).toFixed(0)}€ pas encore retirés` : "Aucun" },
           { label: "Vouchers à assigner", value: pendingVoucher.length, sub: "Codes à saisir" },
           { label: "Payés au total", value: rewards.filter((r) => ["PAID","REVEALED"].includes(r.status)).length, sub: `${(rewards.filter((r) => ["PAID","REVEALED"].includes(r.status)).reduce((s, r) => s + r.amountCents, 0) / 100).toFixed(0)}€` },
         ].map((s) => (
@@ -253,30 +235,9 @@ export default function AdminPaymentsPage() {
                       {feedback[r.id]}
                     </span>
                   ) : r.status === "PENDING" && r.type === "CASH" ? (
-                    <div>
-                      <button
-                        onClick={() => processTransfer(r)}
-                        disabled={processing === r.id}
-                        style={{
-                          padding: "6px 12px",
-                          background: "#573E69",
-                          color: "#fff",
-                          border: "1px solid #6B4FA8",
-                          borderRadius: "2px",
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          cursor: processing === r.id ? "not-allowed" : "pointer",
-                          opacity: processing === r.id ? 0.6 : 1,
-                        }}
-                      >
-                        {processing === r.id ? "…" : hasConnect ? "Virement Stripe →" : "Marquer envoyé →"}
-                      </button>
-                      {!hasConnect && (
-                        <div style={{ fontSize: "10px", color: "#D97706", marginTop: "4px" }}>
-                          Pas de compte Connect
-                        </div>
-                      )}
-                    </div>
+                    <span style={{ fontSize: "12px", color: "#7A7875" }}>
+                      Dans le solde{hasConnect ? "" : " · banque non connectée"}
+                    </span>
                   ) : r.status === "PENDING" && r.type === "VOUCHER" ? (
                     <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                       <input

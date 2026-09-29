@@ -217,6 +217,26 @@ export async function sendRewardAvailable(to: string, firstName: string, amount:
   }));
 }
 
+export async function sendPayoutSent(to: string, firstName: string, amountCents: number) {
+  return send(to, `${(amountCents / 100).toLocaleString("fr-FR")} € en route vers votre compte`, layout({
+    title: `C'est parti, ${esc(firstName)}.`,
+    body: `Votre retrait de <strong style="color:${INK}">${(amountCents / 100).toLocaleString("fr-FR")} €</strong> a été envoyé. Il arrive sur votre compte bancaire sous 1 à 3 jours ouvrés.`,
+    cta: { label: "Voir mes gains", href: `${APP_URL}/participant/wallet` },
+  }));
+}
+
+/** Un retrait n'a pas pu partir : Lucas doit relancer depuis l'admin. */
+export async function sendPayoutFailedAdmin(participantName: string, amountCents: number, reason: string) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return null;
+  return send(adminEmail, `Retrait bloqué : ${participantName}`, layout({
+    title: "Un retrait n'est pas parti",
+    body: `Le retrait de <strong style="color:${INK}">${(amountCents / 100).toLocaleString("fr-FR")} €</strong> de ${esc(participantName)} a échoué. Le participant voit « en cours de traitement ».`,
+    aside: esc(reason),
+    cta: { label: "Relancer le virement", href: `${APP_URL}/admin/payments` },
+  }));
+}
+
 export async function sendAvailabilityProposed(to: string, contactFirstName: string, participantFirstName: string, studyTitle: string, studyId: string, slots: Date[]) {
   const list = slots.map((d) => `<li style="margin:4px 0;text-transform:capitalize">${esc(fmtDateTime(d))}</li>`).join("");
   return send(to, `${participantFirstName} propose ses disponibilités`, layout({

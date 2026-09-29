@@ -280,6 +280,7 @@ model ParticipantProfile {
   referredBy      ParticipantProfile?  @relation("Referrals", fields: [referredById], references: [id])
   referrals       ParticipantProfile[] @relation("Referrals")
   referralBonuses ReferralBonus[]
+  payouts         Payout[]
 }
 
 // ─── GHOST FILE (IA) ─────────────────────────────────────
@@ -531,6 +532,9 @@ model Reward {
   amountCents      Int
   stripeTransferId String?
   paidAt           DateTime?
+  // Le retrait qui a emporté ce gain (null : encore dans le solde).
+  payoutId         String?
+  payout           Payout?   @relation(fields: [payoutId], references: [id])
 
   voucherCode       String?
   voucherBrand      String?
@@ -629,13 +633,39 @@ model ReferralBonus {
   applicationId String
   kind          String             // "first" | "interview" | "welcome"
   amountCents   Int
-  status        String             @default("pending") // pending | paid | cancelled
+  status        String             @default("pending") // pending | processing | paid | cancelled
   createdAt     DateTime           @default(now())
   paidAt        DateTime?
+  payoutId      String?
+  payout        Payout?            @relation(fields: [payoutId], references: [id])
 
   @@unique([beneficiaryId, applicationId, kind])
   @@index([refereeId])
   @@map("referral_bonuses")
+}
+
+// Un retrait, comme sur Vinted : le participant vide son solde (gains
+// d'entretiens + primes de parrainage) vers son compte bancaire, dès le
+// minimum atteint. Le virement part par Stripe Connect.
+model Payout {
+  id                   String             @id @default(cuid())
+  participantProfileId String
+  participantProfile   ParticipantProfile @relation(fields: [participantProfileId], references: [id])
+  amountCents          Int
+  status               String             @default("requested") // requested | sent | failed | cancelled
+  method               String             @default("stripe")    // stripe | manual
+  stripeTransferId     String?
+  error                String?
+  attempts             Int                @default(0)
+  sendingAt            DateTime?
+  createdAt            DateTime           @default(now())
+  paidAt               DateTime?
+  rewards              Reward[]
+  bonuses              ReferralBonus[]
+
+  @@index([participantProfileId])
+  @@index([status])
+  @@map("payouts")
 }
 
 // Laboratoire : une marque inventée par Claude écrit un brief, notre lecteur

@@ -133,7 +133,7 @@ export async function referralSummary(profileId: string): Promise<ReferralSummar
       active: f.onboardingStatus === "complete",
     })),
     earnedCents: bonuses.filter((b) => b.status === "paid").reduce((n, b) => n + b.amountCents, 0),
-    pendingCents: bonuses.filter((b) => b.status === "pending").reduce((n, b) => n + b.amountCents, 0),
+    pendingCents: bonuses.filter((b) => b.status === "pending" || b.status === "processing").reduce((n, b) => n + b.amountCents, 0),
     welcomeCents: bonuses.filter((b) => b.kind === "welcome").reduce((n, b) => n + b.amountCents, 0),
   };
 }

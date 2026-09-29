@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import WithdrawPanel, { PayoutHistory, type WalletBalance } from "./WithdrawPanel";
 
 type Reward = {
   id: string;
@@ -149,42 +150,27 @@ function VoucherCard({ reward, onReveal, onCopy, copied }: {
   );
 }
 
-// Cash claim component
+// Un gain d'entretien : dans le solde, en route vers la banque, ou versé.
 function CashCard({ reward }: { reward: Reward }) {
-  const [claimed, setClaimed] = useState(reward.paidAt !== null);
-  const [claiming, setClaiming] = useState(false);
-
+  const state = reward.status === "PAID"
+    ? { text: reward.paidAt ? `Versé le ${fmtDate(reward.paidAt)}` : "Versé", bg: "var(--color-success-light)", color: "var(--color-success)" }
+    : reward.status === "PROCESSING"
+      ? { text: "Retrait en cours : arrivée sous 1 à 3 jours ouvrés", bg: "var(--color-warning-light)", color: "var(--color-warning)" }
+      : { text: "Dans votre solde, prêt à être retiré", bg: "var(--color-surface-2)", color: "var(--color-text-secondary)" };
   return (
-    <div style={{ background: "var(--color-surface)", border: `2px solid ${claimed ? "var(--color-success)" : "var(--color-border)"}`, borderRadius: "14px", padding: "22px 24px", transition: "border-color 0.4s" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+    <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "14px", padding: "20px 22px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
         <div>
           <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "2px" }}>
             {reward.studyTitle}
           </div>
-          <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>{fmtDate(reward.createdAt)} · Virement bancaire</div>
+          <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>Entretien du {fmtDate(reward.createdAt)}</div>
         </div>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: "26px", fontWeight: 700, color: claimed ? "var(--color-success)" : "var(--color-text-primary)" }}>
+        <div style={{ fontSize: "24px", fontWeight: 700, color: reward.status === "PAID" ? "var(--color-success)" : "var(--color-text-primary)" }}>
           {euros(reward.amountCents)}€
         </div>
       </div>
-
-      {claimed ? (
-        <div style={{ padding: "12px 16px", background: "var(--color-success-light)", borderRadius: "10px", display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "20px" }}>✓</span>
-          <div>
-            <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-success)" }}>Virement en cours</div>
-            <div style={{ fontSize: "12px", color: "var(--color-success)", opacity: 0.8 }}>Arrivée sous 2-3 jours ouvrés</div>
-          </div>
-        </div>
-      ) : reward.status === "PAID" ? (
-        <div style={{ padding: "12px 16px", background: "var(--color-warning-light)", borderRadius: "10px", fontSize: "13px", color: "var(--color-warning)" }}>
-          Votre récompense est prête — vous recevrez un virement automatiquement
-        </div>
-      ) : (
-        <div style={{ padding: "10px 14px", background: "var(--color-surface-2)", borderRadius: "8px", fontSize: "13px", color: "var(--color-text-tertiary)" }}>
-          {reward.status === "PROCESSING" ? "Virement en cours de traitement" : "En attente de traitement par Rarelyst"}
-        </div>
-      )}
+      <div style={{ padding: "10px 14px", background: state.bg, borderRadius: "9px", fontSize: "13px", color: state.color }}>{state.text}</div>
     </div>
   );
 }
@@ -201,12 +187,16 @@ export default function ParticipantWalletClient({
   rewards,
   bonuses = [],
   stripeConnectStatus,
-  participantId,
+  balance,
+  payouts,
+  stripeReady,
 }: {
   rewards: Reward[];
   bonuses?: Bonus[];
   stripeConnectStatus: string | null;
-  participantId: string;
+  balance: WalletBalance;
+  payouts: { id: string; amountCents: number; status: string; createdAt: string; paidAt: string | null }[];
+  stripeReady: boolean;
 }) {
   const [tab, setTab] = useState<"rewards" | "cash" | "vouchers">("rewards");
   const [copied, setCopied] = useState<string | null>(null);
@@ -215,18 +205,9 @@ export default function ParticipantWalletClient({
   );
   const [connectStatus, setConnectStatus] = useState(stripeConnectStatus);
   const [connectSyncing, setConnectSyncing] = useState(false);
-  const [connectingToStripe, setConnectingToStripe] = useState(false);
 
   const cashRewards = rewards.filter((r) => r.type === "CASH");
   const voucherRewards = rewards.filter((r) => r.type === "VOUCHER");
-  const availableCents = cashRewards.filter((r) => r.status === "PAID").reduce((s, r) => s + r.amountCents, 0);
-  // Les primes de parrainage s'ajoutent aux gains des entretiens.
-  const pendingCents = cashRewards.filter((r) => r.status === "PENDING").reduce((s, r) => s + r.amountCents, 0)
-    + bonuses.filter((b) => b.status === "pending").reduce((s, b) => s + b.amountCents, 0);
-  const totalEarned = rewards.filter((r) => ["PAID", "REVEALED"].includes(r.status)).reduce((s, r) => s + r.amountCents, 0)
-    + bonuses.filter((b) => b.status === "paid").reduce((s, b) => s + b.amountCents, 0);
-
-  const isStripeConnected = connectStatus === "active";
 
   // When participant returns from Stripe Connect onboarding, sync the real status
   useEffect(() => {
@@ -246,17 +227,6 @@ export default function ParticipantWalletClient({
         .finally(() => setConnectSyncing(false));
     }
   }, []);
-
-  async function handleConnectStripe() {
-    setConnectingToStripe(true);
-    try {
-      const res = await fetch("/api/stripe/connect", { method: "POST" });
-      const data = await res.json() as { url?: string };
-      if (data.url) window.location.href = data.url;
-    } catch {
-      setConnectingToStripe(false);
-    }
-  }
 
   function copyCode(code: string) {
     navigator.clipboard.writeText(code).then(() => {
@@ -279,7 +249,7 @@ export default function ParticipantWalletClient({
 
   const tabs = [
     { key: "rewards" as const, label: "Toutes les récompenses", count: rewards.length },
-    { key: "cash" as const, label: "Virements", count: cashRewards.length },
+    { key: "cash" as const, label: "Gains et retraits", count: cashRewards.length },
     { key: "vouchers" as const, label: "Mes vouchers", count: voucherRewards.length },
   ];
 
@@ -293,20 +263,7 @@ export default function ParticipantWalletClient({
         Vos gains des études Rarelyst
       </p>
 
-      {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px", marginBottom: "36px" }}>
-        {[
-          { label: "Disponible", value: `${euros(availableCents)}€`, color: "var(--color-text-primary)", sub: availableCents > 0 ? "Prêt à retirer" : "Aucun gain disponible" },
-          { label: "En attente", value: `${euros(pendingCents)}€`, color: "var(--color-warning)", sub: "En cours de traitement" },
-          { label: "Total gagné", value: `${euros(totalEarned)}€`, color: "var(--color-accent)", sub: `${rewards.length} étude${rewards.length > 1 ? "s" : ""}` },
-        ].map(({ label, value, color, sub }) => (
-          <div key={label} style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "14px", padding: "20px 22px" }}>
-            <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>{label}</div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: "28px", fontWeight: 700, color, marginBottom: "4px" }}>{value}</div>
-            <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>{sub}</div>
-          </div>
-        ))}
-      </div>
+      <WithdrawPanel balance={balance} connectStatus={connectStatus} syncing={connectSyncing} stripeReady={stripeReady} />
 
       {/* Parrainage : les primes, ou l'invitation à parrainer */}
       <a href="/participant/parrainage" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, padding: "16px 20px", marginBottom: 28, borderRadius: 14, background: "linear-gradient(135deg, #fff6e3, #ffffff)", border: "1px solid #f1e6cf", textDecoration: "none", color: "inherit" }}>
@@ -355,7 +312,7 @@ export default function ParticipantWalletClient({
               <div style={{ fontSize: "14px", color: "var(--color-text-tertiary)", marginTop: "6px" }}>Participez à des études pour gagner des récompenses</div>
             </div>
           ) : rewards.map((r) => {
-            const statusLabel = r.status === "PAID" ? "Payé" : r.status === "REVEALED" ? "Révélé" : r.status === "PROCESSING" ? "En cours" : "En attente";
+            const statusLabel = r.status === "PAID" ? "Versé" : r.status === "REVEALED" ? "Révélé" : r.status === "PROCESSING" ? "Retrait en cours" : r.type === "CASH" ? "Dans le solde" : "En préparation";
             const statusBg = r.status === "PAID" || r.status === "REVEALED" ? "var(--color-success-light)" : r.status === "PROCESSING" ? "var(--color-info-light)" : "var(--color-warning-light)";
             const statusColor = r.status === "PAID" || r.status === "REVEALED" ? "var(--color-success)" : r.status === "PROCESSING" ? "var(--color-info)" : "var(--color-warning)";
             return (
@@ -379,44 +336,7 @@ export default function ParticipantWalletClient({
       {/* Cash tab */}
       {tab === "cash" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {/* Bank account */}
-          <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px", padding: "22px" }}>
-            <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "14px" }}>Compte bancaire</div>
-            {connectSyncing ? (
-              <div style={{ padding: "14px 16px", background: "var(--color-surface-2)", border: "1px solid var(--color-border)", borderRadius: "9px", fontSize: "13px", color: "var(--color-text-secondary)" }}>
-                Synchronisation du compte en cours…
-              </div>
-            ) : isStripeConnected ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", background: "var(--color-success-light)", border: "1px solid var(--color-success)", borderRadius: "9px" }}>
-                <span style={{ fontSize: "22px" }}>✓</span>
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-success)" }}>Compte bancaire connecté</div>
-                  <div style={{ fontSize: "12px", color: "var(--color-success)", opacity: 0.8 }}>Stripe Connect actif — virements automatiques</div>
-                </div>
-              </div>
-            ) : connectStatus === "restricted" ? (
-              <div>
-                <div style={{ padding: "12px 16px", background: "var(--color-warning-light)", border: "1px solid var(--color-warning)", borderRadius: "9px", fontSize: "13px", color: "var(--color-warning)", marginBottom: "12px" }}>
-                  Votre compte Stripe nécessite des informations supplémentaires pour être activé.
-                </div>
-                <button onClick={handleConnectStripe} disabled={connectingToStripe} style={{ padding: "10px 20px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
-                  {connectingToStripe ? "Redirection…" : "Compléter mon profil Stripe →"}
-                </button>
-              </div>
-            ) : (
-              <div>
-                <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: "0 0 16px", lineHeight: 1.6 }}>
-                  Connectez votre compte bancaire pour recevoir vos virements directement sur votre IBAN.
-                </p>
-                <button onClick={handleConnectStripe} disabled={connectingToStripe} style={{ padding: "11px 24px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: connectingToStripe ? "not-allowed" : "pointer", opacity: connectingToStripe ? 0.7 : 1 }}>
-                  {connectingToStripe ? "Redirection vers Stripe…" : "Connecter mon compte bancaire →"}
-                </button>
-                <p style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "8px" }}>
-                  Sécurisé par Stripe · Vos données bancaires ne transitent pas par Rarelyst
-                </p>
-              </div>
-            )}
-          </div>
+          <PayoutHistory payouts={payouts} />
 
           {cashRewards.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--color-text-secondary)", fontSize: "14px" }}>Aucun virement pour le moment</div>
