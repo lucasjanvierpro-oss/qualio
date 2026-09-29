@@ -26,7 +26,9 @@ declare global {
   }
 }
 
-const EMBED_SCRIPT = "https://cdn.srv.whereby.com/embed/v2/index.js";
+// v3 : la version actuelle. L'ancienne adresse (v2/index.js) répond 403 (constaté le 29/09/2026) :
+// la visio ne s'affichait plus du tout.
+const EMBED_SCRIPT = "https://cdn.srv.whereby.com/embed/v3-embed.js";
 
 export default function WherebyRoom({ roomUrl, displayName, height = "min(72vh, 680px)", minimal = false, onJoin, onLeave }: {
   roomUrl: string;
