@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth/guards";
 import { prisma } from "@/lib/prisma";
-import { prepareDemoBrief, prepareDemoSynthesis } from "@/lib/demo/prepare";
+import { prepareDemoBrief, prepareDemoInterviews, prepareDemoSynthesis } from "@/lib/demo/prepare";
 
 // Admin → Lancer une démo : préparer une présentation pour une marque.
 
@@ -18,6 +18,13 @@ export async function startDemo(input: { brandName: string; topic?: string; lang
   const r = await prepareDemoBrief(demo.id);
   revalidatePath("/admin/demo");
   return "error" in r ? r : { id: demo.id };
+}
+
+export async function interviewDemo(id: string): Promise<{ ok: true } | { error: string }> {
+  await assertAdmin();
+  const r = await prepareDemoInterviews(id);
+  revalidatePath("/admin/demo");
+  return r;
 }
 
 export async function finishDemo(id: string): Promise<{ ok: true } | { error: string }> {

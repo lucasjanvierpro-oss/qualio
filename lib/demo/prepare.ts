@@ -7,11 +7,11 @@ import type { BriefDraft } from "@/lib/studies/briefTypes";
 import { buildUserMessage, generateReport } from "@/lib/reports/generate";
 import { checkAndRepairQuotes } from "@/lib/reports/quality";
 
-// La démo pour une marque, en deux temps (chacun tient dans une requête) :
+// La démo pour une marque, en trois temps (chacun tient dans une requête) :
 // 1. le brief qu'écrirait son équipe études, lu par le vrai lecteur de brief,
 //    et huit profils d'exemple très précis ;
-// 2. quatre entretiens simulés et la synthèse, par le vrai moteur de synthèse,
-//    citations vérifiées comprises.
+// 2. quatre entretiens simulés ;
+// 3. la synthèse, par le vrai moteur de synthèse, citations vérifiées comprises.
 // Tout est marqué « exemple » à l'écran : ce ne sont ni de vrais membres du
 // panel, ni de vrais entretiens.
 
@@ -34,7 +34,8 @@ const PROOFS = ["verifie", "linkedin", "emploi", "cv", "portfolio", "reseaux", "
 
 async function askJson<T>(system: string, prompt: string, maxTokens: number): Promise<T> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const msg = await anthropic.messages.create({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: "user", content: prompt }] });
+  // En flux : le raisonnement du modèle prend une partie du budget avant la réponse.
+  const msg = await anthropic.messages.stream({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: "user", content: prompt }] }).finalMessage();
   return JSON.parse(extractJsonObject(textFromMessage(msg))) as T;
 }
 
@@ -61,7 +62,7 @@ Format :
 {"sector":"","positioning":"1 phrase","clientele":"1 phrase","topic":"le sujet en 1 ligne","persona":"poste de la personne qui écrit le brief","brief":"",
 "profiles":[{"firstName":"Léa","initial":"M.","age":29,"city":"Paris","role":"Styliste de célébrités","tier":"rare|initie|averti","match":"Très proche|Proche","why":"pourquoi elle répond au brief, 1 à 2 phrases concrètes","highlight":"un détail marquant court (ex. 38 k abonnés, 12 ans en boutique)","proofs":["verifie","linkedin"]}]}
 Les preuves possibles : ${PROOFS.join(", ")} (2 à 4 par profil, « verifie » toujours).`,
-      6000,
+      16000,
     );
     const today = new Intl.DateTimeFormat("fr-FR", { dateStyle: "full", timeZone: "Europe/Paris" }).format(new Date());
     const draft = await readBrief([{ kind: "text", text: `Ce que la marque a écrit :\n${base.brief}` }], today);
@@ -80,8 +81,8 @@ Les preuves possibles : ${PROOFS.join(", ")} (2 à 4 par profil, « verifie » t
   }
 }
 
-/** Étape 2 : quatre entretiens simulés, puis la synthèse par le vrai moteur. */
-export async function prepareDemoSynthesis(id: string): Promise<{ ok: true } | { error: string }> {
+/** Étape 2 : quatre entretiens simulés. */
+export async function prepareDemoInterviews(id: string): Promise<{ ok: true } | { error: string }> {
   const demo = await prisma.demoSession.findUnique({ where: { id } });
   const data = demo?.data as unknown as DemoData | null;
   if (!demo || !data?.draft) return { error: "Préparez d'abord le brief." };
@@ -103,9 +104,28 @@ LANGUE : ${en ? "anglais" : "français"}
 
 Écris les ${picked.length} entretiens (350 à 500 mots chacun).
 Format : {"interviews": [{"profil": "Léa M., styliste de célébrités, 29 ans", "transcript": "Intervieweur : …\\nParticipant : …"}]}`,
-      12000,
+      24000,
     );
     if (!interviews?.length) throw new Error("aucun entretien");
+    const next: DemoData = { ...data, interviews };
+    await prisma.demoSession.update({ where: { id }, data: { data: next as unknown as Prisma.InputJsonValue, error: null } });
+    return { ok: true };
+  } catch (e) {
+    console.error("[démo] entretiens", e);
+    await prisma.demoSession.update({ where: { id }, data: { status: "failed", error: "Les entretiens simulés n'ont pas pu être écrits." } }).catch(() => null);
+    return { error: "Les entretiens simulés n'ont pas pu être écrits. Réessayez." };
+  }
+}
+
+/** Étape 3 : la synthèse par le vrai moteur, citations vérifiées. */
+export async function prepareDemoSynthesis(id: string): Promise<{ ok: true } | { error: string }> {
+  const demo = await prisma.demoSession.findUnique({ where: { id } });
+  const data = demo?.data as unknown as DemoData | null;
+  if (!demo || !data?.draft) return { error: "Préparez d'abord le brief." };
+  if (!data.interviews?.length) return { error: "Les entretiens simulés manquent." };
+  const en = demo.lang === "en";
+  const { draft, interviews } = data;
+  try {
     const userMessage = buildUserMessage({
       studyObjective: draft.objective || data.topic,
       brandContext: `Étude menée pour ${demo.brandName} · secteur : ${data.sector}`,
@@ -121,7 +141,7 @@ Format : {"interviews": [{"profil": "Léa M., styliste de célébrités, 29 ans"
     const { structured } = await generateReport(userMessage);
     if (!structured) throw new Error("synthèse illisible");
     const q = await checkAndRepairQuotes(structured, interviews.map((iv) => iv.transcript));
-    const next: DemoData = { ...data, interviews, report: structured, quality: { citations: q.total, verifiees: q.verified, corrigees: q.repaired, retirees: q.removed } };
+    const next: DemoData = { ...data, report: structured, quality: { citations: q.total, verifiees: q.verified, corrigees: q.repaired, retirees: q.removed } };
     await prisma.demoSession.update({ where: { id }, data: { status: "done", data: next as unknown as Prisma.InputJsonValue, error: null } });
     return { ok: true };
   } catch (e) {

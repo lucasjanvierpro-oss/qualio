@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/app/generated/prisma/client";
 import { sendReportReady } from "@/lib/resend/emails";
-import { textFromMessage, extractJsonObject } from "@/lib/anthropic/text";
+import { textFromMessage, extractJsonObject, wasTruncated } from "@/lib/anthropic/text";
 import { checkAndRepairQuotes } from "@/lib/reports/quality";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -151,21 +151,43 @@ export async function generateReport(userMessage: string): Promise<{
   raw: string;
   structured: Record<string, unknown> | null;
 }> {
-  const response = await anthropic.messages.create({
+  // En flux : le raisonnement du modèle consomme une partie du budget avant la
+  // réponse, et un long rapport coupé à 16 000 jetons devenait illisible
+  // (constaté le 30/09 sur une démo de 4 entretiens et 3 décisions).
+  const response = await anthropic.messages.stream({
     model: REPORT_MODEL,
-    max_tokens: 16000,
+    max_tokens: 32000,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userMessage }],
-  });
+  }).finalMessage();
 
   const raw = textFromMessage(response);
+  if (wasTruncated(response)) console.error("[rapport] réponse coupée par la limite de jetons", raw.length);
   let structured: Record<string, unknown> | null = null;
   try {
     structured = JSON.parse(extractJsonObject(raw));
-  } catch {
-    structured = null;
+  } catch (e) {
+    console.error("[rapport] JSON illisible, réparation", response.stop_reason, raw.length, e instanceof Error ? e.message : e);
+    structured = await repairJson(raw);
   }
   return { raw, structured };
+}
+
+/** Dernier recours : fait réécrire en JSON valide une réponse abîmée (guillemet, coupure). */
+async function repairJson(raw: string): Promise<Record<string, unknown> | null> {
+  if (!raw.includes("{")) return null;
+  try {
+    const fixed = await anthropic.messages.stream({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 32000,
+      system: "Tu répares du JSON. Tu renvoies exactement le même contenu, en JSON strictement valide : guillemets échappés, virgules corrigées, structures coupées refermées proprement. Tu ne résumes rien, tu n'ajoutes rien. Uniquement le JSON.",
+      messages: [{ role: "user", content: raw }],
+    }).finalMessage();
+    return JSON.parse(extractJsonObject(textFromMessage(fixed)));
+  } catch (e) {
+    console.error("[rapport] réparation impossible", e instanceof Error ? e.message : e);
+    return null;
+  }
 }
 
 function calcAge(dob: Date | null): number | null {

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import DemoLauncher from "./DemoLauncher";
 import DeleteDemo from "./DeleteDemo";
+import ResumeDemo from "./ResumeDemo";
 import a from "../admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -28,13 +29,15 @@ export default async function DemoPage() {
           {demos.length === 0 && <p className={a.muted} style={{ margin: 0, padding: 16, fontSize: 13 }}>Aucune démo pour l&apos;instant.</p>}
           {demos.map((d) => {
             const topic = (d.data as { topic?: string } | null)?.topic ?? d.topic;
-            const ready = d.status === "done" || d.status === "synthesis" || (d.status === "failed" && !!(d.data as object | null));
+            const data = d.data as { interviews?: unknown[]; report?: unknown } | null;
+            const ready = !!data;
             return (
-              <div key={d.id} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto auto", gap: 14, alignItems: "center", padding: "14px 16px", borderTop: "1px solid #262420" }}>
+              <div key={d.id} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto auto auto", gap: 14, alignItems: "center", padding: "14px 16px", borderTop: "1px solid #262420" }}>
                 <span>
                   <b style={{ color: "#f8f7f4" }}>{d.brandName}</b> <span className={a.muted} style={{ fontSize: 12 }}>· {d.lang.toUpperCase()} · {fmt(d.createdAt)} · {STATUS[d.status] ?? d.status}</span>
                   {topic && <span className={a.muted} style={{ display: "block", fontSize: 12.5, marginTop: 3 }}>{topic}</span>}
                 </span>
+                {ready && !data?.report ? <ResumeDemo id={d.id} hasInterviews={!!data?.interviews?.length} /> : <span />}
                 {ready ? <Link className={a.btn} href={`/demo/${d.id}`} style={{ textDecoration: "none" }}>Présenter →</Link> : <span />}
                 <DeleteDemo id={d.id} />
               </div>

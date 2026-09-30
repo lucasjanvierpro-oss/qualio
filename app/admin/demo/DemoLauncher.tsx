@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { finishDemo, startDemo } from "@/app/actions/demoSessions";
+import { finishDemo, interviewDemo, startDemo } from "@/app/actions/demoSessions";
 import LoupeLoading from "@/components/brand/LoupeLoading";
 import a from "../admin.module.css";
 
@@ -13,7 +13,7 @@ export default function DemoLauncher() {
   const [brand, setBrand] = useState("");
   const [topic, setTopic] = useState("");
   const [lang, setLang] = useState<"fr" | "en">("fr");
-  const [step, setStep] = useState<"idle" | "brief" | "synthesis">("idle");
+  const [step, setStep] = useState<"idle" | "brief" | "interviews" | "synthesis">("idle");
   const [error, setError] = useState<string | null>(null);
 
   async function launch() {
@@ -21,8 +21,9 @@ export default function DemoLauncher() {
     setStep("brief");
     const r = await startDemo({ brandName: brand, topic, lang });
     if ("error" in r) { setError(r.error); setStep("idle"); router.refresh(); return; }
-    setStep("synthesis");
-    const f = await finishDemo(r.id);
+    setStep("interviews");
+    const iv = await interviewDemo(r.id);
+    const f = "error" in iv ? iv : (setStep("synthesis"), await finishDemo(r.id));
     setStep("idle");
     router.refresh();
     if ("error" in f) { setError(`${f.error} Le brief et les profils sont prêts : vous pouvez déjà présenter.`); return; }
@@ -55,7 +56,8 @@ export default function DemoLauncher() {
         <span className={a.muted} style={{ fontSize: 12 }}>Environ 3 minutes. Rien ne touche aux vraies études ni au panel.</span>
       </div>
       {step === "brief" && <LoupeLoading tone="dark" compact lines={["Claude écrit le brief de la marque…", "Notre lecteur de brief le lit…", "Il cherche huit profils très précis…"]} />}
-      {step === "synthesis" && <LoupeLoading tone="dark" compact lines={["Brief et profils prêts.", "Quatre entretiens simulés…", "La synthèse s'écrit…", "Chaque citation est vérifiée…"]} />}
+      {step === "interviews" && <LoupeLoading tone="dark" compact lines={["Brief et profils prêts.", "Quatre entretiens simulés…", "Des avis qui divergent vraiment…"]} />}
+      {step === "synthesis" && <LoupeLoading tone="dark" compact lines={["Entretiens prêts.", "La synthèse s'écrit…", "Chaque citation est vérifiée…"]} />}
       {error && <p className={`${a.msg} ${a.warn}`} style={{ margin: 0 }}>{error}</p>}
     </div>
   );
