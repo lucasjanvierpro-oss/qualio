@@ -6,12 +6,13 @@ export default function CertificationCard({ level, steps, companyName }: { level
   const t = CERT_TITLES[level];
   return (
     <section style={{
-      display: "grid", gridTemplateColumns: "auto 1fr", gap: 24, alignItems: "center",
+      // Sur téléphone, le texte passe sous le poinçon au lieu de s'écraser à côté.
+      display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center",
       padding: 24, borderRadius: 14, marginBottom: 28,
       background: "var(--color-surface)", border: "1px solid var(--color-border-base)",
     }}>
-      <Hallmark level={level} size={150} initial={companyName} />
-      <div>
+      <div style={{ flex: "0 0 auto" }}><Hallmark level={level} size={150} initial={companyName} /></div>
+      <div style={{ flex: "1 1 260px", minWidth: 0 }}>
         <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--color-text-tertiary)" }}>Poinçon Rarelyst</div>
         <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-.02em", color: "var(--color-text-primary)", margin: "4px 0 4px" }}>
           {level ? `Titre ${t.roman} · ${t.name}` : t.name}

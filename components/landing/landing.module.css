@@ -62,6 +62,10 @@
 .login { font-size: 15px; color: var(--ink-2); }
 .login:hover { color: var(--ink); }
 @media (max-width: 520px) { .login { display: none; } }
+/* En-tête sur téléphone : un bouton court, sur une seule ligne. */
+.navCta { white-space: nowrap; }
+.ctaShort { display: none; }
+@media (max-width: 480px) { .ctaLong { display: none; } .ctaShort { display: inline; } }
 .navDemo { white-space: nowrap; }
 @media (max-width: 1180px) { .navRight .navDemo { display: none; } }
 

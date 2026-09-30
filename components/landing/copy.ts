@@ -7,7 +7,7 @@ type Faq = { q: string; a: string };
 
 export type LandingCopy = {
   locale: string;
-  nav: { how: string; profiles: string; pricing: string; join: string; faq: string; login: string; cta: string };
+  nav: { how: string; profiles: string; pricing: string; join: string; faq: string; login: string; cta: string; ctaShort: string };
   hero: { pill: string; pillValue: string; text: string; cta: string; join: string; h1: [string, string, string] };
   lanes: { foot: string; rare: string; unfindable: string; aria: string };
   how: { kicker: string; h2: string; lead: string };
@@ -51,7 +51,7 @@ export type LandingCopy = {
 
 const FR: LandingCopy = {
   locale: "fr-FR",
-  nav: { how: "Comment ça marche", profiles: "Profils", pricing: "Tarifs", join: "Participer", faq: "Questions", login: "Connexion", cta: "Demander une étude" },
+  nav: { how: "Comment ça marche", profiles: "Profils", pricing: "Tarifs", join: "Participer", faq: "Questions", login: "Connexion", cta: "Demander une étude", ctaShort: "Commencer" },
   hero: {
     h1: ["Qui", "voulez-vous", "entendre"],
     pill: "Vos premiers profils qualifiés", pillValue: "72 h",
@@ -187,7 +187,7 @@ const FR: LandingCopy = {
 
 const EN: LandingCopy = {
   locale: "en-GB",
-  nav: { how: "How it works", profiles: "Profiles", pricing: "Pricing", join: "Join the panel", faq: "FAQ", login: "Log in", cta: "Start a study" },
+  nav: { how: "How it works", profiles: "Profiles", pricing: "Pricing", join: "Join the panel", faq: "FAQ", login: "Log in", cta: "Start a study", ctaShort: "Start" },
   hero: {
     h1: ["Who", "do you want to", "hear from"],
     pill: "Your first qualified profiles", pillValue: "72 h",

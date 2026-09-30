@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
 import type { EarnedBadge } from "@/lib/participants/badges";
 import { BadgeChips } from "@/components/badges/BadgeShelf";
 import LoupeMascot from "@/components/brand/LoupeMascot";
@@ -178,6 +178,13 @@ function ProfileCard({ p, onClick }: { p: ProfileCard; onClick: () => void }) {
   );
 }
 
+const NARROW = "(max-width: 860px)";
+function subscribeNarrow(onChange: () => void) {
+  const m = window.matchMedia(NARROW);
+  m.addEventListener("change", onChange);
+  return () => m.removeEventListener("change", onChange);
+}
+
 export default function BrandProfilesClient() {
   const [profiles, setProfiles] = useState<ProfileCard[]>([]);
   const [total, setTotal] = useState(0);
@@ -186,7 +193,11 @@ export default function BrandProfilesClient() {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [selected, setSelected] = useState<ProfileCard | null>(null);
   const [page, setPage] = useState(0);
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  // Sur téléphone, les filtres sont fermés par défaut et s'ouvrent au-dessus
+  // des fiches (ouverts sur le côté, ils écrasaient la liste).
+  const narrow = useSyncExternalStore(subscribeNarrow, () => window.matchMedia(NARROW).matches, () => false);
+  const [filtersChoice, setFiltersOpen] = useState<boolean | null>(null);
+  const filtersOpen = filtersChoice ?? !narrow;
 
   const load = useCallback(async (q: string, f: Filters, p: number) => {
     setLoading(true);
@@ -246,14 +257,15 @@ export default function BrandProfilesClient() {
   const inpStyle = { ...selectSel, outline: "none" };
 
   return (
-    <div style={{ display: "flex", height: "100%", minHeight: "calc(100vh - 60px)" }}>
+    <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", height: "100%", minHeight: "calc(100vh - 60px)" }}>
       {/* Filter sidebar */}
       <div style={{
-        width: filtersOpen ? "240px" : "0", flexShrink: 0, overflow: "hidden",
-        transition: "width 0.2s ease", borderRight: "1px solid var(--color-border)",
+        width: narrow ? "100%" : filtersOpen ? "240px" : "0", flexShrink: 0, overflow: "hidden",
+        display: narrow && !filtersOpen ? "none" : undefined,
+        transition: "width 0.2s ease", borderRight: narrow ? undefined : "1px solid var(--color-border)",
         background: "var(--color-surface)", position: "relative",
       }}>
-        <div style={{ width: "240px", padding: "24px 20px", display: "flex", flexDirection: "column", gap: "18px" }}>
+        <div style={{ width: narrow ? "100%" : "240px", padding: "24px 20px", display: "flex", flexDirection: "column", gap: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-text-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Filtres</span>
             {hasFilters && <button onClick={clearAll} style={{ fontSize: "12px", color: "var(--color-text-tertiary)", background: "none", border: "none", cursor: "pointer" }}>Tout effacer</button>}
@@ -326,7 +338,7 @@ export default function BrandProfilesClient() {
             onClick={() => setFiltersOpen(!filtersOpen)}
             style={{ padding: "8px 14px", background: "var(--color-surface-2)", border: "1px solid var(--color-border)", borderRadius: "7px", fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap" }}
           >
-            {filtersOpen ? "← Masquer filtres" : "→ Filtres"}
+            {filtersOpen ? (narrow ? "Masquer les filtres" : "← Masquer filtres") : (narrow ? "Filtres" : "→ Filtres")}
           </button>
 
           {/* NL Search */}

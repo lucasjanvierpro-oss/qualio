@@ -95,8 +95,8 @@ export default function Landing({ tiers, lang = "fr" }: { tiers: LandingTier[]; 
               <LangSwitch lang={lang} hrefs={{ fr: "/", en: "/en" }} />
               <Link className={styles.login} href="/login">{c.nav.login}</Link>
               <a className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm} ${styles.navDemo}`} href="#demo">{c.demoNav}</a>
-              <Link className={`${styles.btn} ${styles.btnSm}`} href="/signup/brand">
-                {c.nav.cta} <span className={styles.arr}>→</span>
+              <Link className={`${styles.btn} ${styles.btnSm} ${styles.navCta}`} href="/signup/brand">
+                <span className={styles.ctaLong}>{c.nav.cta}</span><span className={styles.ctaShort}>{c.nav.ctaShort}</span> <span className={styles.arr}>→</span>
               </Link>
             </div>
           </header>
