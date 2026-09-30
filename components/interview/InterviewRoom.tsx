@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import s from "@/components/rl/rl.module.css";
 import WherebyRoom from "@/components/shared/WherebyRoom";
+import { useVisioCheck, VISIO_BLOCKED_HELP } from "@/components/shared/useVisioCheck";
 import Tour from "@/components/tour/Tour";
 
 type Props = {
@@ -148,6 +149,7 @@ export default function InterviewRoom(p: Props) {
                   ? <li>Parlez librement : il n&apos;y a pas de bonne ou de mauvaise réponse.</li>
                   : <li>L&apos;entretien est enregistré et transcrit automatiquement pour la synthèse.</li>}
               </ul>
+              <NetworkLine />
             </section>
             {fiche}
           </div>
@@ -168,6 +170,7 @@ export default function InterviewRoom(p: Props) {
                   : "Vérifiez votre caméra et votre micro avant d'entrer. L'enregistrement démarre automatiquement dès que vous êtes deux."}
               </p>
               <button type="button" className={`${s.btn} ${s.btnLight}`} onClick={() => setEntered(true)} data-tour="room-enter">Entrer dans la salle →</button>
+              <NetworkLine />
             </section>
           )
         )}
@@ -201,6 +204,20 @@ export default function InterviewRoom(p: Props) {
           { target: "room-enter", title: "Entrez dans la salle", text: "Vous vérifiez caméra et micro avant d'entrer. Parlez librement : il n'y a pas de bonne ou de mauvaise réponse." },
         ]} />
       )}
+    </div>
+  );
+}
+
+/** Dit avant l'entretien si le réseau laisse passer la visio. */
+function NetworkLine() {
+  const { state, retry } = useVisioCheck();
+  if (state === "checking") return <p className={s.muted} style={{ margin: "18px 0 0" }}>Vérification de votre connexion…</p>;
+  if (state === "ok") return <p style={{ margin: "18px 0 0", color: "#8fd9b0", fontWeight: 600 }}>✓ Votre réseau laisse passer la visio.</p>;
+  return (
+    <div role="alert" style={{ marginTop: 18, padding: "14px 16px", borderRadius: 14, background: "rgba(255, 190, 120, .12)", border: "1px solid rgba(255, 190, 120, .35)" }}>
+      <p style={{ margin: 0, fontWeight: 700 }}>{VISIO_BLOCKED_HELP.title}</p>
+      <p className={s.muted} style={{ margin: "6px 0 10px" }}>{VISIO_BLOCKED_HELP.text}</p>
+      <button type="button" className={`${s.btn} ${s.btnLight}`} onClick={() => void retry()}>Réessayer</button>
     </div>
   );
 }
