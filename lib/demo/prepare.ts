@@ -61,6 +61,7 @@ LANGUE DES TEXTES : ${en ? "anglais" : "français"}
 Format :
 {"sector":"","positioning":"1 phrase","clientele":"1 phrase","topic":"le sujet en 1 ligne","persona":"poste de la personne qui écrit le brief","brief":"",
 "profiles":[{"firstName":"Léa","initial":"M.","age":29,"city":"Paris","role":"Styliste de célébrités","tier":"rare|initie|averti","match":"Très proche|Proche","why":"pourquoi elle répond au brief, 1 à 2 phrases concrètes","highlight":"un détail marquant court (ex. 38 k abonnés, 12 ans en boutique)","proofs":["verifie","linkedin"]}]}
+Paliers : « averti » = consommateur passionné ou client fidèle ; « initie » = professionnel du secteur (vendeur en boutique, styliste, acheteur, créateur de contenu) ; « rare » = profil introuvable ailleurs (styliste de célébrités, collectionneur de référence, client très important).
 Les preuves possibles : ${PROOFS.join(", ")} (2 à 4 par profil, « verifie » toujours).`,
       16000,
     );
