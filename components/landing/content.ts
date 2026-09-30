@@ -30,6 +30,9 @@ type Content = {
 
 // Le genre de profils que nous recrutons. La rareté dit à quel point un
 // profil est difficile à trouver ailleurs — c'est ce qui en fait la valeur.
+// Portraits de la console : illustrations (style « Lorelei » de Lisa Wischofsky,
+// domaine public CC0, générées avec DiceBear), dans public/avatars. Pas de
+// photos de vraies personnes pour des profils d'exemple.
 const FR: Content = {
   lane1: [
     { label: "Styliste freelance" },
@@ -52,14 +55,16 @@ const FR: Content = {
     { label: "Photographe de mode" },
   ],
   panel: [
-    { name: "Amina D.", role: "Styliste indépendante · Paris", signals: ["quiet luxury", "styliste", "matières", "Paris"], rarity: "rare" },
-    { name: "Sofia L.", role: "Directrice artistique · Bordeaux", signals: ["quiet luxury", "gros budget", "matières"] },
-    { name: "Nadia C.", role: "Directrice marketing retail · Lille", signals: ["quiet luxury", "gros budget"] },
-    { name: "Lucas M.", role: "Buyer menswear · Paris", signals: ["buyer", "retail", "concept store"], rarity: "rare" },
-    { name: "Thomas R.", role: "Reseller sneakers · Lyon", signals: ["sneakers", "revente", "drops"] },
-    { name: "Julien P.", role: "Étudiant en design · Nantes", signals: ["drops", "Gen Z", "sneakers"] },
-    { name: "Inès B.", role: "Journaliste mode · Paris", signals: ["seconde main", "archive", "Gen Z"] },
-    { name: "Camille F.", role: "Créateur·rice de contenu · Marseille", signals: ["archive", "seconde main", "Gen Z"], rarity: "introuvable" },
+    { name: "Amina D.", role: "Styliste de célébrités · Paris", signals: ["quiet luxury", "styliste", "matières", "Paris"], rarity: "rare", photo: "/avatars/amina.svg" },
+    { name: "Yuki T.", role: "Acheteuse luxe · Tokyo", signals: ["quiet luxury", "gros budget", "matières"], photo: "/avatars/yuki.svg" },
+    { name: "Chiara R.", role: "Directrice artistique · Milan", signals: ["quiet luxury", "gros budget"], photo: "/avatars/chiara.svg" },
+    { name: "Omar B.", role: "Personal shopper · Dubaï", signals: ["quiet luxury", "gros budget", "styliste"], rarity: "rare", photo: "/avatars/omar.svg" },
+    { name: "Lucas M.", role: "Buyer menswear · Paris", signals: ["buyer", "retail", "concept store"], rarity: "rare", photo: "/avatars/lucas.svg" },
+    { name: "Nadia C.", role: "Visual merchandiser · New York", signals: ["retail", "concept store", "buyer"], photo: "/avatars/nadia.svg" },
+    { name: "Kwame A.", role: "Reseller sneakers · Londres", signals: ["sneakers", "revente", "drops"], photo: "/avatars/kwame.svg" },
+    { name: "Diego S.", role: "Collectionneur de sneakers · Madrid", signals: ["drops", "sneakers", "Gen Z"], rarity: "introuvable", photo: "/avatars/diego.svg" },
+    { name: "Seo-yeon P.", role: "Créatrice de contenu mode · Séoul", signals: ["Gen Z", "seconde main", "archive"], rarity: "introuvable", photo: "/avatars/seoyeon.svg" },
+    { name: "Maya L.", role: "Gen Z · revendeuse Vinted · Berlin", signals: ["seconde main", "archive", "Gen Z"], photo: "/avatars/maya.svg" },
   ],
   briefs: [
     { text: "Des acheteuses de luxe discret, 25–40 ans, qui savent parler matière.", signals: ["quiet luxury", "matières", "gros budget", "styliste"] },
@@ -97,14 +102,16 @@ const EN: Content = {
     { label: "Fashion photographer" },
   ],
   panel: [
-    { name: "Amina D.", role: "Freelance stylist · Paris", signals: ["quiet luxury", "stylist", "materials", "Paris"], rarity: "rare" },
-    { name: "Sofia L.", role: "Art director · Bordeaux", signals: ["quiet luxury", "high spend", "materials"] },
-    { name: "Nadia C.", role: "Retail marketing director · Lille", signals: ["quiet luxury", "high spend"] },
-    { name: "Lucas M.", role: "Menswear buyer · Paris", signals: ["buyer", "retail", "concept store"], rarity: "rare" },
-    { name: "Thomas R.", role: "Sneaker reseller · Lyon", signals: ["sneakers", "resale", "drops"] },
-    { name: "Julien P.", role: "Design student · Nantes", signals: ["drops", "Gen Z", "sneakers"] },
-    { name: "Inès B.", role: "Fashion journalist · Paris", signals: ["second-hand", "archive", "Gen Z"] },
-    { name: "Camille F.", role: "Content creator · Marseille", signals: ["archive", "second-hand", "Gen Z"], rarity: "introuvable" },
+    { name: "Amina D.", role: "Celebrity stylist · Paris", signals: ["quiet luxury", "stylist", "materials", "Paris"], rarity: "rare", photo: "/avatars/amina.svg" },
+    { name: "Yuki T.", role: "Luxury buyer · Tokyo", signals: ["quiet luxury", "high spend", "materials"], photo: "/avatars/yuki.svg" },
+    { name: "Chiara R.", role: "Art director · Milan", signals: ["quiet luxury", "high spend"], photo: "/avatars/chiara.svg" },
+    { name: "Omar B.", role: "Personal shopper · Dubai", signals: ["quiet luxury", "high spend", "stylist"], rarity: "rare", photo: "/avatars/omar.svg" },
+    { name: "Lucas M.", role: "Menswear buyer · Paris", signals: ["buyer", "retail", "concept store"], rarity: "rare", photo: "/avatars/lucas.svg" },
+    { name: "Nadia C.", role: "Visual merchandiser · New York", signals: ["retail", "concept store", "buyer"], photo: "/avatars/nadia.svg" },
+    { name: "Kwame A.", role: "Sneaker reseller · London", signals: ["sneakers", "resale", "drops"], photo: "/avatars/kwame.svg" },
+    { name: "Diego S.", role: "Sneaker collector · Madrid", signals: ["drops", "sneakers", "Gen Z"], rarity: "introuvable", photo: "/avatars/diego.svg" },
+    { name: "Seo-yeon P.", role: "Fashion content creator · Seoul", signals: ["Gen Z", "second-hand", "archive"], rarity: "introuvable", photo: "/avatars/seoyeon.svg" },
+    { name: "Maya L.", role: "Gen Z · Vinted reseller · Berlin", signals: ["second-hand", "archive", "Gen Z"], photo: "/avatars/maya.svg" },
   ],
   briefs: [
     { text: "Quiet luxury shoppers, 25–40, who can talk about materials.", signals: ["quiet luxury", "materials", "high spend", "stylist"] },

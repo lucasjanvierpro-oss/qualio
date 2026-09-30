@@ -151,13 +151,15 @@
 }
 @keyframes rowIn { from { transform: translateY(10px); opacity: 0; } }
 .avatar {
-  position: relative; width: 44px; height: 44px; border-radius: 12px; overflow: hidden; flex-shrink: 0;
+  position: relative; width: 52px; height: 52px; border-radius: 16px; overflow: hidden; flex-shrink: 0;
   background: #fff; color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 18px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.14), 0 10px 24px -12px rgba(0, 0, 0, 0.6);
 }
 .avatar img { object-fit: cover; }
 .rowName { font-weight: 600; letter-spacing: -0.015em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .rowRole { display: block; font-size: 14px; color: rgba(255, 255, 255, 0.64); }
 .fit { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); white-space: nowrap; }
+.fitTop { color: #8fe0b4; background: rgba(47, 163, 107, 0.18); box-shadow: inset 0 0 0 1px rgba(143, 224, 180, 0.25); }
 @media (max-width: 560px) { .row { grid-template-columns: auto 1fr; } .fit { grid-column: 1 / -1; justify-self: start; } }
 .consoleFoot { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; font-size: 13px; color: rgba(255, 255, 255, 0.56); flex-wrap: wrap; }
 .consoleFoot button { background: none; border: 0; color: #fff; cursor: pointer; font: inherit; font-size: 13px; padding: 0; text-decoration: underline; text-underline-offset: 3px; }

@@ -122,7 +122,7 @@ export default function SearchConsole({ lang = "fr" }: { lang?: Lang }) {
           <div key={`${index}-${profile.name}`} className={styles.row} style={{ animationDelay: `${320 + k * 130}ms` }}>
             <span className={styles.avatar}>
               {profile.photo
-                ? <Image src={profile.photo} alt="" fill sizes="44px" />
+                ? <Image src={profile.photo} alt="" fill sizes="44px" unoptimized={profile.photo.endsWith(".svg")} />
                 : profile.name[0]}
             </span>
             <span>
@@ -136,7 +136,7 @@ export default function SearchConsole({ lang = "fr" }: { lang?: Lang }) {
               </span>
               <span className={styles.rowRole}>{profile.role}</span>
             </span>
-            <span className={styles.fit}>{fitLabel(score, c.console.fit)}</span>
+            <span className={`${styles.fit} ${k === 0 ? styles.fitTop : ""}`}>{fitLabel(score, c.console.fit)}</span>
           </div>
         ))}
       </div>
