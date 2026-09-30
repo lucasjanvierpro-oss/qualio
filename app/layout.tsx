@@ -18,11 +18,11 @@ const SITE_URL = "https://www.rarelyst.co";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Rarelyst — Participants experts pour vos études qualitatives",
+    default: "Recrutement pour études qualitatives mode, luxe, beauté · Rarelyst",
     template: "%s · Rarelyst",
   },
   description:
-    "Rarelyst connecte les équipes insights des grandes marques mode et luxe avec des participants experts en moins de 72h. Recrutement qualitatif rapide et ciblé.",
+    "Profils vérifiés pour vos entretiens qualitatifs : stylistes, acheteurs, collectionneurs, micro-influenceurs. Premiers profils sous 72 h, payés seulement si vous les gardez.",
   keywords: [
     "recrutement quali", "études qualitatives", "consumer insights",
     "mode", "luxe", "panel expert", "entretiens qualitatifs", "Rarelyst",
@@ -35,9 +35,9 @@ export const metadata: Metadata = {
   verification: { google: "GD1b47z_YZR2ABVvnmCosy9frwfHlJak0KZ69zfUokc" },
   alternates: { canonical: SITE_URL },
   openGraph: {
-    title: "Rarelyst — Participants experts pour vos études qualitatives",
+    title: "Rarelyst · Qui voulez-vous entendre ?",
     description:
-      "Recrutez 5 à 8 profils experts mode/luxe en 72h pour vos entretiens qualitatifs.",
+      "Des profils très précis et vérifiés pour les études qualitatives des marques de mode, luxe et beauté. Premiers profils sous 72 h.",
     url: SITE_URL,
     siteName: "Rarelyst",
     locale: "fr_FR",
@@ -45,8 +45,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rarelyst — Participants experts",
-    description: "Recrutez les bons profils pour vos études quali mode et luxe.",
+    title: "Rarelyst · Qui voulez-vous entendre ?",
+    description: "Des profils très précis et vérifiés pour les études qualitatives des marques de mode, luxe et beauté.",
   },
 };
 

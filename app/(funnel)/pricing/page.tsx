@@ -6,11 +6,18 @@ import { TIERS } from "@/lib/pricing/config";
 import { getLang } from "@/lib/i18n/server";
 import LangSwitch from "@/components/i18n/LangSwitch";
 import p from "./pricing.module.css";
+import JsonLd from "@/components/seo/JsonLd";
+import { breadcrumb, graph, organization, service } from "@/lib/seo/schema";
+import { SITE_URL } from "@/lib/seo/site";
 
 // Les tarifs viennent des réglages de prix (/admin/prix) : une seule grille
 // pour ce site, le compte marque et le paiement.
 
-export const metadata: Metadata = { title: "Tarifs · Pricing" };
+export const metadata: Metadata = {
+  title: { absolute: "Tarifs : prix d'un profil pour vos études qualitatives · Rarelyst" },
+  description: "Le prix de chaque profil s'affiche avant de l'accepter : 390 € à 1 300 € HT l'entretien de 45 min, rémunération du participant comprise. Crédits sans abonnement, vous ne payez que les profils gardés.",
+  alternates: { canonical: "/pricing" },
+};
 
 const T = {
   fr: {
@@ -84,6 +91,11 @@ export default async function PricingPage() {
 
   return (
     <div className={p.page} lang={lang}>
+      <JsonLd data={graph(
+        organization(lang),
+        service(lang, TIERS.map((id) => ({ id, label: cfg.tiers[id].label, who: cfg.tiers[id].who, credits: cfg.tiers[id].baseCredits, euros: Math.round((cfg.tiers[id].baseCredits * cfg.creditValueCents) / 100), pay: cfg.tiers[id].participantPayCents }))),
+        breadcrumb([{ name: lang === "en" ? "Home" : "Accueil", url: `${SITE_URL}${lang === "en" ? "/en" : ""}` }, { name: lang === "en" ? "Pricing" : "Tarifs", url: `${SITE_URL}/pricing` }]),
+      )} />
       <header className={p.nav}>
         <Link href={t.home} className={p.brand}><Image src="/brand/logo.png" alt="" width={26} height={26} priority />Rarelyst</Link>
         <div className={p.navRight}>
