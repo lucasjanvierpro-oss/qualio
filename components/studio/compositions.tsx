@@ -815,7 +815,7 @@ function PostQuestion({ lang }: { lang: Lang }) {
 // d'important sous x < 200 dans la moitié basse. Le texte commence à x = 232.
 const BN = {
   fr: {
-    q1: "Qui voulez-vous", q2: "entendre\u00a0?", pill: "Vos premiers profils qualifiés", lanes: ["Acheteuse luxe", "Collectionneur d'archives", "Styliste indépendante"],
+    q1: "Qui voulez-vous", q2: "entendre\u00a0?", pill: "Vos premiers profils qualifiés", lanes: ["Acheteuse luxe", "Collectionneur", "Styliste"],
     brief: "Brief d'une marque", briefText: "Des acheteuses de luxe discrètes, qui savent parler matière.", match: "2 profils correspondent", close: "Très proche",
     rows: [["A", "#c98e68", "Amina D.", "Acheteuse luxe · Paris"], ["S", "#8a6bd8", "Sofia L.", "Directrice artistique · Milan"]],
     sub: "Des profils précis et vérifiés, pour vos études qualitatives.",
@@ -825,7 +825,7 @@ const BN = {
     tagline: "Les bonnes personnes pour vos études qualitatives.", sectors: "Mode · Luxe · Beauté",
   },
   en: {
-    q1: "Who do you want", q2: "to hear from?", pill: "Your first qualified profiles", lanes: ["Luxury buyer", "Archive collector", "Freelance stylist"],
+    q1: "Who do you want", q2: "to hear from?", pill: "Your first qualified profiles", lanes: ["Luxury buyer", "Collector", "Stylist"],
     brief: "A brand's brief", briefText: "Discreet luxury buyers who can talk about materials.", match: "2 matching profiles", close: "Very close",
     rows: [["A", "#c98e68", "Amina D.", "Luxury buyer · Paris"], ["S", "#8a6bd8", "Sofia L.", "Art director · Milan"]],
     sub: "Precise, verified profiles for your qualitative research.",
@@ -847,10 +847,10 @@ function BanniereHero({ lang }: { lang: Lang }) {
       <div style={{ position: "absolute", left: 232, top: 136, display: "flex", alignItems: "center", gap: 8, padding: "5px 12px 5px 5px", borderRadius: 999, background: "#fff", boxShadow: "0 0 0 1px var(--line), 0 10px 24px -16px rgba(40,20,90,.5)", fontSize: 13, fontWeight: 600 }}>
         <b style={{ padding: "3px 8px", borderRadius: 999, color: "#fff", background: "linear-gradient(110deg, var(--g2), var(--g3))", fontSize: 12 }}>72 h</b>{c.pill}
       </div>
-      <span className={`${s.chip} ${s.chipRare}`} style={{ position: "absolute", left: 540, top: 34, fontSize: 13, padding: "7px 12px", transform: "rotate(-3deg)" }}>{c.lanes[0]}</span>
-      <span className={`${s.chip} ${s.chipHolo}`} style={{ position: "absolute", left: 506, top: 84, fontSize: 13, padding: "7px 12px", transform: "rotate(2deg)" }}>{c.lanes[1]}</span>
-      <span className={s.chip} style={{ position: "absolute", left: 548, top: 134, fontSize: 13, padding: "7px 12px", transform: "rotate(-2deg)" }}>{c.lanes[2]}</span>
-      <div style={{ position: "absolute", right: 30, top: 34, transform: "rotate(-8deg)" }}><LoupeMascot size={124} mood="search" animated={false} /></div>
+      <span className={`${s.chip} ${s.chipRare}`} style={{ position: "absolute", left: 548, top: 30, fontSize: 13, padding: "7px 12px", transform: "rotate(-3deg)" }}>{c.lanes[0]}</span>
+      <span className={`${s.chip} ${s.chipHolo}`} style={{ position: "absolute", left: 528, top: 82, fontSize: 13, padding: "7px 12px", transform: "rotate(2deg)" }}>{c.lanes[1]}</span>
+      <span className={s.chip} style={{ position: "absolute", left: 556, top: 134, fontSize: 13, padding: "7px 12px", transform: "rotate(-2deg)" }}>{c.lanes[2]}</span>
+      <div style={{ position: "absolute", right: 24, top: 38, transform: "rotate(-8deg)" }}><LoupeMascot size={116} mood="search" animated={false} /></div>
     </div>
   );
 }
@@ -870,7 +870,7 @@ function BanniereConsole({ lang }: { lang: Lang }) {
           {c.rows.map(([i, col, n, r]) => (
             <div key={n} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", borderRadius: 10, background: "rgba(255,255,255,.07)" }}>
               <span className={s.av} style={{ width: 24, height: 24, borderRadius: 7, fontSize: 11, background: col }}>{i}</span>
-              <span style={{ fontSize: 11.5, lineHeight: 1.15, flex: 1 }}><b>{n}</b> <span style={{ color: "rgba(255,255,255,.6)" }}>· {r}</span></span>
+              <span style={{ fontSize: 11.5, lineHeight: 1.2, flex: 1 }}><b>{n}</b><br /><span style={{ fontSize: 10.5, color: "rgba(255,255,255,.6)" }}>{r}</span></span>
               <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 7px", borderRadius: 999, color: "#8fe0b4", background: "rgba(47,163,107,.18)" }}>{c.close}</span>
             </div>
           ))}
@@ -886,18 +886,16 @@ function BanniereProfils({ lang }: { lang: Lang }) {
   return (
     <div className={s.frame} style={{ width: 792, height: 198, background: `${glow("100%", "0%", "rgba(214,200,255,.7)", "50% 100%")}, ${glow("70%", "100%", "rgba(255,214,236,.6)")}, #fcfbfe` }}>
       <Brand x={24} y={20} />
-      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 40, fontSize: 32, lineHeight: 1.02 }}>{c.p1}<br /><span className={s.grad}>{c.p2}</span></h2>
-      <p style={{ position: "absolute", left: 232, top: 118, width: 250, margin: 0, fontSize: 12.5, lineHeight: 1.45, color: "var(--ink-2)" }}>{c.pSub}</p>
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 22, width: 250, fontSize: 30, lineHeight: 1.02 }}>{c.p1} <span className={s.grad}>{c.p2}</span></h2>
+      <p style={{ position: "absolute", left: 232, top: 132, width: 230, margin: 0, fontSize: 12, lineHeight: 1.45, color: "var(--ink-2)" }}>{c.pSub}</p>
       {c.cards.map(([i, col, n, r, tag], k) => (
-        <div key={n} className={s.row} style={{ position: "absolute", left: 510 + k * 22, top: 18 + k * 54, width: 240, gridTemplateColumns: "34px 1fr auto", gap: 8, padding: "7px 10px", borderRadius: 13, transform: `rotate(${[-3, 1.5, -1][k]}deg)`, zIndex: 3 - k }}>
+        <div key={n} className={s.row} style={{ position: "absolute", left: 510 + [0, 18, 6][k], top: 18 + k * 54, width: 250, gridTemplateColumns: "34px 1fr auto", gap: 8, padding: "6px 10px", borderRadius: 13, transform: `rotate(${[-2.5, 1.5, -1][k]}deg)`, zIndex: k + 1 }}>
           <span className={s.av} style={{ width: 34, height: 34, borderRadius: 10, fontSize: 15, background: col }}>{i}</span>
-          <span style={{ lineHeight: 1.15 }}><b style={{ fontSize: 12.5 }}>{n}</b><br /><span style={{ fontSize: 10.5, color: "var(--ink-2)" }}>{r}</span>
-            <span style={{ display: "flex", gap: 2, marginTop: 3 }}>{medals[k].map((m) => <Medallion key={m} id={m} size={16} />)}</span>
-          </span>
+          <span style={{ lineHeight: 1.15 }}><span style={{ display: "flex", alignItems: "center", gap: 4 }}><b style={{ fontSize: 12.5 }}>{n}</b>{medals[k].map((m) => <Medallion key={m} id={m} size={15} />)}</span><span style={{ fontSize: 10.5, color: "var(--ink-2)" }}>{r}</span></span>
           <span className={`${s.tag} ${k === 2 ? s.chipHolo : ""}`} style={{ fontSize: 10, padding: "3px 7px", background: k === 2 ? undefined : "var(--accent-soft)", color: "var(--g2)" }}>{tag}</span>
         </div>
       ))}
-      <div style={{ position: "absolute", left: 470, top: 4, zIndex: 5, transform: "rotate(-14deg)" }}><LoupeMascot size={62} mood="happy" animated={false} /></div>
+      <div style={{ position: "absolute", left: 452, top: 112, zIndex: 5, transform: "rotate(-14deg)" }}><LoupeMascot size={58} mood="happy" animated={false} /></div>
     </div>
   );
 }
