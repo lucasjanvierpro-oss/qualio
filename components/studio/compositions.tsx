@@ -45,7 +45,7 @@ const fadeBefore = (t: number, at: number): React.CSSProperties => ({ opacity: 1
 // ── 1. Pour les marques : Rarelyst en 16 secondes ─────────────────────
 const M = {
   fr: {
-    q1: "Qui voulez-vous", q2: "entendre ?", usual: "Ce qu'on vous livre d'habitude",
+    q1: "Qui voulez-vous", q2: "entendre ?", usual: "Ce qu'on vous livre d'habitude",
     boxes: ["Femme", "25–35 ans", "CSP+", "Île-de-France"], here: "Nous, une personne.",
     rows: [
       { i: "C", c: "#c98e68", n: "Camille R.", r: "Acheteuse luxe · Paris", tag: "◆ Initiée", holo: false },
@@ -54,7 +54,7 @@ const M = {
     ],
     film: "Vous menez l'entretien. Le reste se fait seul.", deliv: ["Vidéo", "Transcription", "Synthèse"],
     delivTitle: "Et une synthèse qui répond à vos questions.",
-    cta: "Qui voulez-vous entendre ?", ctaSub: "Vos premiers profils vérifiés en quelques jours.",
+    cta: "Qui voulez-vous entendre ?", ctaSub: "Vos premiers profils vérifiés en quelques jours.",
   },
   en: {
     q1: "Who do you want", q2: "to hear from?", usual: "What you usually get",
@@ -151,7 +151,7 @@ function Marques(t: number, lang: Lang) {
 // ── 2. Pour les participants : votre œil vaut quelque chose ───────────
 const P = {
   fr: {
-    who: ["Styliste ?", "Vendeuse en boutique ?", "Collectionneur ?"], title1: "Votre œil", title2: "vaut quelque chose.",
+    who: ["Styliste ?", "Vendeuse en boutique ?", "Collectionneur ?"], title1: "Votre œil", title2: "vaut quelque chose.",
     paySub: "par entretien de 45 min, payé par la marque", proof: "Plus votre profil est prouvé, mieux vous êtes payé.",
     cert: "Profil certifié à 85 %", solde: "Solde disponible", retirer: "Retirer", sent: "C'est parti : arrivée sous 1 à 3 jours",
     cta: "Rejoignez le panel", ctaSub: "Les marques de mode et de luxe paient pour votre regard.",
@@ -308,7 +308,7 @@ function LoupeSePresente(t: number) {
           <span key={m} style={{ position: "absolute", left: 110 + i * 120, top: 780, ...pop(t, 6.8 + i * 0.2), opacity: seg(t, 6.8 + i * 0.2, 7.0 + i * 0.2) }}><Medallion id={m} size={80} /></span>
         ))}
       </div>
-      <Cta t={t} at={9.6} title="Qui voulez-vous entendre ?" sub="Rarelyst trouve et vérifie les profils rares pour vos études." />
+      <Cta t={t} at={9.6} title="Qui voulez-vous entendre ?" sub="Rarelyst trouve et vérifie les profils rares pour vos études." />
     </div>
   );
 }
@@ -351,8 +351,8 @@ function AvantApres(t: number) {
 // ── 7. La synthèse qui s'écrit ────────────────────────────────────────
 function Synthese(t: number) {
   const answers = [
-    { at: 1.4, q: "Trois ou cinq coloris ?", a: "Trois. Le noir porte les ventes ; le reste finirait soldé.", n: 5, conf: "Confiance forte" },
-    { at: 4.0, q: "Écrire « recyclé » sur l'étiquette ?", a: "Pas en premier : le mot rassure la seconde main, pas la cliente du neuf.", n: 4, conf: "Confiance moyenne" },
+    { at: 1.4, q: "Trois ou cinq coloris ?", a: "Trois. Le noir porte les ventes ; le reste finirait soldé.", n: 5, conf: "Confiance forte" },
+    { at: 4.0, q: "Écrire « recyclé » sur l'étiquette ?", a: "Pas en premier : le mot rassure la seconde main, pas la cliente du neuf.", n: 4, conf: "Confiance moyenne" },
   ];
   return (
     <div className={`${s.frame} ${s.bgLilac}`} style={{ width: 540, height: 960 }}>
@@ -549,7 +549,7 @@ const Note = ({ children, light = false }: { children: React.ReactNode; light?: 
 
 const CM = {
   fr: {
-    kicker: "Études qualitatives", c1: "Interrogez-vous", c2: "les bonnes personnes ?", cSub: "5 règles pour recruter des profils qui font vraiment avancer une décision.", swipe: "Glissez",
+    kicker: "Études qualitatives", c1: "Interrogez-vous", c2: "les bonnes personnes ?", cSub: "5 règles pour recruter des profils qui font vraiment avancer une décision.", swipe: "Glissez",
     r1: "Décrivez une personne, pas une cible.", usual: "Ce qu'on écrit d'habitude", boxes: ["Femme", "25–35 ans", "CSP+"], better: "Ce qu'il faut écrire",
     brief: "Une vendeuse en boutique de luxe qui conseille chaque semaine des clientes venues d'Asie.",
     r2: "Allez chercher ceux qui ne répondent jamais aux panels.",
@@ -558,9 +558,9 @@ const CM = {
     r3: "Vérifiez avant l'entretien, pas pendant.", role: "Acheteuse luxe · 11 ans · Paris",
     proofs: ["Identité vérifiée", "LinkedIn relié", "Emploi confirmé", "CV relu"], r3Note: "Chaque preuve devient une médaille, visible sur le profil avant de le garder.",
     r4: "Posez les questions qui tranchent.",
-    qs: ["Entre ces deux sacs, lequel achèteriez-vous demain ? Pourquoi ?", "Racontez la dernière fois que vous avez hésité en boutique.", "Qu'est-ce qui vous ferait passer chez un concurrent ?"],
+    qs: ["Entre ces deux sacs, lequel achèteriez-vous demain ? Pourquoi ?", "Racontez la dernière fois que vous avez hésité en boutique.", "Qu'est-ce qui vous ferait passer chez un concurrent ?"],
     r4Note: "Des choix, des scènes vécues, des concurrents. Pas « que pensez-vous de… ».",
-    r5: "Exigez une synthèse qui répond à vos décisions.", decisionL: "Votre décision", decision: "Lancer la ligne en cuir recyclé à 690 € ?",
+    r5: "Exigez une synthèse qui répond à vos décisions.", decisionL: "Votre décision", decision: "Lancer la ligne en cuir recyclé à 690 € ?",
     answerL: "La réponse", answer: "Oui, mais sans le mot « recyclé » en vitrine : 5 personnes sur 8 y entendent « seconde main ».",
     conf: "Confiance élevée · 8 entretiens", quote: "« Si c'est écrit recyclé, je pense seconde main. »", verified: "Citation vérifiée dans la transcription",
     e1: "Rarelyst fait", e2: "tout ça pour vous.", points: ["Des profils vérifiés, proposés en quelques jours", "Vous ne payez que ceux que vous gardez", "Vidéo, transcription et synthèse livrées"], eCta: "Réserver une démo · rarelyst.co",
@@ -576,10 +576,10 @@ const CM = {
     proofs: ["Identity verified", "LinkedIn linked", "Job confirmed", "CV reviewed"], r3Note: "Every proof becomes a medal, visible on the profile before you keep it.",
     r4: "Ask the questions that settle things.",
     qs: ["Between these two bags, which would you buy tomorrow? Why?", "Tell me about the last time you hesitated in store.", "What would make you switch to a competitor?"],
-    r4Note: "Choices, real moments, competitors. Not \"what do you think of…\".",
+    r4Note: "Choices, real moments, competitors. Not “what do you think of…”.",
     r5: "Demand a synthesis that answers your decisions.", decisionL: "Your decision", decision: "Launch the recycled leather line at €690?",
-    answerL: "The answer", answer: "Yes, but without the word \"recycled\" in the window: 5 people out of 8 hear \"second-hand\".",
-    conf: "High confidence · 8 interviews", quote: "\"If it says recycled, I think second-hand.\"", verified: "Quote checked against the transcript",
+    answerL: "The answer", answer: "Yes, but without the word “recycled” in the window: 5 people out of 8 hear “second-hand”.",
+    conf: "High confidence · 8 interviews", quote: "“If it says recycled, I think second-hand.”", verified: "Quote checked against the transcript",
     e1: "Rarelyst does", e2: "all of this for you.", points: ["Verified profiles, suggested within days", "You only pay for the ones you keep", "Video, transcript and synthesis delivered"], eCta: "Book a demo · rarelyst.co",
   },
 };
@@ -790,7 +790,7 @@ function PostGaranties({ lang }: { lang: Lang }) {
 }
 
 const PQ = {
-  fr: { k: "Une question", t: "Si vous pouviez interroger n'importe qui pour votre prochaine collection, ce serait qui ?", a: ["Une retoucheuse de maison de couture", "Un revendeur de sneakers rares", "Une cliente qui a arrêté d'acheter chez nous"], foot: "Dites-le en commentaire. On vous dit si on sait la trouver." },
+  fr: { k: "Une question", t: "Si vous pouviez interroger n'importe qui pour votre prochaine collection, ce serait qui ?", a: ["Une retoucheuse de maison de couture", "Un revendeur de sneakers rares", "Une cliente qui a arrêté d'acheter chez nous"], foot: "Dites-le en commentaire. On vous dit si on sait la trouver." },
   en: { k: "A question", t: "If you could interview anyone for your next collection, who would it be?", a: ["A couture house seamstress", "A rare sneaker reseller", "A client who stopped buying from us"], foot: "Tell us in the comments. We'll tell you if we can find them." },
 };
 
