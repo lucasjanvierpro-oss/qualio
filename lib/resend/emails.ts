@@ -100,13 +100,14 @@ export async function sendWelcomeBrand(to: string, companyName: string) {
   }));
 }
 
-export async function sendStudySubmittedAdmin(studyTitle: string, brandName: string) {
+export async function sendStudySubmittedAdmin(studyTitle: string, brandName: string, studyId?: string, suggested = 0) {
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) return null;
   return send(adminEmail, `Nouvelle étude : ${studyTitle}`, layout({
     title: "Nouvelle étude reçue",
     body: `<strong style="color:${INK}">${esc(brandName)}</strong> vient de soumettre l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong>. Le compte à rebours des 72 heures commence.`,
-    cta: { label: "Ouvrir l'étude", href: `${APP_URL}/admin/studies` },
+    aside: suggested ? `L'IA a déjà présélectionné <strong>${suggested} profil${suggested > 1 ? "s" : ""}</strong>, avec pour chacun la raison du choix. Validez-les en un clic.` : undefined,
+    cta: { label: suggested ? "Valider les profils" : "Ouvrir l'étude", href: studyId ? `${APP_URL}/admin/studies/${studyId}` : `${APP_URL}/admin/studies` },
   }));
 }
 

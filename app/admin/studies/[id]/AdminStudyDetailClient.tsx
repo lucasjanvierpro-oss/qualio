@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
-import { shortlistParticipant, updateStudyStatus } from "@/app/actions/studies";
+import { dismissSuggestion, rerunSuggestions, shortlistParticipant, updateStudyStatus } from "@/app/actions/studies";
 import { useMessages } from "@/hooks/useMessages";
 
 type Criteria = {
@@ -184,6 +184,52 @@ function AdminChatPanel({ studyId, brandName, contactEmail }: { studyId: string;
         <button onClick={handleSend} disabled={!input.trim()} style={{ padding: "9px 18px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer", opacity: !input.trim() ? 0.5 : 1 }}>
           Envoyer
         </button>
+      </div>
+    </div>
+  );
+}
+
+/** Les profils présélectionnés par l'IA à l'arrivée du brief : un clic pour les proposer, un clic pour les écarter. */
+function SuggestionsSection({ studyId, apps }: { studyId: string; apps: { id: string; adminScore: number | null; adminMatchNote: string | null; participantProfile: { id: string; firstName: string; lastName: string; city: string | null; profession: string | null } }[] }) {
+  const [done, setDone] = useState<Record<string, "proposed" | "dismissed">>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const [rerun, setRerun] = useState<string | null>(null);
+  const left = apps.filter((a) => !done[a.id]);
+  const btn = { fontSize: "12px", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontWeight: 600 } as const;
+  return (
+    <div style={{ marginBottom: "24px", padding: "16px", borderRadius: "12px", border: "1px solid var(--color-accent)", background: "var(--color-accent-light)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: left.length ? 12 : 0 }}>
+        <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-accent)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          Présélection de l&apos;IA — {left.length} à valider
+        </div>
+        <button type="button" style={{ ...btn, background: "transparent", border: "1px solid var(--color-accent)", color: "var(--color-accent)" }} disabled={rerun === "…"}
+          onClick={async () => { setRerun("…"); const r = await rerunSuggestions(studyId); setRerun(r.created ? `${r.created} nouveau(x) profil(s) : rechargez la page` : "Aucun nouveau profil pertinent"); }}>
+          {rerun ?? "Relancer la présélection"}
+        </button>
+      </div>
+      {left.length === 0 && <p style={{ margin: "8px 0 0", fontSize: "13px", color: "var(--color-text-secondary)" }}>Rien à valider. La marque ne voit ces profils qu&apos;une fois proposés.</p>}
+      <div style={{ display: "grid", gap: "8px" }}>
+        {left.map((a) => (
+          <div key={a.id} style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "10px", padding: "12px 14px", display: "grid", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <strong style={{ fontSize: "14px" }}>{a.participantProfile.firstName} {a.participantProfile.lastName}</strong>
+              <span style={{ fontSize: "12px", color: "var(--color-text-secondary)" }}>{[a.participantProfile.profession, a.participantProfile.city].filter(Boolean).join(" · ")}</span>
+              {a.adminScore != null && <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", background: "var(--color-accent-light)", color: "var(--color-accent)" }}>{a.adminScore}/10</span>}
+              <Link href={`/admin/participants/${a.participantProfile.id}`} style={{ fontSize: "12px", color: "var(--color-accent)", textDecoration: "none", marginLeft: "auto" }}>Profil →</Link>
+            </div>
+            {a.adminMatchNote && <p style={{ margin: 0, fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.5 }}>« {a.adminMatchNote} »</p>}
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" disabled={busy === a.id} style={{ ...btn, background: "var(--color-accent)", color: "#fff", border: "none" }}
+                onClick={async () => { setBusy(a.id); await shortlistParticipant(studyId, a.participantProfile.id, a.adminMatchNote ?? undefined); setDone((d) => ({ ...d, [a.id]: "proposed" })); setBusy(null); }}>
+                Proposer à la marque
+              </button>
+              <button type="button" disabled={busy === a.id} style={{ ...btn, background: "transparent", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
+                onClick={async () => { setBusy(a.id); await dismissSuggestion(a.id); setDone((d) => ({ ...d, [a.id]: "dismissed" })); setBusy(null); }}>
+                Écarter
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -435,7 +481,8 @@ export default function AdminStudyDetailClient({
   };
 
   const [status, setStatus] = useState(study.status);
-  const [tab, setTab] = useState<"brief" | "matching" | "messages">("brief");
+  // Une présélection de l'IA attend : on ouvre directement l'onglet de matching.
+  const [tab, setTab] = useState<"brief" | "matching" | "messages">(study.applications.some((a) => a.status === "SUGGESTED") ? "matching" : "brief");
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const [localShortlisted, setLocalShortlisted] = useState<string[]>(
     study.applications.filter((a) => ["SHORTLISTED", "INVITED", "CONFIRMED"].includes(a.status)).map((a) => a.participantProfile.id)
@@ -645,6 +692,9 @@ export default function AdminStudyDetailClient({
       {tab === "matching" && (
         <div style={{ display: "grid", gridTemplateColumns: selectedParticipant ? "1fr 380px" : "1fr", gap: "20px" }}>
           <div>
+            {/* Présélection de l'IA, à valider avant que la marque la voie */}
+            <SuggestionsSection studyId={study.id} apps={study.applications.filter((a) => a.status === "SUGGESTED")} />
+
             {/* Already shortlisted */}
             {shortlistedApps.length > 0 && (
               <ShortlistedSection apps={shortlistedApps} studyDuration={study.duration} />

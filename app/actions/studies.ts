@@ -6,6 +6,7 @@ import { after } from "next/server";
 import { assertAdmin, getSessionUser } from "@/lib/auth/guards";
 import { sendAvailabilityRequested, sendAsyncInvitation } from "@/lib/resend/emails";
 import { sendStudySubmittedAdmin } from "@/lib/resend/emails";
+import { suggestProfiles } from "@/lib/studies/suggest";
 import { getPricingConfig, priceProfiles } from "@/lib/pricing/quotes";
 import { DURATIONS, type BriefProfile, type Duration } from "@/lib/studies/briefTypes";
 import { recordDemand } from "@/lib/lab/demand";
@@ -106,7 +107,9 @@ export async function createStudy(data: StudyInput): Promise<{ studyId: string }
   });
 
   after(async () => {
-    await sendStudySubmittedAdmin(title, brand.companyName).catch(() => {});
+    // Présélection immédiate par l'IA, validée ensuite à la main dans l'admin.
+    const suggested = await suggestProfiles(study.id).catch((e) => { console.error("[présélection]", e); return 0; });
+    await sendStudySubmittedAdmin(title, brand.companyName, study.id, suggested).catch(() => {});
     // Ce que les vraies marques demandent : c'est ce qui apprend qui recruter.
     await recordDemand("study", study.id, profiles).catch((e) => console.error("[demande]", e));
   });
@@ -354,4 +357,22 @@ export async function rejectApplication(applicationId: string, reason?: string) 
 
   revalidatePath("/brand/studies");
   return { ok: true };
+}
+
+/** Écarter une suggestion de l'IA : elle disparaît, sans trace chez le participant. */
+export async function dismissSuggestion(applicationId: string) {
+  await assertAdmin();
+  const app = await prisma.application.findUnique({ where: { id: applicationId }, select: { studyId: true, status: true } });
+  if (!app || app.status !== "SUGGESTED") return { ok: false };
+  await prisma.application.delete({ where: { id: applicationId } });
+  revalidatePath(`/admin/studies/${app.studyId}`);
+  return { ok: true };
+}
+
+/** Relancer la présélection par l'IA pour une étude (admin). */
+export async function rerunSuggestions(studyId: string) {
+  await assertAdmin();
+  const n = await suggestProfiles(studyId).catch(() => 0);
+  revalidatePath(`/admin/studies/${studyId}`);
+  return { created: n };
 }

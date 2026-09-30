@@ -33,6 +33,8 @@ export default async function StudyDetailPage({ params, searchParams }: { params
       include: {
         report: { select: { id: true } },
         applications: {
+          // Les présélections de l'IA ne sont montrées qu'après validation par l'équipe.
+          where: { status: { not: "SUGGESTED" } },
           orderBy: { updatedAt: "desc" },
           include: {
             interview: { select: { id: true, scheduledAt: true, status: true, transcriptStatus: true, brandRating: true, brandReviewTags: true, brandFeedback: true, mode: true } },

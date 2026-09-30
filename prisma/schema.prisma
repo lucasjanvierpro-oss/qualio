@@ -36,6 +36,8 @@ enum StudyStatus {
 }
 
 enum ApplicationStatus {
+  /// Présélectionné par l'IA à l'arrivée du brief : visible de l'admin seulement.
+  SUGGESTED
   PENDING
   SHORTLISTED
   INVITED
