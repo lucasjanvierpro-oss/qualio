@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/guards";
 import Stage from "@/components/studio/Stage";
-import { COMPOSITIONS, SIZES } from "@/components/studio/compositions";
+import { REGISTRY, SIZES } from "@/components/studio/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export default async function Studio() {
       <h1 style={{ margin: 0, fontSize: 34, letterSpacing: "-0.04em" }}>Studio Rarelyst</h1>
       <p style={{ margin: "6px 0 26px", color: "#5f5868" }}>Les formats pour Instagram, TikTok et LinkedIn, joués en direct. Chaque format s&apos;ouvre seul pour être filmé ou capturé.</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 22, alignItems: "flex-start" }}>
-        {COMPOSITIONS.map((c) => {
+        {REGISTRY.map((c) => {
           const [w, h] = SIZES[c.format];
           const scale = Math.min(270 / w, 480 / h);
           return (

@@ -13,20 +13,9 @@ import s from "./studio.module.css";
 // rien ne bouge tout seul, sauf les petites boucles de la loupe. C'est ce qui
 // permet de filmer image par image une vidéo parfaitement fluide.
 
-export type Lang = "fr" | "en";
-export type Format = "story" | "post" | "square" | "banner" | "avatar";
-export const SIZES: Record<Format, [number, number]> = {
-  story: [540, 960], post: [540, 675], square: [540, 540], banner: [792, 198], avatar: [200, 200],
-};
-export type Composition = {
-  id: string; title: string; format: Format;
-  /** Durée en secondes ; 0 pour un visuel fixe. */
-  duration: number;
-  /** Instant affiché pour un visuel fixe. */
-  still?: number;
-  langs: Lang[];
-  render: (t: number, lang: Lang) => React.ReactNode;
-};
+import { REGISTRY, type Lang } from "./registry";
+
+type Render = (t: number, lang: Lang) => React.ReactNode;
 
 function Brand({ x = 28, y = 30, light = false }: { x?: number; y?: number; light?: boolean }) {
   return (
@@ -523,23 +512,29 @@ function CarreLogo() {
   );
 }
 
-export const COMPOSITIONS: Composition[] = [
-  { id: "marques", title: "Rarelyst en 16 secondes (marques)", format: "story", duration: 16, langs: ["fr", "en"], render: Marques },
-  { id: "participants", title: "Votre œil vaut quelque chose (participants)", format: "story", duration: 14, langs: ["fr", "en"], render: Participants },
-  { id: "parrainage", title: "Parrainage : jusqu'à 320 € par ami", format: "story", duration: 10.5, langs: ["fr"], render: (t) => Parrainage(t) },
-  { id: "profil-rare", title: "Le genre de profil que nous trouvons", format: "story", duration: 11, langs: ["fr"], render: (t) => ProfilRare(t) },
-  { id: "loupe", title: "La loupe se présente", format: "story", duration: 12, langs: ["fr"], render: (t) => LoupeSePresente(t) },
-  { id: "avant-apres", title: "Avant, après", format: "story", duration: 10.5, langs: ["fr"], render: (t) => AvantApres(t) },
-  { id: "synthese", title: "La synthèse qui s'écrit", format: "story", duration: 10, langs: ["fr"], render: (t) => Synthese(t) },
-  { id: "post-versus", title: "Post : une tranche d'âge, une personne", format: "post", duration: 0, langs: ["fr"], render: () => <PostVersus /> },
-  { id: "post-introuvables", title: "Post : les profils introuvables", format: "post", duration: 0, langs: ["fr"], render: () => <PostIntrouvables /> },
-  { id: "post-remuneration", title: "Post : 90 à 350 € par entretien", format: "post", duration: 0, langs: ["fr"], render: () => <PostRemuneration /> },
-  { id: "post-parrainage", title: "Post : parrainage", format: "post", duration: 0, langs: ["fr"], render: () => <PostParrainage /> },
-  { id: "story-citation", title: "Story : citation d'entretien", format: "story", duration: 0, langs: ["fr"], render: () => <StoryCitation /> },
-  { id: "story-langues", title: "Story : entretiens en anglais", format: "story", duration: 0, langs: ["fr"], render: () => <StoryLangues /> },
-  { id: "banniere-linkedin", title: "Bannière de la page LinkedIn", format: "banner", duration: 0, langs: ["fr"], render: () => <BanniereLinkedIn /> },
-  { id: "avatar", title: "Photo de profil (loupe)", format: "avatar", duration: 0, langs: ["fr"], render: () => <Avatar /> },
-  { id: "carre-logo", title: "Carré logo", format: "square", duration: 0, langs: ["fr"], render: () => <CarreLogo /> },
-];
+const RENDERS: Record<string, Render> = {
+  marques: Marques,
+  participants: Participants,
+  parrainage: (t) => Parrainage(t),
+  "profil-rare": (t) => ProfilRare(t),
+  loupe: (t) => LoupeSePresente(t),
+  "avant-apres": (t) => AvantApres(t),
+  synthese: (t) => Synthese(t),
+  "post-versus": () => <PostVersus />,
+  "post-introuvables": () => <PostIntrouvables />,
+  "post-remuneration": () => <PostRemuneration />,
+  "post-parrainage": () => <PostParrainage />,
+  "story-citation": () => <StoryCitation />,
+  "story-langues": () => <StoryLangues />,
+  "banniere-linkedin": () => <BanniereLinkedIn />,
+  avatar: () => <Avatar />,
+  "carre-logo": () => <CarreLogo />,
+};
 
-export const findComposition = (id: string) => COMPOSITIONS.find((c) => c.id === id) ?? null;
+/** Le rendu d'un format à l'instant t. */
+export function renderComposition(id: string, t: number, lang: Lang) {
+  const meta = REGISTRY.find((c) => c.id === id);
+  const r = RENDERS[id];
+  if (!meta || !r) return null;
+  return r(meta.duration ? t : meta.still ?? 99, lang);
+}

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/guards";
 import Stage from "@/components/studio/Stage";
-import { findComposition } from "@/components/studio/compositions";
+import { findMeta } from "@/components/studio/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ export default async function StudioFormat({ params, searchParams }: { params: P
   if (me?.role !== "ADMIN") notFound();
   const { id } = await params;
   const { lang } = await searchParams;
-  if (!findComposition(id)) notFound();
+  if (!findMeta(id)) notFound();
   return (
     <main style={{ margin: 0, padding: 0, background: "#fff", width: "fit-content" }}>
       <Stage id={id} lang={lang === "en" ? "en" : "fr"} />
