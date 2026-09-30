@@ -198,9 +198,9 @@ function Participants(t: number, lang: Lang) {
         <div style={{ position: "absolute", left: 30, right: 30, top: 360, opacity: seg(t, 9.2, 9.5) }}>
           <div className={s.card} style={{ padding: 26, color: "var(--ink)", ...rise(t, 9.2, 0.5, 40) }}>
             <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--ink-3)" }}>{c.solde}</div>
-            <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: "-0.04em", marginTop: 6 }}>{pressed ? "0" : "180"} €</div>
+            <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: "-0.04em", marginTop: 6 }}>180 €</div>
             <div className={s.btn} style={{ width: "100%", marginTop: 18, transform: `scale(${t > 10.4 && t < 10.7 ? 0.96 : 1})`, background: pressed ? "#1f7a4d" : "var(--ink)" }}>
-              {pressed ? "✓" : `${c.retirer} 180 €`}
+              {pressed ? (lang === "en" ? "✓ Sent" : "✓ Virement envoyé") : `${c.retirer} 180 €`}
             </div>
             <p style={{ margin: "14px 0 0", fontSize: 15, color: "var(--ok)", fontWeight: 600, ...rise(t, 10.8) }}>{c.sent}</p>
           </div>
