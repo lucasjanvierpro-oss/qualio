@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe/client";
 import { prisma } from "@/lib/prisma";
 import type Stripe from "stripe";
 import { connectStatus } from "@/lib/stripe/connect";
+import { invoiceForCheckout } from "@/lib/billing/invoices";
 
 // Deux points d'arrivée côté Stripe peuvent viser cette adresse : un pour les
 // événements du compte Rarelyst (achats de crédits), un pour ceux des comptes
@@ -58,6 +59,17 @@ export async function POST(request: NextRequest) {
               },
             });
           });
+          // Facture de l'achat (émise tout de suite si l'émetteur est complet, sinon brouillon).
+          const addr = session.customer_details?.address;
+          await invoiceForCheckout({
+            brandProfileId, stripeSessionId: session.id, packLabel: meta.packLabel ?? `${credits} crédits`, credits,
+            amountCents: session.amount_total ?? 0, paidAt: new Date((event.created ?? Date.now() / 1000) * 1000),
+            billing: {
+              name: session.customer_details?.name ?? null,
+              email: session.customer_details?.email ?? null,
+              address: addr ? [addr.line1, addr.line2, [addr.postal_code, addr.city].filter(Boolean).join(" "), addr.country].filter(Boolean).join("\n") : null,
+            },
+          }).catch((e) => console.error("[facture]", e));
         }
         break;
       }

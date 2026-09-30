@@ -6,6 +6,7 @@ import CertificationCard from "@/components/brand/CertificationCard";
 import { certLevel, certSteps } from "@/lib/brands/certification";
 import { getPricingConfig } from "@/lib/pricing/quotes";
 import { TIERS } from "@/lib/pricing/config";
+import InvoiceList from "@/components/billing/InvoiceList";
 
 export default async function BrandAccountPage() {
   const supabase = await createClient();
@@ -18,6 +19,7 @@ export default async function BrandAccountPage() {
       brandProfile: {
         include: {
           creditTransactions: { orderBy: { createdAt: "desc" }, take: 20 },
+          invoices: { orderBy: { createdAt: "desc" }, take: 24, select: { id: true, number: true, status: true, totalCents: true, createdAt: true } },
         },
       },
     },
@@ -57,6 +59,7 @@ export default async function BrandAccountPage() {
         })) ?? []
       }
     />
+    <InvoiceList invoices={profile?.invoices ?? []} hrefBase="/brand/account/invoices" />
     </>
   );
 }

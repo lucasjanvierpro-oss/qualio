@@ -102,17 +102,17 @@ model BrandProfile {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  companyName      String
-  industry         String?
-  website          String?
-  logoUrl          String?
-  contactFirstName String?
-  contactLastName  String?
-  contactTitle     String?
-  isVerified       Boolean @default(false)
-  isActivated      Boolean @default(false)
+  companyName         String
+  industry            String?
+  website             String?
+  logoUrl             String?
+  contactFirstName    String?
+  contactLastName     String?
+  contactTitle        String?
+  isVerified          Boolean   @default(false)
+  isActivated         Boolean   @default(false)
   /// Contrôle de l'adresse du domaine prouvé (email confirmé, Google ou LinkedIn).
-  domainVerifiedAt DateTime?
+  domainVerifiedAt    DateTime?
   /// Société retrouvée au registre officiel (France) ou déclarée hors de France.
   siren               String?
   legalName           String?
@@ -125,6 +125,7 @@ model BrandProfile {
   credits          Int     @default(0)
 
   creditTransactions CreditTransaction[]
+  invoices           Invoice[]
   studies            Study[]
   messages           Message[]
   profileRequests    ProfileRequest[]
@@ -133,12 +134,12 @@ model BrandProfile {
   updatedAt DateTime @updatedAt
 
   // Fonctions en bêta ouvertes à cette marque (ex. "async" : entretiens en autonomie).
-  betaFeatures String[] @default([])
+  betaFeatures      String[] @default([])
   // Mémoire de la maison : positionnement, clientèle, concurrents, vocabulaire,
   // enseignements passés. Donnée à l'IA qui écrit les synthèses.
-  houseNotes   String?  @db.Text
+  houseNotes        String?  @db.Text
   /// Langue des emails envoyés à la marque.
-  preferredLanguage String @default("fr")
+  preferredLanguage String   @default("fr")
 
   @@map("brand_profiles")
 }
@@ -149,23 +150,23 @@ model ParticipantProfile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Identité
-  firstName   String
-  lastName    String
-  dateOfBirth DateTime?
-  city        String?
+  firstName        String
+  lastName         String
+  dateOfBirth      DateTime?
+  city             String?
   // Informations fiscales (obligations des plateformes : art. 242 bis CGI, DAC7).
   addressLine      String?
   postalCode       String?
   taxId            String?
   taxCountry       String?
   taxInfoUpdatedAt DateTime?
-  country     String    @default("FR")
-  photoUrl    String?
+  country          String    @default("FR")
+  photoUrl         String?
 
   // Carrière & expertise
-  profession          String?
-  yearsOfExperience   Int?
-  professionalBio     String?   @db.Text
+  profession        String?
+  yearsOfExperience Int?
+  professionalBio   String? @db.Text
 
   // Bio générale
   bio String? @db.Text
@@ -176,19 +177,19 @@ model ParticipantProfile {
   tiktokUrl    String?
 
   // Influence
-  followerRange        String?   // "0", "1k-5k", "5k-20k", "20k-100k", "100k+"
+  followerRange        String? // "0", "1k-5k", "5k-20k", "20k-100k", "100k+"
   isInfluencerDeclared Boolean?
   influenceNiche       String?
 
   // Shopping & style
-  shoppingBudgetRange String?   // "0-100€", "100-300€", "300-600€", "600€+"
-  shoppingChannels    String[]  // ["retail", "luxury", "resale", "online", ...]
+  shoppingBudgetRange String? // "0-100€", "100-300€", "300-600€", "600€+"
+  shoppingChannels    String[] // ["retail", "luxury", "resale", "online", ...]
   shoppingFrequency   String?
   isEarlyAdopter      Boolean?
 
   // Préférences
-  rewardPreference String?   // "CASH" | "VOUCHER"
-  languages        String[]  @default(["fr"])
+  rewardPreference String? // "CASH" | "VOUCHER"
+  languages        String[] @default(["fr"])
   availability     Json?
 
   // Réponses du tunnel d'onboarding (stockées en JSON)
@@ -199,43 +200,43 @@ model ParticipantProfile {
   brandAffinities String[]
 
   // ─── Tunnel de qualification Rarelyst ───────────────────
-  onboardingStep     Int     @default(0)
-  onboardingStatus   String  @default("incomplete") // "incomplete" | "complete"
-  preferredLanguage  String  @default("fr")
+  onboardingStep    Int    @default(0)
+  onboardingStatus  String @default("incomplete") // "incomplete" | "complete"
+  preferredLanguage String @default("fr")
 
-  gender             String?
-  employmentStatus   String?
-  educationLevel     String?
-  householdIncome    String?
-  ethnicity          String?
+  gender           String?
+  employmentStatus String?
+  educationLevel   String?
+  householdIncome  String?
+  ethnicity        String?
 
   macroUniverses      String[] // univers macro sélectionnés
   engagementTypes     String[] // types d'engagement avec les marques
-  selfProfileType     String?  // auto-identification: industry_insider, early_adopter, ...
+  selfProfileType     String? // auto-identification: industry_insider, early_adopter, ...
   behavioralChecklist String[] // items comportementaux cochés
 
-  adaptiveAnswers    Json?     // réponses aux questions adaptatives (par type)
-  expertAnswers      Json?     // 3 questions expertes universelles
+  adaptiveAnswers Json? // réponses aux questions adaptatives (par type)
+  expertAnswers   Json? // 3 questions expertes universelles
 
-  preferredFormat    String?   // "one_on_one" | "focus_group" | "both"
+  preferredFormat    String? // "one_on_one" | "focus_group" | "both"
   interviewLanguages String[]
 
   agreedToCodeOfConduct Boolean @default(false)
 
   // Segment choisi en tête de tunnel : pro | consumer | creator | hybrid
-  segment          String?
+  segment       String?
   // Parcours pro (segment pro ou hybrid), à la manière de Respondent
-  proRole          String?
-  proSector        String?
-  proYears         String?
-  proCompany       String?
+  proRole       String?
+  proSector     String?
+  proYears      String?
+  proCompany    String?
   // Auto-déclarations explicites (0-3 par trait) et la preuve donnée en une ligne
-  selfTraits       Json?
-  traitProofs      Json?
+  selfTraits    Json?
+  traitProofs   Json?
   // Liens publics lus par l'IA
-  websiteUrl       String?
-  otherLinks       String[] @default([])
-  linksAnalysis    Json?
+  websiteUrl    String?
+  otherLinks    String[] @default([])
+  linksAnalysis Json?
 
   cvUrl            String?
   portfolioUrl     String?
@@ -243,7 +244,7 @@ model ParticipantProfile {
   linkedinVerified Boolean @default(false)
 
   // Résumé présentable, VISIBLE par les marques (≠ ghost file interne)
-  brandSummary     String? @db.Text
+  brandSummary String? @db.Text
 
   profileScore Int    @default(0)
   profileLevel String @default("bronze") // bronze | silver | gold | platine
@@ -255,24 +256,24 @@ model ParticipantProfile {
   idVerifiedByAdminId  String?
 
   // Qualité
-  participationCount Int     @default(0)
-  averageRating      Float?
-  accessTier         AccessTier @default(STANDARD)
+  participationCount     Int              @default(0)
+  averageRating          Float?
+  accessTier             AccessTier       @default(STANDARD)
   /// Palier de prix imposé par l'admin (averti | initie | rare) ; sinon calculé.
-  priceTier            String?
+  priceTier              String?
   /// Prix fixé à la main, en crédits ; prime sur le calcul automatique.
-  priceOverrideCredits Int?
+  priceOverrideCredits   Int?
   /// Emploi vérifié : un code envoyé à l'adresse professionnelle.
   workEmail              String?
   workEmailVerifiedAt    DateTime?
   workEmailCodeHash      String?
   workEmailCodeExpiresAt DateTime?
   /// Ce que la marque lit à la place du prix, ex. « Sur demande · 48 h de délai ».
-  accessNote         String?
-  profileRequests    ProfileRequest[]
+  accessNote             String?
+  profileRequests        ProfileRequest[]
 
-  isBlacklisted      Boolean @default(false)
-  blacklistReason    String?
+  isBlacklisted   Boolean @default(false)
+  blacklistReason String?
 
   // Stripe Connect
   stripeConnectId     String?
@@ -287,8 +288,6 @@ model ParticipantProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("participant_profiles")
-
   // Parrainage : un code par personne, et qui l'a invitée. Les primes ne
   // naissent que d'entretiens réellement menés (voir ReferralBonus).
   referralCode    String?              @unique
@@ -297,6 +296,8 @@ model ParticipantProfile {
   referrals       ParticipantProfile[] @relation("Referrals")
   referralBonuses ReferralBonus[]
   payouts         Payout[]
+
+  @@map("participant_profiles")
 }
 
 // ─── GHOST FILE (IA) ─────────────────────────────────────
@@ -316,33 +317,33 @@ model ParticipantGhostFile {
   overallQualityScore Int?
 
   // Classification
-  profileType         String?  // "expert", "insider", "influencer", "creative", "enthusiast"
-  primaryExpertise    String?  // "mode", "luxe", "streetwear", "beauté", "retail", etc.
+  profileType         String? // "expert", "insider", "influencer", "creative", "enthusiast"
+  primaryExpertise    String? // "mode", "luxe", "streetwear", "beauté", "retail", etc.
   secondaryExpertises String[]
-  generationTag       String?  // "Gen Z", "Millennial", "Gen X"
-  influenceTier       String?  // "nano", "micro", "macro", "none"
+  generationTag       String? // "Gen Z", "Millennial", "Gen X"
+  influenceTier       String? // "nano", "micro", "macro", "none"
 
   // Insights qualitatifs
-  redFlags             String[]
-  aiProfileSummary     String   @db.Text
-  aiStrengths          String[]
-  aiWeaknesses         String[]
-  aiBestStudyTypes     String[]
-  aiRecommendedBrands  String[]
+  redFlags            String[]
+  aiProfileSummary    String   @db.Text
+  aiStrengths         String[]
+  aiWeaknesses        String[]
+  aiBestStudyTypes    String[]
+  aiRecommendedBrands String[]
 
   // Tags invisibles — vocabulaire normalisé pour le moteur de recherche marques.
   // Jamais affichés à la marque ni au participant.
-  aiTags               String[] @default([])
+  aiTags String[] @default([])
 
   // Comportements confirmés par l'IA à partir des preuves — jamais sur simple
   // déclaration. Clés fixes (voir lib/participants/badges.ts).
-  behaviours           String[] @default([])
+  behaviours String[] @default([])
 
   // Meta
-  generatedAt     DateTime @default(now())
-  lastUpdatedAt   DateTime @updatedAt
-  aiModelUsed     String   @default("claude-sonnet-5")
-  processingStatus String  @default("pending") // "pending" | "processing" | "done" | "error"
+  generatedAt      DateTime @default(now())
+  lastUpdatedAt    DateTime @updatedAt
+  aiModelUsed      String   @default("claude-sonnet-5")
+  processingStatus String   @default("pending") // "pending" | "processing" | "done" | "error"
 
   @@map("participant_ghost_files")
 }
@@ -360,7 +361,7 @@ model CreditTransaction {
   description           String?
   stripePaymentIntentId String?
   studyId               String?
-  study                 Study? @relation(fields: [studyId], references: [id])
+  study                 Study?                @relation(fields: [studyId], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -383,8 +384,8 @@ model Study {
   confirmedCount         Int @default(0)
 
   deadlineAt        DateTime?
-  interviewDuration Int      @default(30)
-  preferredLanguage String   @default("fr")
+  interviewDuration Int       @default(30)
+  preferredLanguage String    @default("fr")
 
   rewardAmount Int
   rewardType   RewardType @default(CASH)
@@ -429,9 +430,9 @@ model StudyTimeSlot {
 
   startTime   DateTime
   endTime     DateTime
-  capacity    Int     @default(1)
-  bookedCount Int     @default(0)
-  isAvailable Boolean @default(true)
+  capacity    Int      @default(1)
+  bookedCount Int      @default(0)
+  isAvailable Boolean  @default(true)
 
   interviews Interview[]
 
@@ -448,7 +449,7 @@ model StudyReport {
   study   Study  @relation(fields: [studyId], references: [id], onDelete: Cascade)
 
   markdownContent    String   @db.Text
-  structuredContent  Json?    // Rapport structuré multi-catégories (onglets)
+  structuredContent  Json? // Rapport structuré multi-catégories (onglets)
   generatedAt        DateTime @default(now())
   generatedByAdminId String?
   aiModelUsed        String   @default("claude-sonnet-5")
@@ -489,8 +490,8 @@ model Application {
   // Consentement explicite du participant à l'enregistrement (RGPD).
   recordingConsentAt DateTime?
   // Accord de confidentialité accepté par le participant, et version du texte.
-  ndaAcceptedAt DateTime?
-  ndaVersion    String?
+  ndaAcceptedAt      DateTime?
+  ndaVersion         String?
 
   interview Interview?
   reward    Reward?
@@ -510,35 +511,35 @@ model Interview {
   timeSlotId    String?
   timeSlot      StudyTimeSlot? @relation(fields: [timeSlotId], references: [id])
 
-  scheduledAt     DateTime
-  durationMinutes Int     @default(30)
-  videoLink       String?
-  hostRoomUrl     String?
+  scheduledAt      DateTime
+  durationMinutes  Int      @default(30)
+  videoLink        String?
+  hostRoomUrl      String?
   wherebyMeetingId String?
-  wherebyRoomName  String?  // ex "/470c1e94-..." — clé de matching des webhooks
-  status          String  @default("scheduled")
+  wherebyRoomName  String? // ex "/470c1e94-..." — clé de matching des webhooks
+  status           String   @default("scheduled")
 
   // Enregistrement & transcription (pipeline auto)
-  recordingStatus String?   // "pending" | "recording" | "ready" | "failed"
-  recordingUrl    String?   @db.Text
+  recordingStatus  String? // "pending" | "recording" | "ready" | "failed"
+  recordingUrl     String? @db.Text
   // Les liens d'accès Whereby expirent : on garde l'id pour en générer un frais.
-  recordingId     String?
-  transcriptStatus String?  // "pending" | "processing" | "done" | "failed"
-  transcriptId    String?   // id du job AssemblyAI
-  transcript      String?   @db.Text
+  recordingId      String?
+  transcriptStatus String? // "pending" | "processing" | "done" | "failed"
+  transcriptId     String? // id du job AssemblyAI
+  transcript       String? @db.Text
 
-  completedAt   DateTime?
+  completedAt           DateTime?
   // Entretien en autonomie (mode "async") : quand le participant a commencé,
   // envoyé, et à quel moment il est passé à chaque question ([{ i, at }], at en
   // millisecondes depuis le début).
-  mode          String    @default("live")
-  prompts       Json?
-  startedAt     DateTime?
-  submittedAt   DateTime?
-  brandRating     Int?
-  brandFeedback   String?
-  brandReviewTags String[]  @default([])
-  brandReviewedAt DateTime?
+  mode                  String    @default("live")
+  prompts               Json?
+  startedAt             DateTime?
+  submittedAt           DateTime?
+  brandRating           Int?
+  brandFeedback         String?
+  brandReviewTags       String[]  @default([])
+  brandReviewedAt       DateTime?
   // Présence dans la salle (événement « join » de la visio) : sert à détecter
   // une absence sans que personne n'ait à la constater.
   participantJoinedAt   DateTime?
@@ -632,12 +633,11 @@ model InviteCode {
   @@map("invite_codes")
 }
 
-
 /// Demande d'accès à un profil « sur demande ».
 /// Elle ne débite aucun crédit et ne crée pas de candidature : elle ouvre une
 /// conversation entre la marque et Rarelyst.
 model ProfileRequest {
-  id                   String @id @default(cuid())
+  id                   String  @id @default(cuid())
   brandProfileId       String
   participantProfileId String
   studyId              String?
@@ -669,7 +669,7 @@ model ReferralBonus {
   beneficiary   ParticipantProfile @relation(fields: [beneficiaryId], references: [id])
   refereeId     String
   applicationId String
-  kind          String             // "first" | "interview" | "welcome"
+  kind          String // "first" | "interview" | "welcome"
   amountCents   Int
   status        String             @default("pending") // pending | processing | paid | cancelled
   createdAt     DateTime           @default(now())
@@ -691,7 +691,7 @@ model Payout {
   participantProfile   ParticipantProfile @relation(fields: [participantProfileId], references: [id])
   amountCents          Int
   status               String             @default("requested") // requested | sent | failed | cancelled
-  method               String             @default("stripe")    // stripe | manual
+  method               String             @default("stripe") // stripe | manual
   stripeTransferId     String?
   error                String?
   attempts             Int                @default(0)
@@ -747,21 +747,22 @@ model InterviewIncident {
 
 /// Facture d'un achat de crédits. Numérotée à l'émission (RL-AAAA-0001).
 model Invoice {
-  id              String    @id @default(cuid())
-  number          String?   @unique
+  id              String       @id @default(cuid())
+  number          String?      @unique
   brandProfileId  String
-  status          String    @default("draft") // draft | issued
+  brandProfile    BrandProfile @relation(fields: [brandProfileId], references: [id])
+  status          String       @default("draft") // draft | issued
   issuedAt        DateTime?
   amountCents     Int
-  vatCents        Int       @default(0)
+  vatCents        Int          @default(0)
   totalCents      Int
-  currency        String    @default("EUR")
+  currency        String       @default("EUR")
   lines           Json
   issuer          Json?
   customer        Json?
-  stripeSessionId String?   @unique
+  stripeSessionId String?      @unique
   paidAt          DateTime?
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime     @default(now())
 
   @@index([brandProfileId])
   @@map("invoices")
@@ -815,7 +816,7 @@ model LabRun {
 model DemandSignal {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
-  source    String   // "study" | "lab"
+  source    String // "study" | "lab"
   sourceId  String
   label     String
   canonical String

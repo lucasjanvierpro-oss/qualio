@@ -15,6 +15,7 @@ const NAV = [
   { href: "/admin/participants",   label: "Participants" },
   { href: "/admin/matching",       label: "Matching" },
   { href: "/admin/payments",       label: "Paiements" },
+  { href: "/admin/invoices",       label: "Factures" },
   { href: "/admin/verifications",  label: "Vérifications" },
   { href: "/admin/access",         label: "Accès clients" },
 ];

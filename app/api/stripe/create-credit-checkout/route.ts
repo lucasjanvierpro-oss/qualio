@@ -38,6 +38,9 @@ export async function POST(request: NextRequest) {
   const session = await stripe.checkout.sessions.create({
     customer: stripeCustomerId,
     mode: "payment",
+    // L'adresse de facturation figure obligatoirement sur la facture.
+    billing_address_collection: "required",
+    customer_update: { address: "auto", name: "auto" },
     line_items: [{
       price_data: {
         currency: "eur",
@@ -55,6 +58,7 @@ export async function POST(request: NextRequest) {
       brandProfileId: dbUser.brandProfile.id,
       type: "credit_pack",
       credits: String(pack.credits),
+      packLabel: pack.label,
     },
   });
 
