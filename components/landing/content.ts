@@ -67,7 +67,7 @@ const FR: Content = {
     { name: "Maya L.", role: "Gen Z · revendeuse Vinted · Berlin", signals: ["seconde main", "archive", "Gen Z"], photo: "/avatars/maya.svg" },
   ],
   briefs: [
-    { text: "Des acheteuses de luxe discret, 25–40 ans, qui savent parler matière.", signals: ["quiet luxury", "matières", "gros budget", "styliste"] },
+    { text: "Des acheteuses de luxe discret, 25\u2060–\u206040 ans, qui savent parler matière.", signals: ["quiet luxury", "matières", "gros budget", "styliste"] },
     { text: "Des reselleurs de sneakers qui achètent au drop.", signals: ["sneakers", "revente", "drops"] },
     { text: "Des Gen Z qui s'habillent en seconde main et en archive.", signals: ["Gen Z", "seconde main", "archive"] },
     { text: "Des pros du retail mode, pour tester un nouveau concept de boutique.", signals: ["buyer", "retail", "concept store"] },
@@ -114,7 +114,7 @@ const EN: Content = {
     { name: "Maya L.", role: "Gen Z · Vinted reseller · Berlin", signals: ["second-hand", "archive", "Gen Z"], photo: "/avatars/maya.svg" },
   ],
   briefs: [
-    { text: "Quiet luxury shoppers, 25–40, who can talk about materials.", signals: ["quiet luxury", "materials", "high spend", "stylist"] },
+    { text: "Quiet luxury shoppers, 25\u2060–\u206040, who can talk about materials.", signals: ["quiet luxury", "materials", "high spend", "stylist"] },
     { text: "Sneaker resellers who buy on drop day.", signals: ["sneakers", "resale", "drops"] },
     { text: "Gen Z who dress in second-hand and archive pieces.", signals: ["Gen Z", "second-hand", "archive"] },
     { text: "Fashion retail pros, to test a new store concept.", signals: ["buyer", "retail", "concept store"] },
