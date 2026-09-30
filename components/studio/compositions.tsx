@@ -888,9 +888,9 @@ function BanniereProfils({ lang }: { lang: Lang }) {
     <div className={s.frame} style={{ width: 792, height: 198, background: `${glow("100%", "0%", "rgba(214,200,255,.7)", "50% 100%")}, ${glow("70%", "100%", "rgba(255,214,236,.6)")}, #fcfbfe` }}>
       <Brand x={24} y={20} />
       <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 22, width: 250, fontSize: 30, lineHeight: 1.02 }}>{c.p1} <span className={s.grad}>{c.p2}</span></h2>
-      <p style={{ position: "absolute", left: 232, top: 132, width: 230, margin: 0, fontSize: 12, lineHeight: 1.45, color: "var(--ink-2)" }}>{c.pSub}</p>
+      <p style={{ position: "absolute", left: 232, top: 132, width: 200, margin: 0, fontSize: 12, lineHeight: 1.45, color: "var(--ink-2)" }}>{c.pSub}</p>
       {c.cards.map(([i, col, n, r, tag], k) => (
-        <div key={n} className={s.row} style={{ position: "absolute", left: 510 + [0, 18, 6][k], top: 18 + k * 54, width: 250, gridTemplateColumns: "34px 1fr auto", gap: 8, padding: "6px 10px", borderRadius: 13, transform: `rotate(${[-2.5, 1.5, -1][k]}deg)`, zIndex: k + 1 }}>
+        <div key={n} className={s.row} style={{ position: "absolute", left: 506 + [0, 14, 4][k], top: 16 + k * 54, width: 266, gridTemplateColumns: "34px 1fr auto", gap: 8, padding: "6px 10px", borderRadius: 13, transform: `rotate(${[-2.5, 1.5, -1][k]}deg)`, zIndex: k + 1 }}>
           <span className={s.av} style={{ width: 34, height: 34, borderRadius: 10, fontSize: 15, background: col }}>{i}</span>
           <span style={{ lineHeight: 1.15 }}><span style={{ display: "flex", alignItems: "center", gap: 4 }}><b style={{ fontSize: 12.5 }}>{n}</b>{medals[k].map((m) => <Medallion key={m} id={m} size={15} />)}</span><span style={{ fontSize: 10.5, color: "var(--ink-2)" }}>{r}</span></span>
           <span className={`${s.tag} ${k === 2 ? s.chipHolo : ""}`} style={{ fontSize: 10, padding: "3px 7px", background: k === 2 ? undefined : "var(--accent-soft)", color: "var(--g2)" }}>{tag}</span>
