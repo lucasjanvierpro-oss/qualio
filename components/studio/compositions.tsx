@@ -847,11 +847,11 @@ const NIGHT_TEXT: React.CSSProperties = { background: "linear-gradient(100deg, #
 const glass: React.CSSProperties = { background: "rgba(255,255,255,.045)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.1)" };
 
 /** Fond noir : lueur violette discrète et trame de points qui s'efface vers la gauche. */
-function Night({ children, glowAt = "88% 0%" }: { children: React.ReactNode; glowAt?: string }) {
+function Night({ children, glowAt = "88% 0%", brand = true }: { children: React.ReactNode; glowAt?: string; brand?: boolean }) {
   return (
     <div className={s.frame} style={{ width: 792, height: 198, color: "#f4f1f8", background: `radial-gradient(55% 130% at ${glowAt}, rgba(106,67,219,.34), transparent 70%), radial-gradient(35% 90% at 100% 100%, rgba(215,96,158,.16), transparent 70%), #0a090d` }}>
       <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(255,255,255,.13) 0.8px, transparent 1.1px)", backgroundSize: "12px 12px", WebkitMaskImage: "linear-gradient(90deg, transparent 20%, #000 75%)", maskImage: "linear-gradient(90deg, transparent 20%, #000 75%)" }} />
-      <Brand x={24} y={20} light />
+      {brand && <Brand x={24} y={20} light />}
       {children}
     </div>
   );
@@ -861,14 +861,14 @@ function BanniereNoirCasting({ lang }: { lang: Lang }) {
   const c = BNN[lang];
   return (
     <Night>
-      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 36, fontSize: 34, lineHeight: 1.02, color: "#fff" }}>{c.c1}<br /><span style={NIGHT_TEXT}>{c.c2}</span></h2>
-      <p style={{ position: "absolute", left: 232, top: 124, width: 245, margin: 0, fontSize: 12.5, lineHeight: 1.45, color: "rgba(244,241,248,.62)" }}>{c.cSub}</p>
-      <div style={{ position: "absolute", left: 500, top: 20, display: "grid", gridTemplateColumns: "136px 136px", gap: 7 }}>
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 38, fontSize: 31, lineHeight: 1.02, color: "#fff" }}>{c.c1}<br /><span style={NIGHT_TEXT}>{c.c2}</span></h2>
+      <p style={{ position: "absolute", left: 232, top: 122, width: 225, margin: 0, fontSize: 12.5, lineHeight: 1.45, color: "rgba(244,241,248,.62)" }}>{c.cSub}</p>
+      <div style={{ position: "absolute", left: 478, top: 20, display: "grid", gridTemplateColumns: "150px 150px", gap: 7 }}>
         {c.cast.map(([i, col, role, detail], k) => (
-          <div key={role} style={{ ...glass, display: "flex", alignItems: "center", gap: 8, height: 46, padding: "0 10px", borderRadius: 12, boxShadow: k === 0 ? "inset 0 0 0 1px rgba(185,162,255,.6), 0 0 24px -6px rgba(140,104,242,.6)" : glass.boxShadow }}>
-            <span className={s.av} style={{ width: 28, height: 28, borderRadius: "50%", fontSize: 12, background: `linear-gradient(140deg, ${col}, #1b1128)` }}>{i}</span>
+          <div key={role} style={{ ...glass, display: "flex", alignItems: "center", gap: 7, height: 46, padding: "0 9px", borderRadius: 12, boxShadow: k === 0 ? "inset 0 0 0 1px rgba(185,162,255,.6), 0 0 24px -6px rgba(140,104,242,.6)" : glass.boxShadow }}>
+            <span className={s.av} style={{ width: 26, height: 26, borderRadius: "50%", fontSize: 11, flexShrink: 0, background: `linear-gradient(140deg, ${col}, #1b1128)` }}>{i}</span>
             <span style={{ lineHeight: 1.2, minWidth: 0 }}>
-              <b style={{ display: "block", fontSize: 11.5, whiteSpace: "nowrap" }}>{role}</b>
+              <b style={{ display: "block", fontSize: 11, whiteSpace: "nowrap" }}>{role}</b>
               <span style={{ fontSize: 10, color: "rgba(244,241,248,.55)", whiteSpace: "nowrap" }}>✓ {detail}</span>
             </span>
           </div>
@@ -883,13 +883,13 @@ function BanniereNoirTicker({ lang }: { lang: Lang }) {
   return (
     <Night glowAt="75% 50%">
       <p style={{ position: "absolute", left: 232, top: 30, margin: 0, fontSize: 12, fontWeight: 700, color: "#b9a2ff" }}>{c.tk}</p>
-      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 50, fontSize: 31, lineHeight: 1.02, color: "#fff" }}>{c.t1}<br />{c.t2} <span style={NIGHT_TEXT}>{c.t3}</span></h2>
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 50, fontSize: 30, lineHeight: 1.02, color: "#fff" }}>{c.t1}<br />{c.t2}<br /><span style={NIGHT_TEXT}>{c.t3}</span></h2>
       <div style={{ position: "absolute", left: 520, right: 0, top: 0, bottom: 0, WebkitMaskImage: "linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent)", maskImage: "linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent)" }}>
         {c.ticker.map((r, k) => (
           <div key={r} style={{ position: "absolute", left: k === 2 ? 0 : 22, top: 14 + k * 36, fontSize: k === 2 ? 25 : 19, fontWeight: 600, letterSpacing: "-0.035em", whiteSpace: "nowrap", color: k === 2 ? undefined : "rgba(244,241,248,.28)", ...(k === 2 ? NIGHT_TEXT : {}) }}>{k === 2 ? `✦ ${r}` : r}</div>
         ))}
       </div>
-      <div style={{ position: "absolute", left: 452, top: 74, transform: "rotate(-12deg)" }}><LoupeMascot size={56} mood="search" animated={false} /></div>
+      <div style={{ position: "absolute", left: 448, top: 86, transform: "rotate(-12deg)" }}><LoupeMascot size={56} mood="search" animated={false} /></div>
     </Night>
   );
 }
@@ -937,7 +937,7 @@ function BanniereNoirProfils({ lang }: { lang: Lang }) {
 function BanniereNoirLogo({ lang }: { lang: Lang }) {
   const c = BNN[lang];
   return (
-    <Night glowAt="85% 50%">
+    <Night glowAt="85% 50%" brand={false}>
       <div style={{ position: "absolute", left: 232, top: 40, display: "flex", alignItems: "center", gap: 14 }}>
         <Image src="/brand/logo.png" alt="" width={56} height={56} style={{ filter: "brightness(0) invert(1)" }} />
         <span style={{ fontSize: 60, fontWeight: 700, letterSpacing: "-0.055em", lineHeight: 1, color: "#fff" }}>Rarelyst</span>
