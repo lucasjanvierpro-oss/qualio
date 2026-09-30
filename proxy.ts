@@ -10,6 +10,9 @@ const PUBLIC_ROUTES = [
   "/signup/confirmation",
 ];
 
+const PUBLIC_PREFIXES = ["/guides", "/en/guides"];
+const PUBLIC_FILES = /^\/(robots\.txt|sitemap\.xml|llms(-full)?\.txt|manifest\.webmanifest|[a-f0-9]{32}\.txt)$|^\/(en\/)?(opengraph|twitter)-image/;
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -32,6 +35,13 @@ export async function proxy(request: NextRequest) {
 
   // Public routes — always accessible
   if (PUBLIC_ROUTES.some((route) => pathname === route)) {
+    return supabaseResponse;
+  }
+
+  // Fichiers lus par les moteurs de recherche et les assistants IA, et pages
+  // de contenu : jusqu'au 30/09/2026, robots.txt et sitemap.xml renvoyaient
+  // vers /login — Google ne pouvait lire ni l'un ni l'autre.
+  if (PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`)) || PUBLIC_FILES.test(pathname)) {
     return supabaseResponse;
   }
 

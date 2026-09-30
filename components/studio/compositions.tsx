@@ -1284,6 +1284,38 @@ function PanelVideo(t: number, lang: Lang, v: PanelVariant, post: boolean) {
   );
 }
 
+// ── Image de partage du site (aperçu des liens : LinkedIn, WhatsApp, iMessage) ──
+const OG = {
+  fr: { h1: "Qui voulez-vous", h2: "entendre ?", sub: "Profils vérifiés pour les études qualitatives des marques de mode, luxe et beauté.", pill: "Premiers profils sous 72 h",
+    people: [["amina", "Amina D.", "Styliste de célébrités"], ["yuki", "Yuki T.", "Acheteuse luxe · Tokyo"], ["kwame", "Kwame A.", "Reseller sneakers"]] },
+  en: { h1: "Who do you want", h2: "to hear from?", sub: "Verified participants for qualitative research by fashion, luxury and beauty brands.", pill: "First profiles within 72 h",
+    people: [["amina", "Amina D.", "Celebrity stylist"], ["yuki", "Yuki T.", "Luxury buyer · Tokyo"], ["kwame", "Kwame A.", "Sneaker reseller"]] },
+};
+
+function Partage({ lang }: { lang: Lang }) {
+  const c = OG[lang];
+  return (
+    <div className={s.frame} style={{ width: 600, height: 315, color: "#f4f1f8", background: "radial-gradient(60% 90% at 85% 20%, rgba(106,67,219,.4), transparent 70%), radial-gradient(40% 60% at 100% 100%, rgba(215,96,158,.18), transparent 70%), #0a090d" }}>
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(255,255,255,.12) 0.8px, transparent 1.1px)", backgroundSize: "12px 12px", WebkitMaskImage: "linear-gradient(90deg, transparent 30%, #000 80%)", maskImage: "linear-gradient(90deg, transparent 30%, #000 80%)" }} />
+      <Brand x={30} y={28} light />
+      <h1 className={s.h1} style={{ position: "absolute", left: 30, top: 78, fontSize: 44, lineHeight: 0.98, color: "#fff" }}>{c.h1}<br /><span style={NIGHT_TEXT}>{c.h2}</span></h1>
+      <p style={{ position: "absolute", left: 30, top: 186, width: 270, margin: 0, fontSize: 13.5, lineHeight: 1.45, color: "rgba(244,241,248,.7)" }}>{c.sub}</p>
+      <span style={{ position: "absolute", left: 30, top: 250, padding: "7px 12px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, color: "#8fe0b4", background: "rgba(47,163,107,.16)", boxShadow: "inset 0 0 0 1px rgba(143,224,180,.3)" }}>✓ {c.pill}</span>
+      <div style={{ position: "absolute", left: 336, right: 24, top: 56, display: "grid", gap: 9 }}>
+        {c.people.map(([img, n, r], k) => (
+          <div key={n} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 14, background: "rgba(255,255,255,.05)", boxShadow: k === 0 ? "inset 0 0 0 1px rgba(185,162,255,.55), 0 0 26px -8px rgba(140,104,242,.6)" : "inset 0 0 0 1px rgba(255,255,255,.1)" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/avatars/${img}.svg`} alt="" width={40} height={40} style={{ borderRadius: 12, boxShadow: "0 0 0 2px rgba(255,255,255,.14)" }} />
+            <span style={{ flex: 1, lineHeight: 1.2 }}><b style={{ fontSize: 13.5 }}>{n}</b><br /><span style={{ fontSize: 11.5, color: "rgba(244,241,248,.6)" }}>{r}</span></span>
+            <span style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 8px", borderRadius: 999, color: k === 0 ? "#8fe0b4" : "rgba(244,241,248,.75)", background: k === 0 ? "rgba(47,163,107,.16)" : "rgba(255,255,255,.08)" }}>{lang === "fr" ? (k === 0 ? "Très proche" : "Proche") : (k === 0 ? "Very close" : "Close")}</span>
+          </div>
+        ))}
+        <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: "rgba(244,241,248,.8)", marginTop: 4 }}>rarelyst.co</div>
+      </div>
+    </div>
+  );
+}
+
 const RENDERS: Record<string, Render> = {
   marques: Marques,
   participants: Participants,
@@ -1307,6 +1339,7 @@ const RENDERS: Record<string, Render> = {
   "banniere-noir-brief": (_t, lang) => <BanniereNoirBrief lang={lang} />,
   "banniere-noir-profils": (_t, lang) => <BanniereNoirProfils lang={lang} />,
   "banniere-noir-logo": (_t, lang) => <BanniereNoirLogo lang={lang} />,
+  partage: (_t, lang) => <Partage lang={lang} />,
   "page-noir-casting": (_t, lang) => <BanniereNoirCasting lang={lang} cover />,
   "page-noir-ticker": (_t, lang) => <BanniereNoirTicker lang={lang} cover />,
   "page-noir-brief": (_t, lang) => <BanniereNoirBrief lang={lang} cover />,

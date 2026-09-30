@@ -2,9 +2,9 @@
 // compositions.tsx) : lisible par les pages serveur comme par le navigateur.
 
 export type Lang = "fr" | "en";
-export type Format = "story" | "post" | "square" | "banner" | "cover" | "avatar";
+export type Format = "story" | "post" | "square" | "banner" | "cover" | "og" | "avatar";
 export const SIZES: Record<Format, [number, number]> = {
-  story: [540, 960], post: [540, 675], square: [540, 540], banner: [792, 198], cover: [1128, 191], avatar: [200, 200],
+  story: [540, 960], post: [540, 675], square: [540, 540], banner: [792, 198], cover: [1128, 191], og: [600, 315], avatar: [200, 200],
 };
 export type CompositionMeta = {
   id: string; title: string; format: Format;
@@ -35,6 +35,7 @@ export const REGISTRY: CompositionMeta[] = [
   { id: "banniere-noir-brief", title: "Bannière noire : un brief très précis", format: "banner", duration: 0, langs: ["fr", "en"] },
   { id: "banniere-noir-profils", title: "Bannière noire : des profils très précis", format: "banner", duration: 0, langs: ["fr", "en"] },
   { id: "banniere-noir-logo", title: "Bannière noire : logo", format: "banner", duration: 0, langs: ["fr", "en"] },
+  { id: "partage", title: "Image de partage du site (Open Graph, 1200×630)", format: "og", duration: 0, langs: ["fr", "en"] },
   { id: "page-noir-casting", title: "Couverture de la page entreprise LinkedIn : le casting", format: "cover", duration: 0, langs: ["fr", "en"] },
   { id: "page-noir-ticker", title: "Couverture de la page entreprise LinkedIn : parlez aux gens", format: "cover", duration: 0, langs: ["fr", "en"] },
   { id: "page-noir-brief", title: "Couverture de la page entreprise LinkedIn : un brief précis", format: "cover", duration: 0, langs: ["fr", "en"] },

@@ -35,7 +35,7 @@ const SB = env.NEXT_PUBLIC_SUPABASE_URL;
 const OUT = path.join(os.homedir(), "Desktop", "Rarelyst-visuels");
 
 // Même liste que components/studio/registry.ts
-const SIZES = { story: [540, 960], post: [540, 675], square: [540, 540], banner: [792, 198], cover: [1128, 191], avatar: [200, 200] };
+const SIZES = { story: [540, 960], post: [540, 675], square: [540, 540], banner: [792, 198], cover: [1128, 191], og: [600, 315], avatar: [200, 200] };
 // Bannières et couvertures : aussi une version « grand » (×4), plus nette une fois recadrée par LinkedIn.
 const BIG = new Set(["banner", "cover"]);
 const src = fs.readFileSync("components/studio/registry.ts", "utf8");

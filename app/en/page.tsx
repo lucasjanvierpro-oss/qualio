@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Landing from "@/components/landing/Landing";
 import { landingTiers } from "@/components/landing/tiers";
+import { LANDING_COPY } from "@/components/landing/copy";
+import JsonLd from "@/components/seo/JsonLd";
+import { faqPage, graph, organization, service, website } from "@/lib/seo/schema";
+import { SITE_URL } from "@/lib/seo/site";
 
 // La page d'accueil en anglais, à sa propre adresse : c'est ce qui permet à
 // Google de la proposer aux recherches en anglais.
@@ -21,5 +25,11 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePageEn() {
-  return <Landing tiers={await landingTiers()} lang="en" />;
+  const tiers = await landingTiers();
+  return (
+    <>
+      <JsonLd data={graph(organization("en"), website("en"), service("en", tiers), faqPage(LANDING_COPY.en.faq(tiers), `${SITE_URL}/en`))} />
+      <Landing tiers={tiers} lang="en" />
+    </>
+  );
 }
