@@ -24,33 +24,36 @@ export default function AsyncResponse(p: {
   hasRecording: boolean;
   transcriptStatus: string | null;
   transcript: string | null;
+  lang?: "fr" | "en";
 }) {
+  const en = p.lang === "en";
+  const tt = (fr: string, e: string) => (en ? e : fr);
   // Premier passage sur chaque question.
   const first = new Map<number, number>();
   for (const x of p.prompts) if (!first.has(x.i)) first.set(x.i, x.at);
   const state =
-    p.status === "scheduled" ? { label: "Pas encore commencé", tone: "wait" } :
-    p.status === "in_progress" ? { label: "En train de répondre", tone: "wait" } :
-    p.transcriptStatus === "done" ? { label: "Réponse complète", tone: "ok" } :
-    { label: "Envoyé · transcription en cours", tone: "wait" };
+    p.status === "scheduled" ? { label: tt("Pas encore commencé", "Not started yet"), tone: "wait" } :
+    p.status === "in_progress" ? { label: tt("En train de répondre", "Answering"), tone: "wait" } :
+    p.transcriptStatus === "done" ? { label: tt("Réponse complète", "Answer complete"), tone: "ok" } :
+    { label: tt("Envoyé · transcription en cours", "Sent · transcript in progress"), tone: "wait" };
 
   return (
     <div className={s.page}>
       <Link href={p.studyHref} className={`${s.small} ${s.muted}`}>← {p.title}</Link>
-      <p className={s.eyebrow} style={{ marginTop: 18 }}>Entretien en autonomie · bêta</p>
+      <p className={s.eyebrow} style={{ marginTop: 18 }}>{tt("Entretien en autonomie · bêta", "Self-paced interview · beta")}</p>
       <h1 className={s.h1}>{p.person.name}</h1>
       <p className={s.lead}>{p.person.facts}</p>
       <p style={{ margin: "10px 0 0" }}>
         <span className={`${s.badge} ${state.tone === "ok" ? s.badgeOk : s.badgeWait}`}>{state.label}</span>
-        {p.submittedAt && <span className={`${s.small} ${s.muted}`} style={{ marginLeft: 10 }}>Envoyé le {new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(p.submittedAt))}</span>}
+        {p.submittedAt && <span className={`${s.small} ${s.muted}`} style={{ marginLeft: 10 }}>{tt("Envoyé le", "Sent on")} {new Intl.DateTimeFormat(en ? "en-GB" : "fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(p.submittedAt))}</span>}
       </p>
 
       <section className={s.card} style={{ marginTop: 20 }}>
         <div className={s.spread}>
-          <h2 className={s.h3}>Les questions</h2>
+          <h2 className={s.h3}>{tt("Les questions", "The questions")}</h2>
           {p.hasRecording
-            ? <a className={`${s.btn} ${s.btnGhost}`} href={`/api/interviews/${p.interviewId}/recording`} target="_blank" rel="noreferrer">Voir la vidéo</a>
-            : <span className={`${s.small} ${s.muted}`}>La vidéo arrive quelques minutes après l&apos;envoi.</span>}
+            ? <a className={`${s.btn} ${s.btnGhost}`} href={`/api/interviews/${p.interviewId}/recording`} target="_blank" rel="noreferrer">{tt("Voir la vidéo", "Watch the video")}</a>
+            : <span className={`${s.small} ${s.muted}`}>{tt("La vidéo arrive quelques minutes après l'envoi.", "The video arrives a few minutes after sending.")}</span>}
         </div>
         <ol style={{ margin: "12px 0 0", paddingLeft: 0, listStyle: "none", display: "grid", gap: 10 }}>
           {p.questions.map((q, i) => (
@@ -60,14 +63,14 @@ export default function AsyncResponse(p: {
             </li>
           ))}
         </ol>
-        <p className={`${s.small} ${s.faint}`} style={{ margin: "12px 0 0" }}>Le minutage indique quand le participant est passé à chaque question, depuis son entrée dans la salle.</p>
+        <p className={`${s.small} ${s.faint}`} style={{ margin: "12px 0 0" }}>{tt("Le minutage indique quand le participant est passé à chaque question, depuis son entrée dans la salle.", "Timings show when the participant moved to each question, from when they entered the room.")}</p>
       </section>
 
       <section className={s.card} style={{ marginTop: 14 }}>
-        <h2 className={s.h3}>Transcription</h2>
+        <h2 className={s.h3}>{tt("Transcription", "Transcript")}</h2>
         {p.transcript
           ? <div style={{ whiteSpace: "pre-wrap", fontSize: 14.5, lineHeight: 1.6, marginTop: 10 }}>{p.transcript}</div>
-          : <p className={`${s.small} ${s.muted}`} style={{ margin: "8px 0 0" }}>{p.status === "submitted" ? "En cours : elle arrive en général dans l'heure qui suit l'envoi." : "Elle apparaîtra ici une fois les réponses envoyées."}</p>}
+          : <p className={`${s.small} ${s.muted}`} style={{ margin: "8px 0 0" }}>{p.status === "submitted" ? tt("En cours : elle arrive en général dans l'heure qui suit l'envoi.", "In progress: it usually arrives within an hour of sending.") : tt("Elle apparaîtra ici une fois les réponses envoyées.", "It will appear here once the answers are sent.")}</p>}
       </section>
     </div>
   );

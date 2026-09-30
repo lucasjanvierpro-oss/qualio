@@ -40,7 +40,11 @@ export function useVisioCheck() {
   return { state, retry };
 }
 
-export const VISIO_BLOCKED_HELP = {
+export const visioBlockedHelp = (lang: "fr" | "en") => lang === "en" ? {
+  title: "Your network is blocking the video call.",
+  text: "This is common on corporate, school or public Wi-Fi networks. Switch to your phone's hotspot (4G/5G), or ask your IT team to allow whereby.com and appearin.net.",
+} : {
   title: "Votre réseau bloque la visio.",
   text: "C'est fréquent sur un réseau d'entreprise, d'école ou un Wi-Fi public. Passez sur le partage de connexion de votre téléphone (4G/5G), ou demandez à votre service informatique d'autoriser whereby.com et appearin.net.",
 };
+export const VISIO_BLOCKED_HELP = visioBlockedHelp("fr");

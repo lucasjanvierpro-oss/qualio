@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth/guards";
 import InterviewRoom from "@/components/interview/InterviewRoom";
 import AsyncResponse from "@/components/interview/AsyncResponse";
 import { sweepNoShowsSoon } from "@/lib/interviews/reliability";
+import { getLang } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,7 @@ export default async function BrandInterviewPage({ params }: { params: Promise<{
         hasRecording={!!interview.recordingId}
         transcriptStatus={interview.transcriptStatus}
         transcript={interview.transcript}
+        lang={await getLang()}
       />
     );
   }

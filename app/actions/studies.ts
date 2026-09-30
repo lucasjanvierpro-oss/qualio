@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { assertAdmin, getSessionUser } from "@/lib/auth/guards";
-import { sendAvailabilityRequested, sendAsyncInvitation } from "@/lib/resend/emails";
+import { langOf, sendAvailabilityRequested, sendAsyncInvitation } from "@/lib/resend/emails";
 import { sendStudySubmittedAdmin } from "@/lib/resend/emails";
 import { suggestProfiles } from "@/lib/studies/suggest";
 import { getPricingConfig, priceProfiles } from "@/lib/pricing/quotes";
@@ -136,7 +136,7 @@ export async function acceptApplication(applicationId: string, expectedCredits?:
       participantPayCents: true,
       priceBreakdown: true,
       study: { select: { brandProfileId: true, title: true, interviewDuration: true, studyType: true, mode: true, deadlineAt: true, guide: true } },
-      participantProfile: { select: { firstName: true, accessTier: true, user: { select: { email: true } } } },
+      participantProfile: { select: { firstName: true, accessTier: true, preferredLanguage: true, user: { select: { email: true } } } },
     },
   });
   if (!application || application.study.brandProfileId !== me.brandProfileId) {
@@ -238,6 +238,7 @@ export async function acceptApplication(applicationId: string, expectedCredits?:
         asyncInterviewId,
         application.study.guide.length,
         application.study.deadlineAt,
+        langOf(application.participantProfile.preferredLanguage),
       ).catch(() => null);
       return;
     }
@@ -245,7 +246,8 @@ export async function acceptApplication(applicationId: string, expectedCredits?:
       application.participantProfile.user.email,
       application.participantProfile.firstName,
       application.study.title,
-      applicationId
+      applicationId,
+      langOf(application.participantProfile.preferredLanguage),
     ).catch(() => null);
   });
 

@@ -3,20 +3,25 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import LoupeMascot from "@/components/brand/LoupeMascot";
+import { getLang } from "@/lib/i18n/server";
+import { locale, pickTT } from "@/lib/i18n/tt";
 
-const STATUS_META: Record<string, { label: string; color: string }> = {
-  DRAFT:       { label: "Brouillon",   color: "var(--color-text-tertiary)" },
-  ACTIVE:      { label: "Active",      color: "var(--color-success)" },
-  MATCHING:    { label: "En matching", color: "var(--color-warning)" },
-  IN_PROGRESS: { label: "En cours",    color: "var(--color-info)" },
-  COMPLETED:   { label: "Terminée",    color: "var(--color-text-secondary)" },
-  CANCELLED:   { label: "Annulée",     color: "var(--color-error)" },
-};
+const STATUS_META = (tt: (fr: string, en: string) => string): Record<string, { label: string; color: string }> => ({
+  DRAFT:       { label: tt("Brouillon", "Draft"),         color: "var(--color-text-tertiary)" },
+  ACTIVE:      { label: "Active",                         color: "var(--color-success)" },
+  MATCHING:    { label: tt("En matching", "Matching"),    color: "var(--color-warning)" },
+  IN_PROGRESS: { label: tt("En cours", "In progress"),    color: "var(--color-info)" },
+  COMPLETED:   { label: tt("Terminée", "Completed"),      color: "var(--color-text-secondary)" },
+  CANCELLED:   { label: tt("Annulée", "Cancelled"),       color: "var(--color-error)" },
+});
 
 export default async function BrandStudiesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const lang = await getLang();
+  const tt = pickTT(lang);
+  const META = STATUS_META(tt);
 
   const dbUser = await prisma.user.findUnique({
     where: { supabaseId: user.id },
@@ -40,7 +45,7 @@ export default async function BrandStudiesPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "36px" }}>
         <div>
-          <p className="q-label" style={{ marginBottom: "8px" }}>Études</p>
+          <p className="q-label" style={{ marginBottom: "8px" }}>{tt("Études", "Studies")}</p>
           <h1 style={{
             fontFamily: "var(--font-display)",
             fontSize: "30px",
@@ -51,24 +56,24 @@ export default async function BrandStudiesPage() {
             margin: 0,
             lineHeight: 1.1,
           }}>
-            Mes études
+            {tt("Mes études", "My studies")}
           </h1>
           <p style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginTop: "6px" }}>
-            {studies.length} étude{studies.length !== 1 ? "s" : ""}
+            {studies.length} {tt(`étude${studies.length !== 1 ? "s" : ""}`, `stud${studies.length !== 1 ? "ies" : "y"}`)}
           </p>
         </div>
         <Link href="/brand/studies/new" className="q-btn q-btn-primary">
-          + Nouvelle étude
+          + {tt("Nouvelle étude", "New study")}
         </Link>
       </div>
 
       {studies.length === 0 ? (
         <div className="q-card q-empty">
           <LoupeMascot size={64} mood="search" className="rl-empty-mascot" />
-          <p className="q-empty-title">Aucune étude pour le moment</p>
-          <p className="q-empty-sub">Créez votre première étude pour recevoir des profils ciblés sous 72h.</p>
+          <p className="q-empty-title">{tt("Aucune étude pour le moment", "No studies yet")}</p>
+          <p className="q-empty-sub">{tt("Créez votre première étude pour recevoir des profils ciblés sous 72h.", "Create your first study to receive targeted profiles within 72h.")}</p>
           <Link href="/brand/studies/new" className="q-btn q-btn-primary" style={{ marginTop: "20px" }}>
-            Créer une étude →
+            {tt("Créer une étude", "Create a study")} →
           </Link>
         </div>
       ) : (
@@ -82,13 +87,13 @@ export default async function BrandStudiesPage() {
             background: "var(--color-surface-2)",
             borderBottom: "1px solid var(--color-border-base)",
           }}>
-            {["Étude", "Statut", "Deadline", "Participants", ""].map((col) => (
+            {[tt("Étude", "Study"), tt("Statut", "Status"), "Deadline", "Participants", ""].map((col) => (
               <div key={col} className="q-label">{col}</div>
             ))}
           </div>
 
           {studies.map((s, i) => {
-            const meta      = STATUS_META[s.status] ?? STATUS_META.ACTIVE;
+            const meta      = META[s.status] ?? META.ACTIVE;
             const confirmed = s.applications.filter((a) => ["CONFIRMED", "COMPLETED"].includes(a.status)).length;
             const pending   = s.applications.filter((a) => a.status === "SHORTLISTED").length;
             const dl        = s.deadlineAt
@@ -117,10 +122,10 @@ export default async function BrandStudiesPage() {
                     {s.title}
                   </div>
                   <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", display: "flex", gap: "10px" }}>
-                    <span>{s.studyType === "ONE_ON_ONE" ? "Entretien 1:1" : "Focus group"}</span>
+                    <span>{s.studyType === "ONE_ON_ONE" ? tt("Entretien 1:1", "1:1 interview") : "Focus group"}</span>
                     {pending > 0 && (
                       <span style={{ color: "var(--color-warning)", fontWeight: 600 }}>
-                        {pending} profil{pending > 1 ? "s" : ""} à valider
+                        {pending} {tt(`profil${pending > 1 ? "s" : ""} à valider`, `profile${pending > 1 ? "s" : ""} to review`)}
                       </span>
                     )}
                   </div>
@@ -138,11 +143,11 @@ export default async function BrandStudiesPage() {
                   {s.deadlineAt ? (
                     <>
                       <div style={{ fontSize: "12px", color: urgent ? "var(--color-error)" : "var(--color-text-secondary)", fontWeight: urgent ? 600 : 400 }}>
-                        {new Date(s.deadlineAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                        {new Date(s.deadlineAt).toLocaleDateString(locale(lang), { day: "numeric", month: "short" })}
                       </div>
                       {dl !== null && (
                         <div style={{ fontSize: "10px", color: urgent ? "var(--color-error)" : "var(--color-text-tertiary)", fontFamily: "var(--font-mono-base)" }}>
-                          {dl > 0 ? `J−${dl}` : "Aujourd'hui"}
+                          {dl > 0 ? tt(`J−${dl}`, `D−${dl}`) : tt("Aujourd'hui", "Today")}
                         </div>
                       )}
                     </>

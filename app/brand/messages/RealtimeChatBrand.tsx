@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useMessages } from "@/hooks/useMessages";
+import { useLang } from "@/lib/i18n/client";
 
 type Thread = {
   id: string;
@@ -9,6 +10,8 @@ type Thread = {
   status: string;
   updatedAt: string;
 };
+
+const STATUS_EN: Record<string, string> = { DRAFT: "Draft", ACTIVE: "Active", MATCHING: "Matching", IN_PROGRESS: "In progress", COMPLETED: "Completed", CANCELLED: "Cancelled" };
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
   DRAFT:       { bg: "var(--color-surface-2)", text: "var(--color-text-tertiary)", label: "Brouillon" },
@@ -19,18 +22,20 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }>
   CANCELLED:   { bg: "var(--color-error-light)", text: "var(--color-error)", label: "Annulé" },
 };
 
-function fmtTime(iso: string) {
+function fmtTime(iso: string, en = false) {
   const d = new Date(iso);
   const now = new Date();
+  const loc = en ? "en-GB" : "fr-FR";
   const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  if (diffDays === 1) return "Hier";
-  if (diffDays < 7) return d.toLocaleDateString("fr-FR", { weekday: "short" });
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  if (diffDays === 0) return d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 1) return en ? "Yesterday" : "Hier";
+  if (diffDays < 7) return d.toLocaleDateString(loc, { weekday: "short" });
+  return d.toLocaleDateString(loc, { day: "numeric", month: "short" });
 }
 
 function ChatThread({ studyId }: { studyId: string }) {
   const { messages, sendMessage } = useMessages(studyId);
+  const en = useLang() === "en";
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -50,7 +55,7 @@ function ChatThread({ studyId }: { studyId: string }) {
       <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "12px" }}>
         {messages.length === 0 && (
           <div style={{ textAlign: "center", padding: "40px", color: "var(--color-text-tertiary)", fontSize: "14px" }}>
-            Aucun message pour le moment. Posez une question à l'équipe Rarelyst.
+            {en ? "No messages yet. Ask the Rarelyst team a question." : "Aucun message pour le moment. Posez une question à l'équipe Rarelyst."}
           </div>
         )}
         {messages.map((m) => {
@@ -69,7 +74,7 @@ function ChatThread({ studyId }: { studyId: string }) {
               }}>
                 <p style={{ margin: "0 0 4px", fontSize: "14px", lineHeight: 1.5 }}>{m.content}</p>
                 <p style={{ margin: 0, fontSize: "11px", opacity: 0.7, textAlign: "right" }}>
-                  {new Date(m.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(m.created_at).toLocaleTimeString(en ? "en-GB" : "fr-FR", { hour: "2-digit", minute: "2-digit" })}
                 </p>
               </div>
             </div>
@@ -83,11 +88,11 @@ function ChatThread({ studyId }: { studyId: string }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleSend())}
-          placeholder="Écrire à l'équipe Rarelyst…"
+          placeholder={en ? "Write to the Rarelyst team…" : "Écrire à l'équipe Rarelyst…"}
           style={{ flex: 1, padding: "10px 14px", border: "1px solid var(--color-border)", borderRadius: "8px", fontSize: "14px", background: "var(--color-background)", color: "var(--color-text-primary)", outline: "none" }}
         />
         <button onClick={handleSend} style={{ padding: "10px 20px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
-          Envoyer
+          {en ? "Send" : "Envoyer"}
         </button>
       </div>
     </div>
@@ -95,6 +100,7 @@ function ChatThread({ studyId }: { studyId: string }) {
 }
 
 export default function RealtimeChatBrand({ threads }: { threads: Thread[] }) {
+  const en = useLang() === "en";
   const [activeThreadId, setActiveThreadId] = useState(threads[0]?.id ?? null);
   const activeThread = threads.find((t) => t.id === activeThreadId);
 
@@ -106,9 +112,9 @@ export default function RealtimeChatBrand({ threads }: { threads: Thread[] }) {
         </div>
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "12px", color: "var(--color-text-secondary)" }}>
           <div style={{ fontSize: "40px" }}>💬</div>
-          <div style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)" }}>Aucune conversation</div>
+          <div style={{ fontSize: "16px", fontWeight: 600, color: "var(--color-text-primary)" }}>{en ? "No conversations" : "Aucune conversation"}</div>
           <p style={{ fontSize: "14px", textAlign: "center", maxWidth: "320px", margin: 0 }}>
-            Vos conversations avec l'équipe Rarelyst apparaîtront ici, liées à chaque étude.
+            {en ? "Your conversations with the Rarelyst team will appear here, linked to each study." : "Vos conversations avec l'équipe Rarelyst apparaîtront ici, liées à chaque étude."}
           </p>
         </div>
       </div>
@@ -138,10 +144,10 @@ export default function RealtimeChatBrand({ threads }: { threads: Thread[] }) {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
                   <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)", flex: 1, marginRight: "8px", lineHeight: 1.3 }}>{t.study}</span>
-                  <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", flexShrink: 0 }}>{fmtTime(t.updatedAt)}</span>
+                  <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", flexShrink: 0 }}>{fmtTime(t.updatedAt, en)}</span>
                 </div>
                 <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "999px", background: sc.bg, color: sc.text, fontWeight: 500 }}>
-                  {sc.label}
+                  {en ? (STATUS_EN[t.status] ?? sc.label) : sc.label}
                 </span>
               </button>
             );

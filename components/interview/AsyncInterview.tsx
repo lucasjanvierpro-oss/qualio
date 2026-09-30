@@ -5,6 +5,7 @@ import Link from "next/link";
 import WherebyRoom from "@/components/shared/WherebyRoom";
 import LoupeMascot from "@/components/brand/LoupeMascot";
 import css from "./async.module.css";
+import { useTT } from "@/lib/i18n/client";
 
 // Entretien en autonomie (bêta) : le participant est seul dans la salle vidéo.
 // Les questions du guide s'affichent une par une, en noir sur fond blanc ; il
@@ -23,6 +24,7 @@ export default function AsyncInterview(p: {
   index: number;
   backHref: string;
 }) {
+  const tt = useTT();
   const finished = ["submitted", "completed"].includes(p.status);
   const [phase, setPhase] = useState<Phase>(finished ? "done" : "intro");
   const [consent, setConsent] = useState(false);
@@ -55,8 +57,8 @@ export default function AsyncInterview(p: {
       setPhase("room");
     } catch (e) {
       setError(e instanceof Error && e.message === "already_submitted"
-        ? "Vos réponses ont déjà été envoyées."
-        : "La salle vidéo n'a pas pu s'ouvrir. Réessayez dans un instant.");
+        ? tt("Vos réponses ont déjà été envoyées.", "Your answers have already been sent.")
+        : tt("La salle vidéo n'a pas pu s'ouvrir. Réessayez dans un instant.", "The video room could not open. Please try again in a moment."));
     }
     setBusy(false);
   }
@@ -78,13 +80,13 @@ export default function AsyncInterview(p: {
 
   async function go(to: number) {
     setBusy(true);
-    try { await call({ action: "next", index: to }); setIndex(to); } catch { setError("Connexion interrompue : réessayez."); }
+    try { await call({ action: "next", index: to }); setIndex(to); } catch { setError(tt("Connexion interrompue : réessayez.", "Connection lost: please try again.")); }
     setBusy(false);
   }
 
   async function finish() {
     setBusy(true);
-    try { await call({ action: "finish" }); setPhase("done"); setRoomUrl(null); } catch { setError("L'envoi n'a pas abouti : réessayez."); }
+    try { await call({ action: "finish" }); setPhase("done"); setRoomUrl(null); } catch { setError(tt("L'envoi n'a pas abouti : réessayez.", "Sending failed: please try again.")); }
     setBusy(false);
   }
 
@@ -93,10 +95,10 @@ export default function AsyncInterview(p: {
       <div className={css.page}>
         <div className={css.done}>
           <LoupeMascot size={96} mood="wow" />
-          <h1>Merci, c&apos;est envoyé.</h1>
-          <p>La marque recevra la vidéo et la transcription de vos réponses. Votre récompense arrive dans votre solde dès que l&apos;équipe a validé l&apos;entretien.</p>
-          <Link className={css.primary} href="/participant/wallet">Voir mes gains</Link>
-          <Link className={css.link} href={p.backHref}>Retour à l&apos;étude</Link>
+          <h1>{tt("Merci, c'est envoyé.", "Thank you, it's sent.")}</h1>
+          <p>{tt("La marque recevra la vidéo et la transcription de vos réponses. Votre récompense arrive dans votre solde dès que l'équipe a validé l'entretien.", "The brand will receive the video and transcript of your answers. Your reward lands in your balance once the team has validated the interview.")}</p>
+          <Link className={css.primary} href="/participant/wallet">{tt("Voir mes gains", "See my earnings")}</Link>
+          <Link className={css.link} href={p.backHref}>{tt("Retour à l'étude", "Back to the study")}</Link>
         </div>
       </div>
     );
@@ -105,26 +107,26 @@ export default function AsyncInterview(p: {
   if (phase === "intro") {
     return (
       <div className={css.page}>
-        <Link className={css.back} href={p.backHref}>← Retour à l&apos;étude</Link>
-        <p className={css.eyebrow}>Entretien en autonomie</p>
+        <Link className={css.back} href={p.backHref}>← {tt("Retour à l'étude", "Back to the study")}</Link>
+        <p className={css.eyebrow}>{tt("Entretien en autonomie", "Self-guided interview")}</p>
         <h1 className={css.h1}>{p.title}</h1>
         <div className={css.intro}>
           <ol className={css.steps}>
-            <li><b>Installez-vous au calme</b><span>Une bonne lumière, un endroit sans bruit. Comptez une quinzaine de minutes.</span></li>
-            <li><b>Entrez dans la salle vidéo</b><span>Autorisez la caméra et le micro, puis cliquez sur « Rejoindre ». Vous y êtes seul(e).</span></li>
-            <li><b>Répondez à voix haute</b><span>{n} questions s&apos;affichent une par une. Prenez votre temps, puis passez à la suivante.</span></li>
+            <li><b>{tt("Installez-vous au calme", "Settle somewhere quiet")}</b><span>{tt("Une bonne lumière, un endroit sans bruit. Comptez une quinzaine de minutes.", "Good light, no noise. Allow about fifteen minutes.")}</span></li>
+            <li><b>{tt("Entrez dans la salle vidéo", "Enter the video room")}</b><span>{tt("Autorisez la caméra et le micro, puis cliquez sur « Rejoindre ». Vous y êtes seul(e).", "Allow camera and microphone, then click “Join”. You are on your own.")}</span></li>
+            <li><b>{tt("Répondez à voix haute", "Answer out loud")}</b><span>{n} {tt("questions s'affichent une par une. Prenez votre temps, puis passez à la suivante.", "questions appear one by one. Take your time, then move to the next.")}</span></li>
           </ol>
           <label className={css.consent}>
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-            <span>J&apos;accepte que mes réponses soient enregistrées en vidéo et transcrites, pour la marque qui mène l&apos;étude. La vidéo n&apos;est plus accessible après 90 jours.</span>
+            <span>{tt("J'accepte que mes réponses soient enregistrées en vidéo et transcrites, pour la marque qui mène l'étude. La vidéo n'est plus accessible après 90 jours.", "I agree that my answers are video-recorded and transcribed for the brand running the study. The video is no longer accessible after 90 days.")}</span>
           </label>
           <label className={css.consent}>
             <input type="checkbox" checked={nda} onChange={(e) => setNda(e.target.checked)} />
-            <span>J&apos;accepte l&apos;<a href="/accord-confidentialite" target="_blank" rel="noopener">accord de confidentialité</a> : je garde pour moi les questions et tout ce que la marque me montre.</span>
+            <span>{tt("J'accepte l'", "I accept the ")}<a href="/accord-confidentialite" target="_blank" rel="noopener">{tt("accord de confidentialité", "confidentiality agreement")}</a>{tt(" : je garde pour moi les questions et tout ce que la marque me montre.", ": I keep the questions and everything the brand shows me to myself.")}</span>
           </label>
           {error && <p className={css.error}>{error}</p>}
           <button type="button" className={css.primary} disabled={!consent || !nda || busy} onClick={start}>
-            {busy ? "Ouverture de la salle…" : p.joined ? "Reprendre" : "Commencer"}
+            {busy ? tt("Ouverture de la salle…", "Opening the room…") : p.joined ? tt("Reprendre", "Resume") : tt("Commencer", "Start")}
           </button>
         </div>
       </div>
@@ -138,21 +140,21 @@ export default function AsyncInterview(p: {
         {!joined ? (
           <div className={css.waiting}>
             <LoupeMascot size={72} mood="search" />
-            <p className={css.q}>Entrez dans la salle vidéo : autorisez la caméra et le micro, puis cliquez sur « Rejoindre ».</p>
-            <p className={css.hint}>La première question s&apos;affiche dès que vous y êtes.</p>
-            {fallback && <button type="button" className={css.ghost} onClick={onJoin}>Je suis dans la salle</button>}
+            <p className={css.q}>{tt("Entrez dans la salle vidéo : autorisez la caméra et le micro, puis cliquez sur « Rejoindre ».", "Enter the video room: allow camera and microphone, then click “Join”.")}</p>
+            <p className={css.hint}>{tt("La première question s'affiche dès que vous y êtes.", "The first question appears as soon as you are in.")}</p>
+            {fallback && <button type="button" className={css.ghost} onClick={onJoin}>{tt("Je suis dans la salle", "I'm in the room")}</button>}
           </div>
         ) : (
           <>
             <div className={css.progress} aria-hidden="true">{p.questions.map((_, i) => <i key={i} data-on={i <= index} />)}</div>
-            <p className={css.count}>Question {index + 1} sur {n}</p>
+            <p className={css.count}>Question {index + 1} {tt("sur", "of")} {n}</p>
             <p className={css.q} key={index}>{p.questions[index]}</p>
             <div className={css.actions}>
-              {index > 0 && <button type="button" className={css.ghost} disabled={busy} onClick={() => go(index - 1)}>← Précédente</button>}
+              {index > 0 && <button type="button" className={css.ghost} disabled={busy} onClick={() => go(index - 1)}>← {tt("Précédente", "Previous")}</button>}
               {last ? (
-                <button type="button" className={css.primary} disabled={busy} onClick={finish}>{busy ? "Envoi…" : "Terminer et envoyer"}</button>
+                <button type="button" className={css.primary} disabled={busy} onClick={finish}>{busy ? tt("Envoi…", "Sending…") : tt("Terminer et envoyer", "Finish and send")}</button>
               ) : (
-                <button type="button" className={css.primary} disabled={busy} onClick={() => go(index + 1)}>Question suivante →</button>
+                <button type="button" className={css.primary} disabled={busy} onClick={() => go(index + 1)}>{tt("Question suivante →", "Next question →")}</button>
               )}
             </div>
             {error && <p className={css.error}>{error}</p>}
@@ -161,7 +163,7 @@ export default function AsyncInterview(p: {
       </section>
       <section className={css.video}>
         {roomUrl && <WherebyRoom roomUrl={roomUrl} displayName={p.displayName} minimal onJoin={onJoin} height="100%" />}
-        <p className={css.rec}><i /> L&apos;enregistrement démarre dès que vous entrez dans la salle.</p>
+        <p className={css.rec}><i /> {tt("L'enregistrement démarre dès que vous entrez dans la salle.", "Recording starts as soon as you enter the room.")}</p>
       </section>
     </div>
   );

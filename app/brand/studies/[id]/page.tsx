@@ -8,6 +8,7 @@ import { priceProfiles, getPricingConfig } from "@/lib/pricing/quotes";
 import { factorText } from "@/lib/pricing/engine";
 import StudyDetailClient, { type Candidate } from "./StudyDetailClient";
 import { sweepNoShowsSoon } from "@/lib/interviews/reliability";
+import { getLang } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function StudyDetailPage({ params, searchParams }: { params
   const me = await getSessionUser();
   if (!me) redirect("/login");
   if (!me.brandProfileId) redirect("/login");
+  const lang = await getLang();
 
   const [study, brand] = await Promise.all([
     prisma.study.findFirst({
@@ -117,14 +119,14 @@ export default async function StudyDetailPage({ params, searchParams }: { params
       attendance: trust.attendance,
       trust,
       badges,
-      traits: (pr?.traits ?? []).filter((t) => t.state === "confirmed").map((t) => TRAIT_LABELS[t.id].name.fr),
+      traits: (pr?.traits ?? []).filter((t) => t.state === "confirmed").map((t) => TRAIT_LABELS[t.id].name[lang]),
       certScore: pr?.certScore ?? 0,
       price: pr ? {
         credits: frozen ?? pr.quote.credits,
         euros: (frozen ?? pr.quote.credits) * cfg.creditValueCents,
         tierLabel: cfg.tiers[pr.quote.tier].label,
         why: frozen
-          ? ((a.priceBreakdown as { factors?: { label: string; factor: number }[] } | null)?.factors ?? []).map((f) => factorText({ key: "", ...f })).concat("Prix fixé quand le profil vous a été proposé")
+          ? ((a.priceBreakdown as { factors?: { label: string; factor: number }[] } | null)?.factors ?? []).map((f) => factorText({ key: "", ...f })).concat(lang === "en" ? "Price locked when the profile was suggested to you" : "Prix fixé quand le profil vous a été proposé")
           : pr.quote.factors.map(factorText),
       } : null,
       kind: g?.profileType ?? null,

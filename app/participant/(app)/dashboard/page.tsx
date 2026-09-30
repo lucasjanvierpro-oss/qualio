@@ -3,11 +3,16 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import LoupeMascot from "@/components/brand/LoupeMascot";
+import { getLang } from "@/lib/i18n/server";
+import { locale, pickTT } from "@/lib/i18n/tt";
 
 export default async function ParticipantDashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const lang = await getLang();
+  const tt = pickTT(lang);
+  const loc = locale(lang);
 
   const dbUser = await prisma.user.findUnique({
     where: { supabaseId: user.id },
@@ -51,14 +56,14 @@ export default async function ParticipantDashboard() {
   ];
   const completeness = Math.round((fields.filter(Boolean).length / fields.length) * 100);
 
-  const firstName = profile?.firstName ?? "vous";
+  const firstName = profile?.firstName ?? tt("vous", "there");
 
   return (
     <div style={{ maxWidth: "860px", margin: "0 auto", padding: "44px 40px" }}>
 
       {/* Header */}
       <div style={{ marginBottom: "40px" }}>
-        <p className="q-label" style={{ marginBottom: "8px" }}>Tableau de bord</p>
+        <p className="q-label" style={{ marginBottom: "8px" }}>{tt("Tableau de bord", "Dashboard")}</p>
         <h1 style={{
           fontFamily: "var(--font-display)",
           fontSize: "32px",
@@ -69,14 +74,14 @@ export default async function ParticipantDashboard() {
           margin: 0,
           lineHeight: 1.1,
         }}>
-          Bonjour, {firstName}
+          {tt("Bonjour", "Hello")}, {firstName}
         </h1>
         <p style={{ fontSize: "13px", color: "var(--color-text-tertiary)", marginTop: "8px" }}>
           {upcomingInterview
-            ? "Vous avez un entretien à venir"
-            : "Aucun entretien planifié pour le moment"}
+            ? tt("Vous avez un entretien à venir", "You have an upcoming interview")
+            : tt("Aucun entretien planifié pour le moment", "No interview scheduled yet")}
           {availableStudies.length > 0 &&
-            ` · ${availableStudies.length} étude${availableStudies.length > 1 ? "s" : ""} disponible${availableStudies.length > 1 ? "s" : ""}`}
+            ` · ${availableStudies.length} ${tt(`étude${availableStudies.length > 1 ? "s" : ""} disponible${availableStudies.length > 1 ? "s" : ""}`, `stud${availableStudies.length > 1 ? "ies" : "y"} available`)}`}
         </p>
       </div>
 
@@ -94,17 +99,17 @@ export default async function ParticipantDashboard() {
         }}>
           <div>
             <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.10em", color: "rgba(255,255,255,0.5)", marginBottom: "8px" }}>
-              Prochain entretien
+              {tt("Prochain entretien", "Next interview")}
             </p>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 800, fontStyle: "normal", color: "#fff", marginBottom: "5px" }}>
               {upcomingInterview.study.title}
             </div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>
-              {new Date(upcomingInterview.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+              {new Date(upcomingInterview.scheduledAt).toLocaleDateString(loc, { weekday: "long", day: "numeric", month: "long" })}
               {" "}&middot;{" "}
-              {new Date(upcomingInterview.scheduledAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+              {new Date(upcomingInterview.scheduledAt).toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" })}
               {" "}&middot;{" "}
-              Récompense : <span style={{ fontFamily: "var(--font-mono-base)", fontWeight: 700 }}>
+              {tt("Récompense", "Reward")} : <span style={{ fontFamily: "var(--font-mono-base)", fontWeight: 700 }}>
                 {((upcomingInterview.participantPayCents ?? upcomingInterview.study.rewardAmount) / 100).toFixed(0)}€
               </span>
             </div>
@@ -124,11 +129,11 @@ export default async function ParticipantDashboard() {
                 flexShrink: 0,
               }}
             >
-              Rejoindre →
+              {tt("Rejoindre", "Join")} →
             </a>
           ) : (
             <div style={{ padding: "10px 20px", background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: "2px", fontSize: "13px", flexShrink: 0 }}>
-              Lien à venir
+              {tt("Lien à venir", "Link coming soon")}
             </div>
           )}
         </div>
@@ -147,7 +152,7 @@ export default async function ParticipantDashboard() {
           alignItems: "center",
         }}>
           <span style={{ fontSize: "13px", color: "var(--color-warning)", fontWeight: 500 }}>
-            Vérification de votre identité en cours — généralement 24–48h
+            {tt("Vérification de votre identité en cours — généralement 24–48h", "Identity verification in progress, usually 24–48h")}
           </span>
         </div>
       )}
@@ -163,10 +168,10 @@ export default async function ParticipantDashboard() {
           alignItems: "center",
         }}>
           <span style={{ fontSize: "13px", color: "var(--color-error)", fontWeight: 500 }}>
-            Document refusé — veuillez renvoyer votre pièce d'identité
+            {tt("Document refusé — veuillez renvoyer votre pièce d'identité", "Document declined, please upload your ID again")}
           </span>
           <Link href="/participant/verification" style={{ fontSize: "12px", color: "var(--color-error)", fontWeight: 700, textDecoration: "none", marginLeft: "16px" }}>
-            Renvoyer →
+            {tt("Renvoyer", "Upload again")} →
           </Link>
         </div>
       )}
@@ -175,7 +180,7 @@ export default async function ParticipantDashboard() {
       {completeness < 100 && (
         <div className="q-card" style={{ marginBottom: "32px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-            <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--color-text-primary)" }}>Complétude du profil</span>
+            <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--color-text-primary)" }}>{tt("Complétude du profil", "Profile completeness")}</span>
             <span style={{ fontFamily: "var(--font-mono-base)", fontSize: "13px", fontWeight: 700, color: completeness < 60 ? "var(--color-warning)" : "var(--color-accent)" }}>
               {completeness}%
             </span>
@@ -184,9 +189,9 @@ export default async function ParticipantDashboard() {
             <div style={{ height: "100%", width: `${completeness}%`, background: "var(--color-accent)", borderRadius: "2px", transition: "width 0.4s" }} />
           </div>
           <p style={{ fontSize: "12px", color: "var(--color-text-tertiary)", margin: 0 }}>
-            Un profil complet augmente vos chances d'être sélectionné(e) pour les études.{" "}
+            {tt("Un profil complet augmente vos chances d'être sélectionné(e) pour les études.", "A complete profile increases your chances of being selected for studies.")}{" "}
             <Link href="/participant/profile" style={{ color: "var(--color-accent)", textDecoration: "none", fontWeight: 600 }}>
-              Compléter →
+              {tt("Compléter", "Complete it")} →
             </Link>
           </p>
         </div>
@@ -194,17 +199,17 @@ export default async function ParticipantDashboard() {
 
       {/* Studies */}
       <div>
-        <p className="q-label" style={{ marginBottom: "14px" }}>Études disponibles pour vous</p>
+        <p className="q-label" style={{ marginBottom: "14px" }}>{tt("Études disponibles pour vous", "Studies available to you")}</p>
 
         {availableStudies.length === 0 ? (
           <div className="q-card q-empty">
             <LoupeMascot size={64} mood="search" className="rl-empty-mascot" />
-            <p className="q-empty-title">Aucune étude pour le moment</p>
+            <p className="q-empty-title">{tt("Aucune étude pour le moment", "No studies yet")}</p>
             <p className="q-empty-sub">
-              Complétez votre profil et l'équipe Rarelyst vous sélectionnera pour les études qui correspondent à votre profil.
+              {tt("Complétez votre profil et l'équipe Rarelyst vous sélectionnera pour les études qui correspondent à votre profil.", "Complete your profile and the Rarelyst team will select you for studies that match it.")}
             </p>
             <Link href="/participant/profile" className="q-btn q-btn-outline" style={{ marginTop: "18px" }}>
-              Compléter mon profil
+              {tt("Compléter mon profil", "Complete my profile")}
             </Link>
           </div>
         ) : (
@@ -217,7 +222,7 @@ export default async function ParticipantDashboard() {
               >
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--color-text-primary)", marginBottom: "5px" }}>
-                    {app.study.studyType === "ONE_ON_ONE" ? "Entretien individuel" : "Focus group"}
+                    {app.study.studyType === "ONE_ON_ONE" ? tt("Entretien individuel", "One-on-one interview") : "Focus group"}
                   </div>
                   <div style={{ display: "flex", gap: "12px", fontSize: "12px", color: "var(--color-text-tertiary)", flexWrap: "wrap" }}>
                     <span>{app.study.interviewDuration} min</span>
@@ -225,7 +230,7 @@ export default async function ParticipantDashboard() {
                       <>
                         <span>·</span>
                         <span>
-                          Avant le {new Date(app.study.deadlineAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                          {tt("Avant le", "Before")} {new Date(app.study.deadlineAt).toLocaleDateString(loc, { day: "numeric", month: "short" })}
                         </span>
                       </>
                     )}
@@ -235,7 +240,7 @@ export default async function ParticipantDashboard() {
                       borderColor: app.status === "INVITED" ? "var(--color-info)" : "var(--color-border-strong)",
                       fontSize: "10px",
                     }}>
-                      {app.status === "INVITED" ? "Invitation reçue" : "Présélectionné"}
+                      {app.status === "INVITED" ? tt("Invitation reçue", "Invitation received") : tt("Présélectionné", "Shortlisted")}
                     </span>
                   </div>
                 </div>
@@ -244,7 +249,7 @@ export default async function ParticipantDashboard() {
                     <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "20px", fontWeight: 700, color: "var(--color-text-primary)", lineHeight: 1 }}>
                       {((app.participantPayCents ?? app.study.rewardAmount) / 100).toFixed(0)}€
                     </div>
-                    <div style={{ fontSize: "10px", color: "var(--color-text-tertiary)", marginTop: "3px" }}>récompense</div>
+                    <div style={{ fontSize: "10px", color: "var(--color-text-tertiary)", marginTop: "3px" }}>{tt("récompense", "reward")}</div>
                   </div>
                   <Link
                     // La page attend l'identifiant de la CANDIDATURE, pas celui de l'étude :
@@ -254,7 +259,7 @@ export default async function ParticipantDashboard() {
                     className="q-btn q-btn-primary"
                     style={{ fontSize: "12px", padding: "8px 16px" }}
                   >
-                    Voir →
+                    {tt("Voir", "View")} →
                   </Link>
                 </div>
               </div>

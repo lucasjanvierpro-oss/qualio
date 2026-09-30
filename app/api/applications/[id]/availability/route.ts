@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { NDA_VERSION } from "@/lib/legal/nda";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
-import { sendAvailabilityProposed } from "@/lib/resend/emails";
+import { langOf, sendAvailabilityProposed } from "@/lib/resend/emails";
 import type { Slot } from "@/lib/interviews/schedule";
 
 const MIN_LEAD_MS = 12 * 3600_000; // la marque doit avoir le temps de choisir
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const brand = application.study.brandProfile;
   await sendAvailabilityProposed(
     brand.user.email, brand.contactFirstName ?? "", application.participantProfile.firstName,
-    application.study.title, application.studyId, proposed.map((s) => new Date(s.startTime)),
+    application.study.title, application.studyId, proposed.map((s) => new Date(s.startTime)), langOf(brand.preferredLanguage),
   ).catch(() => null);
 
   return NextResponse.json({ ok: true, slots: proposed });

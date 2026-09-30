@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/app/generated/prisma/client";
-import { sendReportReady } from "@/lib/resend/emails";
+import { langOf, sendReportReady } from "@/lib/resend/emails";
 import { textFromMessage, extractJsonObject, wasTruncated } from "@/lib/anthropic/text";
 import { checkAndRepairQuotes } from "@/lib/reports/quality";
 
@@ -288,7 +288,8 @@ export async function generateAndStoreReportFromTranscripts(
       study.brandProfile.user.email,
       study.brandProfile.contactFirstName ?? "",
       study.title,
-      study.id
+      study.id,
+      langOf(study.brandProfile.preferredLanguage),
     ).catch(() => null);
     return { ok: true, reportGenerated: true };
   } catch (err) {

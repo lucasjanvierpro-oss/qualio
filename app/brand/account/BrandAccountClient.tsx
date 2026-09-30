@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { redeemInviteCode } from "@/app/actions/inviteCodes";
 import { saveHouse } from "@/app/actions/house";
+import { useLang, useTT } from "@/lib/i18n/client";
 
 type Transaction = { id: string; type: string; amount: number; desc: string; date: string; balance: number };
 
@@ -29,6 +30,8 @@ export default function BrandAccountClient({
   creditValueCents: number;
   house: { industry: string; website: string; houseNotes: string };
 }) {
+  const tt = useTT();
+  const en = useLang() === "en";
   const [tab, setTab] = useState<"credits" | "profile">("credits");
   const [inviteCode, setInviteCode] = useState("");
   const [codeStatus, setCodeStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -59,7 +62,7 @@ export default function BrandAccountClient({
       setTimeout(() => router.refresh(), 1000);
     } else {
       setCodeStatus("error");
-      setCodeError(result.error ?? "Code invalide");
+      setCodeError(result.error ?? tt("Code invalide", "Invalid code"));
     }
   }
 
@@ -67,21 +70,21 @@ export default function BrandAccountClient({
     <div style={{ maxWidth: "860px", margin: "0 auto", padding: "40px 32px" }}>
       {checkoutSuccess && (
         <div style={{ padding: "14px 18px", background: "var(--color-success-light)", border: "1px solid var(--color-success)", borderRadius: "4px", marginBottom: "20px", fontSize: "14px", fontWeight: 600, color: "var(--color-success)" }}>
-          ✓ Paiement confirmé — vos crédits ont été ajoutés à votre compte.
+          ✓ {tt("Paiement confirmé — vos crédits ont été ajoutés à votre compte.", "Payment confirmed, your credits have been added to your account.")}
         </div>
       )}
       <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 32px" }}>
-        Compte & abonnement
+        {tt("Compte & abonnement", "Account & billing")}
       </h1>
 
       {/* Access code banner (only if not activated) */}
       {!isActivated && (
         <div style={{ background: "var(--color-warning-light)", border: "1px solid var(--color-warning)", borderRadius: "12px", padding: "24px", marginBottom: "28px" }}>
           <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--color-warning)", margin: "0 0 8px" }}>
-            🔒 Compte en mode preview
+            🔒 {tt("Compte en mode preview", "Account in preview mode")}
           </h3>
           <p style={{ fontSize: "13px", color: "var(--color-warning)", margin: "0 0 16px", lineHeight: 1.5 }}>
-            Votre accès est limité. Entrez votre code d'accès pour débloquer la création d'études et le recrutement de participants.
+            {tt("Votre accès est limité. Entrez votre code d'accès pour débloquer la création d'études et le recrutement de participants.", "Your access is limited. Enter your access code to unlock study creation and participant recruitment.")}
           </p>
           <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
             <div style={{ flex: 1 }}>
@@ -102,7 +105,7 @@ export default function BrandAccountClient({
                 <div style={{ fontSize: "12px", color: "var(--color-error)", marginTop: "4px" }}>{codeError}</div>
               )}
               {codeStatus === "success" && (
-                <div style={{ fontSize: "12px", color: "var(--color-success)", marginTop: "4px", fontWeight: 600 }}>✓ Code valide — compte activé !</div>
+                <div style={{ fontSize: "12px", color: "var(--color-success)", marginTop: "4px", fontWeight: 600 }}>✓ {tt("Code valide — compte activé !", "Valid code, account activated!")}</div>
               )}
             </div>
             <button
@@ -114,11 +117,11 @@ export default function BrandAccountClient({
                 cursor: "pointer", whiteSpace: "nowrap", opacity: codeStatus === "loading" ? 0.7 : 1,
               }}
             >
-              {codeStatus === "loading" ? "…" : "Activer"}
+              {codeStatus === "loading" ? "…" : tt("Activer", "Activate")}
             </button>
           </div>
           <p style={{ fontSize: "12px", color: "var(--color-warning)", margin: "12px 0 0" }}>
-            Pas encore de code ? <a href="mailto:lucas@rarelyst.co" style={{ color: "var(--color-warning)", fontWeight: 600 }}>Contactez-nous →</a>
+            {tt("Pas encore de code ?", "No code yet?")} <a href="mailto:lucas@rarelyst.co" style={{ color: "var(--color-warning)", fontWeight: 600 }}>{tt("Contactez-nous", "Contact us")} →</a>
           </p>
         </div>
       )}
@@ -126,7 +129,7 @@ export default function BrandAccountClient({
       {isActivated && (
         <div style={{ background: "var(--color-success-light)", border: "1px solid var(--color-success)", borderRadius: "10px", padding: "12px 18px", marginBottom: "24px", display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ color: "var(--color-success)", fontWeight: 700 }}>✓</span>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-success)" }}>Compte activé — accès complet à la plateforme</span>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-success)" }}>{tt("Compte activé — accès complet à la plateforme", "Account activated, full access to the platform")}</span>
         </div>
       )}
 
@@ -144,7 +147,7 @@ export default function BrandAccountClient({
               marginBottom: "-1px",
             }}
           >
-            {t === "credits" ? "Crédits" : "Profil entreprise"}
+            {t === "credits" ? tt("Crédits", "Credits") : tt("Profil entreprise", "Company profile")}
           </button>
         ))}
       </div>
@@ -153,25 +156,25 @@ export default function BrandAccountClient({
         <div>
           <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "12px", padding: "24px", marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>Solde actuel</div>
+              <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>{tt("Solde actuel", "Current balance")}</div>
               <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "48px", fontWeight: 700, color: "var(--color-text-primary)", lineHeight: 1 }}>{credits}</div>
-              <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginTop: "6px" }}>crédits disponibles</div>
+              <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginTop: "6px" }}>{tt("crédits disponibles", "credits available")}</div>
             </div>
             <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", textAlign: "right" }}>
-              <div>1 crédit = {creditValueCents / 100} € HT</div>
-              <div style={{ marginTop: "4px" }}>Un profil coûte selon son palier · remboursé en cas d&apos;absence</div>
+              <div>{tt("1 crédit", "1 credit")} = {creditValueCents / 100} € {tt("HT", "excl. VAT")}</div>
+              <div style={{ marginTop: "4px" }}>{tt("Un profil coûte selon son palier · remboursé en cas d'absence", "A profile's cost depends on its tier · refunded if they don't show up")}</div>
             </div>
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "22px" }}>
             {tiers.map((t) => (
               <span key={t.label} style={{ fontSize: "13px", padding: "6px 12px", borderRadius: "999px", background: "var(--color-surface)", border: "1px solid var(--color-border-base)", color: "var(--color-text-secondary)" }}>
-                <b style={{ color: "var(--color-text-primary)" }}>{t.label}</b> · à partir de {t.credits} crédits l&apos;entretien de 45 min
+                <b style={{ color: "var(--color-text-primary)" }}>{t.label}</b> · {tt(`à partir de ${t.credits} crédits l'entretien de 45 min`, `from ${t.credits} credits per 45-min interview`)}
               </span>
             ))}
           </div>
 
-          <h3 style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 14px" }}>Acheter des crédits</h3>
+          <h3 style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 14px" }}>{tt("Acheter des crédits", "Buy credits")}</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "32px" }}>
             {packs.map((pack, i) => { const popular = i === 1; return (
               <div key={pack.id} style={{
@@ -181,12 +184,12 @@ export default function BrandAccountClient({
               }}>
                 {popular && (
                   <div style={{ position: "absolute", top: "-10px", left: "50%", transform: "translateX(-50%)", background: "var(--color-accent)", color: "#fff", fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "999px" }}>
-                    Populaire
+                    {tt("Populaire", "Popular")}
                   </div>
                 )}
                 <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>{pack.label}</div>
                 <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "32px", fontWeight: 700, color: "var(--color-text-primary)" }}>{pack.credits}</div>
-                <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "12px" }}>crédits · {pack.note}</div>
+                <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "12px" }}>{tt("crédits", "credits")} · {pack.note}</div>
                 <button
                   onClick={async () => {
                     const res = await fetch("/api/stripe/create-credit-checkout", {
@@ -205,7 +208,7 @@ export default function BrandAccountClient({
                     borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer",
                   }}
                 >
-                  {(pack.priceCents / 100).toLocaleString("fr-FR")} € HT
+                  {(pack.priceCents / 100).toLocaleString(en ? "en-GB" : "fr-FR")} € {tt("HT", "excl. VAT")}
                 </button>
               </div>
             ); })}
@@ -213,7 +216,7 @@ export default function BrandAccountClient({
 
           {transactions.length > 0 && (
             <>
-              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 14px" }}>Historique</h3>
+              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 14px" }}>{tt("Historique", "History")}</h3>
               <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border-base)", borderRadius: "10px", overflow: "hidden" }}>
                 {transactions.map((tx, i) => (
                   <div key={tx.id} style={{
@@ -229,7 +232,7 @@ export default function BrandAccountClient({
                       {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
                     </div>
                     <div style={{ fontFamily: "var(--font-mono-base)", fontSize: "13px", color: "var(--color-text-secondary)" }}>
-                      Solde: {tx.balance}
+                      {tt("Solde", "Balance")}: {tx.balance}
                     </div>
                   </div>
                 ))}
@@ -246,6 +249,7 @@ export default function BrandAccountClient({
 
 // Votre maison : secteur, site, et ce que l'IA doit savoir pour vos synthèses.
 function HouseForm({ companyName, house }: { companyName: string; house: { industry: string; website: string; houseNotes: string } }) {
+  const tt = useTT();
   const [industry, setIndustry] = useState(house.industry);
   const [website, setWebsite] = useState(house.website);
   const [notes, setNotes] = useState(house.houseNotes);
@@ -259,24 +263,24 @@ function HouseForm({ companyName, house }: { companyName: string; house: { indus
   }
   return (
     <div style={{ maxWidth: "640px", display: "flex", flexDirection: "column", gap: "18px" }}>
-      <div><span style={label}>Maison</span><div style={{ fontSize: "16px", fontWeight: 600 }}>{companyName}</div></div>
+      <div><span style={label}>{tt("Maison", "House")}</span><div style={{ fontSize: "16px", fontWeight: 600 }}>{companyName}</div></div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-        <div><label style={label} htmlFor="industry">Secteur</label><input id="industry" style={field} value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="Maroquinerie de luxe" /></div>
-        <div><label style={label} htmlFor="website">Site</label><input id="website" style={field} value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://…" /></div>
+        <div><label style={label} htmlFor="industry">{tt("Secteur", "Industry")}</label><input id="industry" style={field} value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder={tt("Maroquinerie de luxe", "Luxury leather goods")} /></div>
+        <div><label style={label} htmlFor="website">{tt("Site", "Website")}</label><input id="website" style={field} value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://…" /></div>
       </div>
       <div>
-        <label style={label} htmlFor="house">Votre maison, pour nos synthèses</label>
+        <label style={label} htmlFor="house">{tt("Votre maison, pour nos synthèses", "Your house, for our reports")}</label>
         <p style={{ margin: "0 0 8px", fontSize: "13.5px", color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
-          Quelques lignes suffisent : votre positionnement, vos clientes et clients, vos concurrents, les mots que vous employez en interne, ce que vous avez déjà appris. L&apos;IA qui écrit vos synthèses le lit avant chaque étude, et ne le partage avec personne.
+          {tt("Quelques lignes suffisent : votre positionnement, vos clientes et clients, vos concurrents, les mots que vous employez en interne, ce que vous avez déjà appris. L'IA qui écrit vos synthèses le lit avant chaque étude, et ne le partage avec personne.", "A few lines are enough: your positioning, your customers, your competitors, the words you use internally, what you've already learned. The AI that writes your reports reads it before each study, and shares it with no one.")}
         </p>
         <textarea id="house" rows={8} style={{ ...field, resize: "vertical", lineHeight: 1.55 }} value={notes} onChange={(e) => setNotes(e.target.value)}
-          placeholder={"Ex. : Maison parisienne de maroquinerie fondée en 1998, positionnée luxe accessible (sacs de 450 à 900 €). Clientèle 30-45 ans, urbaine, fidèle. Nous parlons de « pièces » et jamais de « produits ». Concurrents suivis : Polène, Sézane. Étude 2025 : la couleur prime sur le logo."} />
+          placeholder={tt("Ex. : Maison parisienne de maroquinerie fondée en 1998, positionnée luxe accessible (sacs de 450 à 900 €). Clientèle 30-45 ans, urbaine, fidèle. Nous parlons de « pièces » et jamais de « produits ». Concurrents suivis : Polène, Sézane. Étude 2025 : la couleur prime sur le logo.", "E.g.: Parisian leather goods house founded in 1998, accessible luxury (bags from €450 to €900). Customers aged 30–45, urban, loyal. We say “pieces”, never “products”. Competitors we follow: Polène, Sézane. 2025 study: colour matters more than the logo.")} />
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
         <button type="button" onClick={save} disabled={state === "saving"} style={{ padding: "10px 24px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
-          {state === "saving" ? "Enregistrement…" : "Enregistrer"}
+          {state === "saving" ? tt("Enregistrement…", "Saving…") : tt("Enregistrer", "Save")}
         </button>
-        {state === "saved" && <span style={{ fontSize: "13px", color: "var(--color-success)" }}>Enregistré.</span>}
+        {state === "saved" && <span style={{ fontSize: "13px", color: "var(--color-success)" }}>{tt("Enregistré.", "Saved.")}</span>}
         {state !== "idle" && state !== "saving" && state !== "saved" && <span style={{ fontSize: "13px", color: "var(--color-error)" }}>{state}</span>}
       </div>
     </div>

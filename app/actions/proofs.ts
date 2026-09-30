@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
 import { emailDomain, isProDomain } from "@/lib/brands/certification";
-import { sendWorkEmailCode } from "@/lib/resend/emails";
+import { langOf, sendWorkEmailCode } from "@/lib/resend/emails";
 import { generateGhostFile } from "@/lib/participants/ghostFile";
 
 // Les preuves qu'un participant ajoute depuis son profil. Chacune fait monter
@@ -36,7 +36,7 @@ export async function sendWorkCode(rawEmail: string) {
 
   const p = await prisma.participantProfile.findUnique({
     where: { id: profileId },
-    select: { firstName: true, workEmailCodeExpiresAt: true },
+    select: { firstName: true, workEmailCodeExpiresAt: true, preferredLanguage: true },
   });
   if (!p) return { error: "Profil introuvable." };
   // Un code par minute au plus : le formulaire ne doit pas servir à inonder une boîte.
@@ -55,7 +55,7 @@ export async function sendWorkCode(rawEmail: string) {
     },
   });
   try {
-    await sendWorkEmailCode(email, p.firstName, code);
+    await sendWorkEmailCode(email, p.firstName, code, langOf(p.preferredLanguage));
   } catch {
     return { error: "L'email n'a pas pu partir. Réessayez dans un instant." };
   }

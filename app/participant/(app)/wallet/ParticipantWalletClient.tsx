@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import WithdrawPanel, { PayoutHistory, type WalletBalance } from "./WithdrawPanel";
 import LoupeMascot from "@/components/brand/LoupeMascot";
+import { useLang, useTT } from "@/lib/i18n/client";
 
 type Reward = {
   id: string;
@@ -19,8 +20,8 @@ type Reward = {
 
 function euros(cents: number) { return (cents / 100).toFixed(0); }
 
-function fmtDate(iso: string) {
-  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
+function fmtDate(iso: string, en = false) {
+  return new Intl.DateTimeFormat(en ? "en-GB" : "fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
 }
 
 // --- Confetti burst (pure CSS/JS, no library) ---
@@ -67,6 +68,8 @@ function VoucherCard({ reward, onReveal, onCopy, copied }: {
   onCopy: (code: string) => void;
   copied: string | null;
 }) {
+  const tt = useTT();
+  const en = useLang() === "en";
   const [revealed, setRevealed] = useState(!!reward.voucherRevealedAt);
   const [celebrating, setCelebrating] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -92,10 +95,10 @@ function VoucherCard({ reward, onReveal, onCopy, copied }: {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px" }}>
         <div>
           <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "2px" }}>
-            {reward.voucherBrand ?? "Bon d'achat"}
+            {reward.voucherBrand ?? tt("Bon d'achat", "Voucher")}
           </div>
           <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>
-            {reward.studyTitle} · {fmtDate(reward.createdAt)}
+            {reward.studyTitle} · {fmtDate(reward.createdAt, en)}
           </div>
         </div>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", fontWeight: 700, color: "var(--color-accent)" }}>
@@ -119,12 +122,12 @@ function VoucherCard({ reward, onReveal, onCopy, copied }: {
                 transition: "all 0.2s", whiteSpace: "nowrap",
               }}
             >
-              {copied === reward.voucherCode ? "Copié ✓" : "Copier le code"}
+              {copied === reward.voucherCode ? tt("Copié ✓", "Copied ✓") : tt("Copier le code", "Copy code")}
             </button>
           </div>
           {revealed && (
             <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textAlign: "center" }}>
-              Utilisez ce code sur {reward.voucherBrand ?? "le site partenaire"}
+              {tt("Utilisez ce code sur", "Use this code on")} {reward.voucherBrand ?? tt("le site partenaire", "the partner site")}
             </div>
           )}
         </div>
@@ -140,11 +143,11 @@ function VoucherCard({ reward, onReveal, onCopy, copied }: {
           }}
         >
           <span style={{ fontSize: "18px" }}>🎁</span>
-          Révéler mon code cadeau
+          {tt("Révéler mon code cadeau", "Reveal my gift code")}
         </button>
       ) : (
         <div style={{ padding: "12px 16px", background: "var(--color-surface-2)", borderRadius: "8px", fontSize: "13px", color: "var(--color-text-tertiary)", textAlign: "center" }}>
-          Votre récompense sera disponible après traitement
+          {tt("Votre récompense sera disponible après traitement", "Your reward will be available once processed")}
         </div>
       )}
     </div>
@@ -153,11 +156,13 @@ function VoucherCard({ reward, onReveal, onCopy, copied }: {
 
 // Un gain d'entretien : dans le solde, en route vers la banque, ou versé.
 function CashCard({ reward }: { reward: Reward }) {
+  const tt = useTT();
+  const en = useLang() === "en";
   const state = reward.status === "PAID"
-    ? { text: reward.paidAt ? `Versé le ${fmtDate(reward.paidAt)}` : "Versé", bg: "var(--color-success-light)", color: "var(--color-success)" }
+    ? { text: reward.paidAt ? `${tt("Versé le", "Paid on")} ${fmtDate(reward.paidAt, en)}` : tt("Versé", "Paid"), bg: "var(--color-success-light)", color: "var(--color-success)" }
     : reward.status === "PROCESSING"
-      ? { text: "Retrait en cours : arrivée sous 1 à 3 jours ouvrés", bg: "var(--color-warning-light)", color: "var(--color-warning)" }
-      : { text: "Dans votre solde, prêt à être retiré", bg: "var(--color-surface-2)", color: "var(--color-text-secondary)" };
+      ? { text: tt("Retrait en cours : arrivée sous 1 à 3 jours ouvrés", "Withdrawal in progress: arrives in 1 to 3 business days"), bg: "var(--color-warning-light)", color: "var(--color-warning)" }
+      : { text: tt("Dans votre solde, prêt à être retiré", "In your balance, ready to withdraw"), bg: "var(--color-surface-2)", color: "var(--color-text-secondary)" };
   return (
     <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "14px", padding: "20px 22px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
@@ -165,7 +170,7 @@ function CashCard({ reward }: { reward: Reward }) {
           <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "2px" }}>
             {reward.studyTitle}
           </div>
-          <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>Entretien du {fmtDate(reward.createdAt)}</div>
+          <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>Entretien du {fmtDate(reward.createdAt, en)}</div>
         </div>
         <div style={{ fontSize: "24px", fontWeight: 700, color: reward.status === "PAID" ? "var(--color-success)" : "var(--color-text-primary)" }}>
           {euros(reward.amountCents)}€
@@ -178,11 +183,11 @@ function CashCard({ reward }: { reward: Reward }) {
 
 type Bonus = { id: string; kind: string; amountCents: number; status: string; createdAt: string };
 
-const BONUS_LABEL: Record<string, string> = {
-  first: "Premier entretien d'un filleul",
-  interview: "Entretien d'un filleul",
-  welcome: "Bienvenue : premier entretien",
-};
+const BONUS_LABELS = (tt: (fr: string, en: string) => string): Record<string, string> => ({
+  first: tt("Premier entretien d'un filleul", "A referral's first interview"),
+  interview: tt("Entretien d'un filleul", "A referral's interview"),
+  welcome: tt("Bienvenue : premier entretien", "Welcome: first interview"),
+});
 
 export default function ParticipantWalletClient({
   rewards,
@@ -199,6 +204,9 @@ export default function ParticipantWalletClient({
   payouts: { id: string; amountCents: number; status: string; createdAt: string; paidAt: string | null }[];
   stripeReady: boolean;
 }) {
+  const tt = useTT();
+  const en = useLang() === "en";
+  const BONUS_LABEL = BONUS_LABELS(tt);
   const [tab, setTab] = useState<"rewards" | "cash" | "vouchers">("rewards");
   const [copied, setCopied] = useState<string | null>(null);
   const [revealedIds, setRevealedIds] = useState<string[]>(
@@ -249,19 +257,19 @@ export default function ParticipantWalletClient({
   }, []);
 
   const tabs = [
-    { key: "rewards" as const, label: "Toutes les récompenses", count: rewards.length },
-    { key: "cash" as const, label: "Gains et retraits", count: cashRewards.length },
-    { key: "vouchers" as const, label: "Mes vouchers", count: voucherRewards.length },
+    { key: "rewards" as const, label: tt("Toutes les récompenses", "All rewards"), count: rewards.length },
+    { key: "cash" as const, label: tt("Gains et retraits", "Earnings & withdrawals"), count: cashRewards.length },
+    { key: "vouchers" as const, label: tt("Mes vouchers", "My vouchers"), count: voucherRewards.length },
   ];
 
   return (
     <div style={{ maxWidth: "720px", margin: "0 auto", padding: "40px 32px" }}>
       {/* Header */}
       <h1 style={{ fontFamily: "var(--font-display)", fontSize: "30px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
-        Mes récompenses
+        {tt("Mes récompenses", "My rewards")}
       </h1>
       <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: "0 0 32px" }}>
-        Vos gains des études Rarelyst
+        {tt("Vos gains des études Rarelyst", "Your earnings from Rarelyst studies")}
       </p>
 
       <WithdrawPanel balance={balance} connectStatus={connectStatus} syncing={connectSyncing} stripeReady={stripeReady} />
@@ -269,14 +277,14 @@ export default function ParticipantWalletClient({
       {/* Parrainage : les primes, ou l'invitation à parrainer */}
       <a href="/participant/parrainage" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, padding: "16px 20px", marginBottom: 28, borderRadius: 14, background: "linear-gradient(135deg, #fff6e3, #ffffff)", border: "1px solid #f1e6cf", textDecoration: "none", color: "inherit" }}>
         <span>
-          <strong style={{ display: "block", fontSize: 15 }}>{bonuses.length ? `Parrainage · ${bonuses.length} prime${bonuses.length > 1 ? "s" : ""}` : "Parrainez un ami, gagnez 50 €"}</strong>
+          <strong style={{ display: "block", fontSize: 15 }}>{bonuses.length ? `${tt("Parrainage", "Referrals")} · ${bonuses.length} ${tt(`prime${bonuses.length > 1 ? "s" : ""}`, `bonus${bonuses.length > 1 ? "es" : ""}`)}` : tt("Parrainez un ami, gagnez 50 €", "Refer a friend, earn €50")}</strong>
           <span style={{ fontSize: 13.5, color: "var(--color-text-secondary)" }}>
             {bonuses.length
-              ? bonuses.slice(0, 3).map((b) => `${BONUS_LABEL[b.kind] ?? "Prime"} : ${euros(b.amountCents)} €`).join(" · ")
-              : "Dès que votre ami termine son premier entretien, puis 30 € aux suivants."}
+              ? bonuses.slice(0, 3).map((b) => `${BONUS_LABEL[b.kind] ?? tt("Prime", "Bonus")} : ${euros(b.amountCents)} €`).join(" · ")
+              : tt("Dès que votre ami termine son premier entretien, puis 30 € aux suivants.", "When your friend completes their first interview, then €30 for each of the next ones.")}
           </span>
         </span>
-        <span style={{ fontWeight: 700, color: "#8a5d12", whiteSpace: "nowrap" }}>Voir →</span>
+        <span style={{ fontWeight: 700, color: "#8a5d12", whiteSpace: "nowrap" }}>{tt("Voir", "View")} →</span>
       </a>
 
       {/* Tabs */}
@@ -309,11 +317,11 @@ export default function ParticipantWalletClient({
           {rewards.length === 0 ? (
             <div style={{ textAlign: "center", padding: "64px 20px" }}>
               <LoupeMascot size={64} className="rl-empty-mascot" />
-              <div style={{ fontSize: "16px", color: "var(--color-text-secondary)" }}>Aucune récompense pour le moment</div>
-              <div style={{ fontSize: "14px", color: "var(--color-text-tertiary)", marginTop: "6px" }}>Participez à des études pour gagner des récompenses</div>
+              <div style={{ fontSize: "16px", color: "var(--color-text-secondary)" }}>{tt("Aucune récompense pour le moment", "No rewards yet")}</div>
+              <div style={{ fontSize: "14px", color: "var(--color-text-tertiary)", marginTop: "6px" }}>{tt("Participez à des études pour gagner des récompenses", "Take part in studies to earn rewards")}</div>
             </div>
           ) : rewards.map((r) => {
-            const statusLabel = r.status === "PAID" ? "Versé" : r.status === "REVEALED" ? "Révélé" : r.status === "PROCESSING" ? "Retrait en cours" : r.type === "CASH" ? "Dans le solde" : "En préparation";
+            const statusLabel = r.status === "PAID" ? tt("Versé", "Paid") : r.status === "REVEALED" ? tt("Révélé", "Revealed") : r.status === "PROCESSING" ? tt("Retrait en cours", "Withdrawal in progress") : r.type === "CASH" ? tt("Dans le solde", "In balance") : tt("En préparation", "Being prepared");
             const statusBg = r.status === "PAID" || r.status === "REVEALED" ? "var(--color-success-light)" : r.status === "PROCESSING" ? "var(--color-info-light)" : "var(--color-warning-light)";
             const statusColor = r.status === "PAID" || r.status === "REVEALED" ? "var(--color-success)" : r.status === "PROCESSING" ? "var(--color-info)" : "var(--color-warning)";
             return (
@@ -321,7 +329,7 @@ export default function ParticipantWalletClient({
                 <div>
                   <div style={{ fontSize: "14px", fontWeight: 500, color: "var(--color-text-primary)", marginBottom: "4px" }}>{r.studyTitle}</div>
                   <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>
-                    {fmtDate(r.createdAt)} · {r.type === "CASH" ? "Virement" : `Voucher ${r.voucherBrand ?? ""}`}
+                    {fmtDate(r.createdAt, en)} · {r.type === "CASH" ? tt("Virement", "Bank transfer") : `Voucher ${r.voucherBrand ?? ""}`}
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
@@ -340,7 +348,7 @@ export default function ParticipantWalletClient({
           <PayoutHistory payouts={payouts} />
 
           {cashRewards.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--color-text-secondary)", fontSize: "14px" }}>Aucun virement pour le moment</div>
+            <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--color-text-secondary)", fontSize: "14px" }}>{tt("Aucun virement pour le moment", "No transfers yet")}</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {cashRewards.map((r) => <CashCard key={r.id} reward={r} />)}
@@ -355,7 +363,7 @@ export default function ParticipantWalletClient({
           {voucherRewards.length === 0 ? (
             <div style={{ textAlign: "center", padding: "64px 20px" }}>
               <div style={{ fontSize: "40px", marginBottom: "16px" }}>🎟️</div>
-              <div style={{ fontSize: "16px", color: "var(--color-text-secondary)" }}>Aucun voucher pour le moment</div>
+              <div style={{ fontSize: "16px", color: "var(--color-text-secondary)" }}>{tt("Aucun voucher pour le moment", "No vouchers yet")}</div>
             </div>
           ) : voucherRewards.map((r) => (
             <VoucherCard

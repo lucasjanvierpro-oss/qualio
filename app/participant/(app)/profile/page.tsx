@@ -10,6 +10,8 @@ import { priceProfiles, getPricingConfig } from "@/lib/pricing/quotes";
 // Déposer un CV relance l'analyse du profil (Claude) après la réponse.
 export const maxDuration = 300;
 
+import { getLang } from "@/lib/i18n/server";
+
 export default async function ParticipantProfilePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -51,6 +53,7 @@ export default async function ParticipantProfilePage() {
   return (
     <>
     <Showcase
+      lang={await getLang()}
       badges={badges}
       traits={pr.traits}
       certScore={pr.certScore}

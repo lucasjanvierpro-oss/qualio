@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import LoupeMascot from "@/components/brand/LoupeMascot";
 import css from "./tour.module.css";
+import { useLang } from "@/lib/i18n/client";
 
 // Visite guidée, la première fois qu'on arrive sur un écran : la page
 // s'assombrit sauf l'élément à regarder, une bulle explique, on avance d'étape
@@ -32,7 +33,9 @@ function markSeen(id: string) {
 
 const find = (target: string) => document.querySelector<HTMLElement>(`[data-tour="${target}"]`);
 
-export default function Tour({ id, steps, lang = "fr", delay = 700 }: { id: string; steps: TourStep[]; lang?: Lang; delay?: number }) {
+export default function Tour({ id, steps, lang: langProp, delay = 700 }: { id: string; steps: TourStep[]; lang?: Lang; delay?: number }) {
+  const ctxLang = useLang();
+  const lang = langProp ?? ctxLang;
   const t = T[lang];
   const [active, setActive] = useState(false);
   const [index, setIndex] = useState(0);

@@ -2,7 +2,7 @@ import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { appUrl } from "@/lib/appUrl";
 import { generateAndStoreReportFromTranscripts } from "@/lib/reports/generate";
-import { cancelScheduledEmails, sendIncidentAdmin, sendNoShowNotice, sendRescheduleNotice, sendTechnicalIssueToOther } from "@/lib/resend/emails";
+import { cancelScheduledEmails, langOf, sendIncidentAdmin, sendNoShowNotice, sendRescheduleNotice, sendTechnicalIssueToOther } from "@/lib/resend/emails";
 
 // Fiabilité des entretiens : présence dans la salle, absences constatées
 // toutes seules, reports et problèmes techniques signalés depuis la salle.
@@ -72,8 +72,8 @@ export async function sweepNoShows(): Promise<{ noShows: number; brandAbsent: nu
     include: {
       application: {
         include: {
-          study: { select: { id: true, title: true, brandProfile: { select: { contactFirstName: true, companyName: true, user: { select: { email: true } } } } } },
-          participantProfile: { select: { firstName: true, lastName: true, user: { select: { email: true } } } },
+          study: { select: { id: true, title: true, brandProfile: { select: { contactFirstName: true, companyName: true, preferredLanguage: true, user: { select: { email: true } } } } } },
+          participantProfile: { select: { firstName: true, lastName: true, preferredLanguage: true, user: { select: { email: true } } } },
         },
       },
     },
@@ -92,8 +92,8 @@ export async function sweepNoShows(): Promise<{ noShows: number; brandAbsent: nu
       const { refunded } = await applyNoShow(iv.id);
       noShows++;
       await Promise.allSettled([
-        sendNoShowNotice(study.brandProfile.user.email, study.brandProfile.contactFirstName ?? "", study.title, true, { participantName: name, credits: refunded, href: `${base}/brand/studies/${study.id}` }),
-        sendNoShowNotice(pp.user.email, pp.firstName, study.title, false, { href: `${base}/participant/studies` }),
+        sendNoShowNotice(study.brandProfile.user.email, study.brandProfile.contactFirstName ?? "", study.title, true, { participantName: name, credits: refunded, href: `${base}/brand/studies/${study.id}`, lang: langOf(study.brandProfile.preferredLanguage) }),
+        sendNoShowNotice(pp.user.email, pp.firstName, study.title, false, { href: `${base}/participant/studies`, lang: langOf(pp.preferredLanguage) }),
         sendIncidentAdmin({ kind: "no_show", studyTitle: study.title, who: `${name} (participant)`, details: `Constatée automatiquement ${Math.round(GRACE_MS / 60_000)} min après l'heure prévue. ${refunded} crédits rendus à la marque.`, studyId: study.id }),
       ]);
     } else if (!iv.brandJoinedAt && !iv.brandAbsentNotifiedAt) {
@@ -128,8 +128,8 @@ export async function requestReschedule(interviewId: string, byRole: Role, reaso
     include: {
       application: {
         include: {
-          study: { select: { id: true, title: true, brandProfile: { select: { contactFirstName: true, companyName: true, user: { select: { email: true } } } } } },
-          participantProfile: { select: { firstName: true, lastName: true, user: { select: { email: true } } } },
+          study: { select: { id: true, title: true, brandProfile: { select: { contactFirstName: true, companyName: true, preferredLanguage: true, user: { select: { email: true } } } } } },
+          participantProfile: { select: { firstName: true, lastName: true, preferredLanguage: true, user: { select: { email: true } } } },
         },
       },
     },
@@ -154,8 +154,8 @@ export async function requestReschedule(interviewId: string, byRole: Role, reaso
   const base = appUrl();
   const who = byRole === "participant" ? `${pp.firstName} ${pp.lastName.slice(0, 1)}.` : study.brandProfile.companyName;
   await Promise.allSettled([
-    sendRescheduleNotice(pp.user.email, pp.firstName, study.title, { byWhom: byRole === "participant" ? "Vous avez" : who, reason, forParticipant: true, href: `${base}/participant/studies/${iv.applicationId}` }),
-    sendRescheduleNotice(study.brandProfile.user.email, study.brandProfile.contactFirstName ?? "", study.title, { byWhom: byRole === "brand" ? "Vous avez" : who, reason, forParticipant: false, href: `${base}/brand/studies/${study.id}` }),
+    sendRescheduleNotice(pp.user.email, pp.firstName, study.title, { byWhom: who, self: byRole === "participant", reason, forParticipant: true, href: `${base}/participant/studies/${iv.applicationId}`, lang: langOf(pp.preferredLanguage) }),
+    sendRescheduleNotice(study.brandProfile.user.email, study.brandProfile.contactFirstName ?? "", study.title, { byWhom: who, self: byRole === "brand", reason, forParticipant: false, href: `${base}/brand/studies/${study.id}`, lang: langOf(study.brandProfile.preferredLanguage) }),
     sendIncidentAdmin({ kind: "reschedule", studyTitle: study.title, who: `${who} (${byRole === "participant" ? "participant" : "marque"})`, reason, details: `Créneau libéré : ${iv.scheduledAt.toISOString()}`, studyId: study.id }),
   ]);
   return { ok: true };
@@ -168,8 +168,8 @@ export async function reportTechnical(interviewId: string, byRole: Role, problem
     include: {
       application: {
         include: {
-          study: { select: { id: true, title: true, brandProfile: { select: { contactFirstName: true, companyName: true, user: { select: { email: true } } } } } },
-          participantProfile: { select: { firstName: true, lastName: true, user: { select: { email: true } } } },
+          study: { select: { id: true, title: true, brandProfile: { select: { contactFirstName: true, companyName: true, preferredLanguage: true, user: { select: { email: true } } } } } },
+          participantProfile: { select: { firstName: true, lastName: true, preferredLanguage: true, user: { select: { email: true } } } },
         },
       },
     },
@@ -182,11 +182,11 @@ export async function reportTechnical(interviewId: string, byRole: Role, problem
   const base = appUrl();
   const who = byRole === "participant" ? `${pp.firstName} ${pp.lastName.slice(0, 1)}.` : study.brandProfile.companyName;
   const other = byRole === "participant"
-    ? { to: study.brandProfile.user.email, name: study.brandProfile.contactFirstName ?? "", href: `${base}/brand/interview/${interviewId}` }
-    : { to: pp.user.email, name: pp.firstName, href: `${base}/participant/interview/${interviewId}` };
+    ? { to: study.brandProfile.user.email, name: study.brandProfile.contactFirstName ?? "", href: `${base}/brand/interview/${interviewId}`, lang: langOf(study.brandProfile.preferredLanguage) }
+    : { to: pp.user.email, name: pp.firstName, href: `${base}/participant/interview/${interviewId}`, lang: langOf(pp.preferredLanguage) };
   await Promise.allSettled([
     sendIncidentAdmin({ kind: "technical", studyTitle: study.title, who: `${who} (${byRole === "participant" ? "participant" : "marque"})`, reason: problem, details: [details.network && `Réseau : ${details.network}`, details.userAgent && `Navigateur : ${details.userAgent}`].filter(Boolean).join(" · "), studyId: study.id }),
-    sendTechnicalIssueToOther(other.to, other.name, study.title, who, problem, other.href),
+    sendTechnicalIssueToOther(other.to, other.name, study.title, who, problem, other.href, other.lang),
   ]);
   return { ok: true as const };
 }

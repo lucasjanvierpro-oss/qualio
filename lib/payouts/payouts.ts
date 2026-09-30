@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe/client";
 import { getPricingConfig } from "@/lib/pricing/quotes";
 import { eur } from "@/lib/pricing/config";
-import { sendPayoutFailedAdmin, sendPayoutSent } from "@/lib/resend/emails";
+import { langOf, sendPayoutFailedAdmin, sendPayoutSent } from "@/lib/resend/emails";
 
 // Retraits des participants, comme sur Vinted : les gains d'entretiens et les
 // primes de parrainage s'accumulent dans un solde ; dès le minimum atteint, le
@@ -98,7 +98,7 @@ export async function sendPayout(payoutId: string, opts: { force?: boolean } = {
 
   const p = await prisma.payout.findUniqueOrThrow({
     where: { id: payoutId },
-    include: { participantProfile: { select: { stripeConnectId: true, firstName: true, lastName: true, user: { select: { email: true } } } } },
+    include: { participantProfile: { select: { stripeConnectId: true, firstName: true, lastName: true, preferredLanguage: true, user: { select: { email: true } } } } },
   });
   const who = `${p.participantProfile.firstName} ${p.participantProfile.lastName}`.trim();
   const fail = async (reason: string) => {
@@ -141,7 +141,7 @@ export async function sendPayout(payoutId: string, opts: { force?: boolean } = {
     prisma.reward.updateMany({ where: { payoutId: p.id }, data: { status: "PAID", paidAt: now, stripeTransferId: transferId } }),
     prisma.referralBonus.updateMany({ where: { payoutId: p.id }, data: { status: "paid", paidAt: now } }),
   ]);
-  await sendPayoutSent(p.participantProfile.user.email, p.participantProfile.firstName, p.amountCents).catch(() => null);
+  await sendPayoutSent(p.participantProfile.user.email, p.participantProfile.firstName, p.amountCents, langOf(p.participantProfile.preferredLanguage)).catch(() => null);
   return { ok: true };
 }
 

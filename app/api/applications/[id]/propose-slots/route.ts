@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { sendParticipantInvited } from "@/lib/resend/emails";
+import { langOf, sendParticipantInvited } from "@/lib/resend/emails";
 
 type SlotInput = { startTime: string; note?: string };
 
@@ -38,15 +38,17 @@ export async function POST(
   });
 
   // Email to participant
+  const lang = langOf(existing.participantProfile.preferredLanguage);
   const deadline = existing.study.deadlineAt
-    ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" }).format(existing.study.deadlineAt)
-    : "dès que possible";
+    ? new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" }).format(existing.study.deadlineAt)
+    : lang === "en" ? "as soon as possible" : "dès que possible";
 
   await sendParticipantInvited(
     existing.participantProfile.user.email,
     existing.participantProfile.firstName,
     existing.study.title,
-    deadline
+    deadline,
+    lang,
   ).catch(() => null);
 
   return NextResponse.json({ ok: true, applicationId: id });

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useTT } from "@/lib/i18n/client";
 
 const inputStyle = {
   padding: "10px 12px", border: "1px solid var(--color-border)",
@@ -10,6 +11,7 @@ const inputStyle = {
 };
 
 export default function ParticipantSettingsClient({ email }: { email: string }) {
+  const tt = useTT();
   const [notifications, setNotifications] = useState({
     newStudies: true,
     interviewReminders: true,
@@ -23,11 +25,11 @@ export default function ParticipantSettingsClient({ email }: { email: string }) 
 
   async function handlePasswordChange() {
     if (pwForm.next !== pwForm.confirm) {
-      setPwMsg({ ok: false, text: "Les mots de passe ne correspondent pas." });
+      setPwMsg({ ok: false, text: tt("Les mots de passe ne correspondent pas.", "Passwords do not match.") });
       return;
     }
     if (pwForm.next.length < 8) {
-      setPwMsg({ ok: false, text: "Le mot de passe doit faire au moins 8 caractères." });
+      setPwMsg({ ok: false, text: tt("Le mot de passe doit faire au moins 8 caractères.", "Password must be at least 8 characters.") });
       return;
     }
     setPwLoading(true);
@@ -38,7 +40,7 @@ export default function ParticipantSettingsClient({ email }: { email: string }) 
       setPwMsg({ ok: false, text: error.message });
     } else {
       setPwForm({ current: "", next: "", confirm: "" });
-      setPwMsg({ ok: true, text: "Mot de passe modifié avec succès." });
+      setPwMsg({ ok: true, text: tt("Mot de passe modifié avec succès.", "Password changed.") });
       setTimeout(() => setPwMsg(null), 4000);
     }
   }
@@ -72,28 +74,28 @@ export default function ParticipantSettingsClient({ email }: { email: string }) 
   return (
     <div style={{ maxWidth: "600px", margin: "0 auto", padding: "40px 32px" }}>
       <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 36px" }}>
-        Paramètres
+        {tt("Paramètres", "Settings")}
       </h1>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
 
         {/* Email */}
         <section style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px", padding: "24px" }}>
-          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 12px" }}>Adresse email</h2>
+          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 12px" }}>{tt("Adresse email", "Email address")}</h2>
           <div style={{ padding: "10px 14px", background: "var(--color-surface-2)", borderRadius: "8px", fontSize: "14px", color: "var(--color-text-primary)", border: "1px solid var(--color-border)" }}>
             {email}
           </div>
           <p style={{ fontSize: "12px", color: "var(--color-text-tertiary)", margin: "8px 0 0" }}>
-            Pour changer d'adresse email, contactez support@rarelyst.co
+            {tt("Pour changer d'adresse email, contactez support@rarelyst.co", "To change your email address, contact support@rarelyst.co")}
           </p>
         </section>
 
         {/* Mot de passe */}
         <section style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px", padding: "24px" }}>
-          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 16px" }}>Mot de passe</h2>
+          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 16px" }}>{tt("Mot de passe", "Password")}</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "360px" }}>
-            <input value={pwForm.next} onChange={(e) => setPwForm((p) => ({ ...p, next: e.target.value }))} placeholder="Nouveau mot de passe" type="password" style={inputStyle} />
-            <input value={pwForm.confirm} onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))} placeholder="Confirmer le nouveau mot de passe" type="password" style={inputStyle} />
+            <input value={pwForm.next} onChange={(e) => setPwForm((p) => ({ ...p, next: e.target.value }))} placeholder={tt("Nouveau mot de passe", "New password")} type="password" style={inputStyle} />
+            <input value={pwForm.confirm} onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))} placeholder={tt("Confirmer le nouveau mot de passe", "Confirm the new password")} type="password" style={inputStyle} />
             {pwMsg && (
               <p style={{ fontSize: "13px", color: pwMsg.ok ? "var(--color-success)" : "var(--color-error)", margin: 0 }}>
                 {pwMsg.ok ? "✓ " : "✗ "}{pwMsg.text}
@@ -104,20 +106,20 @@ export default function ParticipantSettingsClient({ email }: { email: string }) 
               disabled={pwLoading || !pwForm.next || !pwForm.confirm}
               style={{ alignSelf: "flex-start", padding: "10px 20px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer", opacity: pwLoading ? 0.7 : 1 }}
             >
-              {pwLoading ? "Modification…" : "Changer le mot de passe"}
+              {pwLoading ? tt("Modification…", "Updating…") : tt("Changer le mot de passe", "Change password")}
             </button>
           </div>
         </section>
 
         {/* Notifications */}
         <section style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px", padding: "24px" }}>
-          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 16px" }}>Notifications email</h2>
+          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 16px" }}>{tt("Notifications email", "Email notifications")}</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {[
-              { key: "newStudies" as const, label: "Nouvelles études disponibles", desc: "Quand une étude correspond à votre profil" },
-              { key: "interviewReminders" as const, label: "Rappels d'entretien", desc: "24h et 1h avant votre entretien" },
-              { key: "rewardAvailable" as const, label: "Récompenses disponibles", desc: "Quand un paiement ou voucher est prêt" },
-              { key: "marketing" as const, label: "Actualités Rarelyst", desc: "Nouvelles fonctionnalités et annonces" },
+              { key: "newStudies" as const, label: tt("Nouvelles études disponibles", "New studies available"), desc: tt("Quand une étude correspond à votre profil", "When a study matches your profile") },
+              { key: "interviewReminders" as const, label: tt("Rappels d'entretien", "Interview reminders"), desc: tt("24h et 1h avant votre entretien", "24h and 1h before your interview") },
+              { key: "rewardAvailable" as const, label: tt("Récompenses disponibles", "Rewards available"), desc: tt("Quand un paiement ou voucher est prêt", "When a payment or voucher is ready") },
+              { key: "marketing" as const, label: tt("Actualités Rarelyst", "Rarelyst news"), desc: tt("Nouvelles fonctionnalités et annonces", "New features and announcements") },
             ].map((n) => (
               <div key={n.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
                 <div>
@@ -132,28 +134,28 @@ export default function ParticipantSettingsClient({ email }: { email: string }) 
 
         {/* Danger zone */}
         <section style={{ background: "var(--color-surface)", border: "1px solid var(--color-error)", borderRadius: "12px", padding: "24px" }}>
-          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-error)", margin: "0 0 8px" }}>Zone de danger</h2>
+          <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-error)", margin: "0 0 8px" }}>{tt("Zone de danger", "Danger zone")}</h2>
           <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: "0 0 16px" }}>
-            La suppression de votre compte est définitive. Vos données et récompenses non retirées seront perdues.
+            {tt("La suppression de votre compte est définitive. Vos données et récompenses non retirées seront perdues.", "Deleting your account is permanent. Your data and unwithdrawn rewards will be lost.")}
           </p>
           {!showDeleteConfirm ? (
             <button
               onClick={() => setShowDeleteConfirm(true)}
               style={{ padding: "10px 20px", background: "none", color: "var(--color-error)", border: "1px solid var(--color-error)", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}
             >
-              Supprimer mon compte
+              {tt("Supprimer mon compte", "Delete my account")}
             </button>
           ) : (
             <div style={{ background: "var(--color-error-light)", border: "1px solid var(--color-error)", borderRadius: "8px", padding: "16px" }}>
               <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-error)", margin: "0 0 12px" }}>
-                Êtes-vous sûr(e) de vouloir supprimer votre compte ?
+                {tt("Êtes-vous sûr(e) de vouloir supprimer votre compte ?", "Are you sure you want to delete your account?")}
               </p>
               <div style={{ display: "flex", gap: "10px" }}>
                 <button onClick={() => setShowDeleteConfirm(false)} style={{ padding: "9px 18px", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "7px", fontSize: "14px", cursor: "pointer" }}>
-                  Annuler
+                  {tt("Annuler", "Cancel")}
                 </button>
                 <button onClick={handleDeleteAccount} style={{ padding: "9px 18px", background: "var(--color-error)", color: "#fff", border: "none", borderRadius: "7px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
-                  Oui, supprimer définitivement
+                  {tt("Oui, supprimer définitivement", "Yes, delete permanently")}
                 </button>
               </div>
             </div>

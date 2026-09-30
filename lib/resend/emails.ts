@@ -20,11 +20,21 @@ function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-function fmtDateTime(d: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(d);
+// Langue du destinataire (préférence enregistrée sur son profil). Les emails
+// envoyés à l'admin restent en français.
+export type Lang = "fr" | "en";
+const pick = (lang: Lang, fr: string, en: string) => (lang === "en" ? en : fr);
+/** La langue enregistrée sur un profil (« fr » par défaut). */
+export const langOf = (v: string | null | undefined): Lang => (v === "en" ? "en" : "fr");
+const loc = (lang: Lang) => (lang === "en" ? "en-GB" : "fr-FR");
+const eur = (cents: number, lang: Lang) => (lang === "en" ? `€${(cents / 100).toLocaleString("en-GB")}` : `${(cents / 100).toLocaleString("fr-FR")} €`);
+
+function fmtDateTime(d: Date, lang: Lang = "fr"): string {
+  return new Intl.DateTimeFormat(loc(lang), { timeZone: TZ, weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(d)
+    + (lang === "en" ? " (Paris time)" : "");
 }
-function fmtTime(d: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(d);
+function fmtTime(d: Date, lang: Lang = "fr"): string {
+  return new Intl.DateTimeFormat(loc(lang), { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(d) + (lang === "en" ? " (Paris time)" : "");
 }
 
 // ── Mise en page commune ──────────────────────────────────────────────
@@ -33,21 +43,22 @@ const INK_2 = "#5F5868";
 const ACCENT = "#6A43DB";
 const SOFT = "#F6F4F8";
 
-function layout(opts: { title: string; body: string; cta?: { label: string; href: string }; aside?: string }): string {
+function layout(opts: { title: string; body: string; cta?: { label: string; href: string }; aside?: string; lang?: Lang }): string {
+  const lang = opts.lang ?? "fr";
   const cta = opts.cta
     ? `<a href="${opts.cta.href}" style="display:inline-block;margin-top:26px;padding:13px 22px;background:${INK};color:#fff;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">${esc(opts.cta.label)} →</a>`
     : "";
   const aside = opts.aside
     ? `<div style="margin-top:22px;padding:16px 18px;background:${SOFT};border-radius:12px;font-size:15px;line-height:1.55;color:${INK};">${opts.aside}</div>`
     : "";
-  return `<!doctype html><html lang="fr"><body style="margin:0;background:#fff;">
+  return `<!doctype html><html lang="${lang}"><body style="margin:0;background:#fff;">
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;max-width:540px;margin:0 auto;padding:40px 24px;color:${INK};">
     <div style="font-weight:700;font-size:18px;letter-spacing:-0.02em;margin-bottom:28px;"><span style="color:${ACCENT};">●</span> Rarelyst</div>
     <h1 style="font-size:24px;line-height:1.2;letter-spacing:-0.03em;margin:0 0 14px;">${opts.title}</h1>
     <div style="font-size:16px;line-height:1.6;color:${INK_2};">${opts.body}</div>
     ${aside}
     ${cta}
-    <p style="margin-top:40px;font-size:13px;color:#9C95A4;">Rarelyst · Recrutement pour études qualitatives mode et luxe</p>
+    <p style="margin-top:40px;font-size:13px;color:#9C95A4;">${lang === "en" ? "Rarelyst · Recruitment for fashion and luxury qualitative research" : "Rarelyst · Recrutement pour études qualitatives mode et luxe"}</p>
   </div></body></html>`;
 }
 
@@ -84,19 +95,23 @@ export function buildIcs(opts: { uid: string; title: string; start: Date; durati
 
 // ── Emails ────────────────────────────────────────────────────────────
 
-export async function sendReportReady(to: string, contactFirstName: string, studyTitle: string, studyId: string) {
-  return send(to, `Votre synthèse est prête : ${studyTitle}`, layout({
-    title: `Votre synthèse est prête${contactFirstName ? `, ${esc(contactFirstName)}` : ""}.`,
-    body: `La synthèse de l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong> est disponible : enseignements clés, verbatims, profils types et pistes de réflexion.`,
-    cta: { label: "Lire la synthèse", href: `${APP_URL}/brand/studies/${studyId}/report` },
+export async function sendReportReady(to: string, contactFirstName: string, studyTitle: string, studyId: string, lang: Lang = "fr") {
+  return send(to, pick(lang, `Votre synthèse est prête : ${studyTitle}`, `Your report is ready: ${studyTitle}`), layout({
+    lang,
+    title: pick(lang, `Votre synthèse est prête${contactFirstName ? `, ${esc(contactFirstName)}` : ""}.`, `Your report is ready${contactFirstName ? `, ${esc(contactFirstName)}` : ""}.`),
+    body: pick(lang,
+      `La synthèse de l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong> est disponible : enseignements clés, verbatims, profils types et pistes de réflexion.`,
+      `The report for <strong style="color:${INK}">${esc(studyTitle)}</strong> is available: key insights, quotes, personas and ideas to consider.`),
+    cta: { label: pick(lang, "Lire la synthèse", "Read the report"), href: `${APP_URL}/brand/studies/${studyId}/report` },
   }));
 }
 
-export async function sendWelcomeBrand(to: string, companyName: string) {
-  return send(to, "Bienvenue sur Rarelyst", layout({
-    title: `Bienvenue, ${esc(companyName)}.`,
-    body: "Votre espace est prêt. Décrivez qui vous voulez entendre : nous vous présentons les premiers profils sous 72 heures.",
-    cta: { label: "Créer une étude", href: `${APP_URL}/brand/studies/new` },
+export async function sendWelcomeBrand(to: string, companyName: string, lang: Lang = "fr") {
+  return send(to, pick(lang, "Bienvenue sur Rarelyst", "Welcome to Rarelyst"), layout({
+    lang,
+    title: pick(lang, `Bienvenue, ${esc(companyName)}.`, `Welcome, ${esc(companyName)}.`),
+    body: pick(lang, "Votre espace est prêt. Décrivez qui vous voulez entendre : nous vous présentons les premiers profils sous 72 heures.", "Your space is ready. Describe who you want to hear: we'll present the first profiles within 72 hours."),
+    cta: { label: pick(lang, "Créer une étude", "Create a study"), href: `${APP_URL}/brand/studies/new` },
   }));
 }
 
@@ -126,12 +141,15 @@ export async function sendProfileRequested(participantName: string, brandProfile
   }));
 }
 
-export async function sendParticipantInvited(to: string, firstName: string, studyDescription: string, deadline: string) {
-  return send(to, "Une marque veut vous entendre", layout({
-    title: `Bonne nouvelle, ${esc(firstName)}.`,
-    body: `Votre profil a été retenu pour l'étude <strong style="color:${INK}">${esc(studyDescription)}</strong>. Choisissez le créneau qui vous convient.`,
-    aside: `À confirmer avant le <strong>${esc(deadline)}</strong>.`,
-    cta: { label: "Choisir mon créneau", href: `${APP_URL}/participant/studies` },
+export async function sendParticipantInvited(to: string, firstName: string, studyDescription: string, deadline: string, lang: Lang = "fr") {
+  return send(to, pick(lang, "Une marque veut vous entendre", "A brand wants to hear from you"), layout({
+    lang,
+    title: pick(lang, `Bonne nouvelle, ${esc(firstName)}.`, `Good news, ${esc(firstName)}.`),
+    body: pick(lang,
+      `Votre profil a été retenu pour l'étude <strong style="color:${INK}">${esc(studyDescription)}</strong>. Choisissez le créneau qui vous convient.`,
+      `Your profile has been selected for the study <strong style="color:${INK}">${esc(studyDescription)}</strong>. Choose the slot that suits you.`),
+    aside: pick(lang, `À confirmer avant le <strong>${esc(deadline)}</strong>.`, `To confirm before <strong>${esc(deadline)}</strong>.`),
+    cta: { label: pick(lang, "Choisir mon créneau", "Choose my slot"), href: `${APP_URL}/participant/studies` },
   }));
 }
 
@@ -142,31 +160,37 @@ export async function sendInterviewConfirmed(
   scheduledAt: Date,
   joinUrl: string,
   isParticipant: boolean,
-  opts: { interviewId?: string; durationMinutes?: number } = {},
+  opts: { interviewId?: string; durationMinutes?: number; lang?: Lang } = {},
 ) {
-  const when = fmtDateTime(scheduledAt);
+  const lang = opts.lang ?? "fr";
+  const when = fmtDateTime(scheduledAt, lang);
   const ics = opts.interviewId
     ? buildIcs({
         uid: `${opts.interviewId}-${isParticipant ? "p" : "b"}`,
-        title: `Entretien Rarelyst · ${studyTitle}`,
+        title: pick(lang, `Entretien Rarelyst · ${studyTitle}`, `Rarelyst interview · ${studyTitle}`),
         start: scheduledAt,
         durationMinutes: opts.durationMinutes ?? 45,
         url: joinUrl,
-        description: `Rejoindre l'entretien : ${joinUrl}`,
+        description: pick(lang, `Rejoindre l'entretien : ${joinUrl}`, `Join the interview: ${joinUrl}`),
       })
     : null;
   return send(
     to,
-    `Entretien confirmé · ${studyTitle}`,
+    pick(lang, `Entretien confirmé · ${studyTitle}`, `Interview confirmed · ${studyTitle}`),
     layout({
-      title: isParticipant ? `C'est confirmé, ${esc(firstName)}.` : "Un entretien est confirmé.",
+      lang,
+      title: isParticipant ? pick(lang, `C'est confirmé, ${esc(firstName)}.`, `It's confirmed, ${esc(firstName)}.`) : pick(lang, "Un entretien est confirmé.", "An interview is confirmed."),
       body: isParticipant
-        ? `Votre entretien pour l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong> est confirmé. Vous le rejoindrez directement depuis votre espace, sans rien installer.`
-        : `Un participant a confirmé son entretien pour <strong style="color:${INK}">${esc(studyTitle)}</strong>. Sa fiche est disponible dans la salle d'entretien.`,
-      aside: `<strong style="text-transform:capitalize">${esc(when)}</strong><br/>Visio dans votre espace Rarelyst`,
-      cta: { label: "Ouvrir la salle d'entretien", href: joinUrl },
+        ? pick(lang,
+          `Votre entretien pour l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong> est confirmé. Vous le rejoindrez directement depuis votre espace, sans rien installer.`,
+          `Your interview for <strong style="color:${INK}">${esc(studyTitle)}</strong> is confirmed. You'll join it straight from your space, nothing to install.`)
+        : pick(lang,
+          `Un participant a confirmé son entretien pour <strong style="color:${INK}">${esc(studyTitle)}</strong>. Sa fiche est disponible dans la salle d'entretien.`,
+          `A participant has confirmed their interview for <strong style="color:${INK}">${esc(studyTitle)}</strong>. Their profile is available in the interview room.`),
+      aside: `<strong style="text-transform:capitalize">${esc(when)}</strong><br/>${pick(lang, "Visio dans votre espace Rarelyst", "Video call in your Rarelyst space")}`,
+      cta: { label: pick(lang, "Ouvrir la salle d'entretien", "Open the interview room"), href: joinUrl },
     }),
-    ics ? { attachments: [{ filename: "entretien-rarelyst.ics", content: Buffer.from(ics).toString("base64"), contentType: "text/calendar" }] } : {},
+    ics ? { attachments: [{ filename: pick(lang, "entretien-rarelyst.ics", "rarelyst-interview.ics"), content: Buffer.from(ics).toString("base64"), contentType: "text/calendar" }] } : {},
   );
 }
 
@@ -176,16 +200,22 @@ export async function sendInterviewReminder(
   scheduledAt: Date,
   joinUrl: string,
   hoursUntil: 24 | 1,
-  opts: { scheduledFor?: Date } = {},
+  opts: { scheduledFor?: Date; lang?: Lang } = {},
 ) {
-  const title = hoursUntil === 1 ? "Votre entretien commence dans une heure." : "Votre entretien a lieu demain.";
+  const lang = opts.lang ?? "fr";
+  const title = hoursUntil === 1
+    ? pick(lang, "Votre entretien commence dans une heure.", "Your interview starts in one hour.")
+    : pick(lang, "Votre entretien a lieu demain.", "Your interview is tomorrow.");
   return send(
     to,
-    hoursUntil === 1 ? `Dans une heure : votre entretien` : `Demain : votre entretien`,
+    hoursUntil === 1 ? pick(lang, "Dans une heure : votre entretien", "In one hour: your interview") : pick(lang, "Demain : votre entretien", "Tomorrow: your interview"),
     layout({
+      lang,
       title,
-      body: `Bonjour ${esc(firstName)}, rendez-vous à <strong style="color:${INK}">${fmtTime(scheduledAt)}</strong>. Pensez à vous installer au calme, caméra et micro prêts.`,
-      cta: { label: "Ouvrir la salle d'entretien", href: joinUrl },
+      body: pick(lang,
+        `Bonjour ${esc(firstName)}, rendez-vous à <strong style="color:${INK}">${fmtTime(scheduledAt)}</strong>. Pensez à vous installer au calme, caméra et micro prêts.`,
+        `Hello ${esc(firstName)}, see you at <strong style="color:${INK}">${fmtTime(scheduledAt, lang)}</strong>. Find a quiet spot, with your camera and microphone ready.`),
+      cta: { label: pick(lang, "Ouvrir la salle d'entretien", "Open the interview room"), href: joinUrl },
     }),
     opts.scheduledFor ? { scheduledAt: opts.scheduledFor.toISOString() } : {},
   );
@@ -197,7 +227,7 @@ export async function sendInterviewReminder(
  * besoin d'une tâche planifiée qui tournerait toutes les 30 minutes.
  */
 export async function scheduleInterviewReminders(opts: {
-  to: string; firstName: string; scheduledAt: Date; joinUrl: string;
+  to: string; firstName: string; scheduledAt: Date; joinUrl: string; lang?: Lang;
 }) {
   const now = Date.now();
   const jobs: Promise<unknown>[] = [];
@@ -205,24 +235,37 @@ export async function scheduleInterviewReminders(opts: {
     const at = new Date(opts.scheduledAt.getTime() - hours * 3600_000);
     // Inutile de rappeler un créneau déjà trop proche.
     if (at.getTime() - now < 10 * 60_000) continue;
-    jobs.push(sendInterviewReminder(opts.to, opts.firstName, opts.scheduledAt, opts.joinUrl, hours, { scheduledFor: at }));
+    jobs.push(sendInterviewReminder(opts.to, opts.firstName, opts.scheduledAt, opts.joinUrl, hours, { scheduledFor: at, lang: opts.lang }));
   }
   return Promise.allSettled(jobs);
 }
 
-export async function sendRewardAvailable(to: string, firstName: string, amount: number, type: "CASH" | "VOUCHER") {
-  return send(to, "Votre récompense vous attend", layout({
-    title: `Merci, ${esc(firstName)}.`,
-    body: `Votre avis a compté. Votre récompense de <strong style="color:${INK}">${(amount / 100).toLocaleString("fr-FR")} €</strong> ${type === "CASH" ? "est disponible." : "vous attend sous forme de bon d'achat."}<br/><br/><span style="font-size:13px;color:#9C95A4">Ces sommes peuvent être imposables selon votre situation : impots.gouv.fr (économie collaborative). Votre relevé annuel est disponible dans votre portefeuille.</span>`,
-    cta: { label: "Récupérer ma récompense", href: `${APP_URL}/participant/wallet` },
+const TAX_NOTE: Record<Lang, string> = {
+  fr: "Ces sommes peuvent être imposables selon votre situation : impots.gouv.fr (économie collaborative). Votre relevé annuel est disponible dans votre portefeuille.",
+  en: "These amounts may be taxable depending on your situation. Your annual statement is available in your wallet.",
+};
+
+export async function sendRewardAvailable(to: string, firstName: string, amount: number, type: "CASH" | "VOUCHER", lang: Lang = "fr") {
+  return send(to, pick(lang, "Votre récompense vous attend", "Your reward is waiting"), layout({
+    lang,
+    title: pick(lang, `Merci, ${esc(firstName)}.`, `Thank you, ${esc(firstName)}.`),
+    body: pick(lang,
+      `Votre avis a compté. Votre récompense de <strong style="color:${INK}">${eur(amount, lang)}</strong> ${type === "CASH" ? "est disponible." : "vous attend sous forme de bon d'achat."}`,
+      `Your opinion counted. Your reward of <strong style="color:${INK}">${eur(amount, lang)}</strong> ${type === "CASH" ? "is available." : "is waiting for you as a voucher."}`)
+      + `<br/><br/><span style="font-size:13px;color:#9C95A4">${TAX_NOTE[lang]}</span>`,
+    cta: { label: pick(lang, "Récupérer ma récompense", "Collect my reward"), href: `${APP_URL}/participant/wallet` },
   }));
 }
 
-export async function sendPayoutSent(to: string, firstName: string, amountCents: number) {
-  return send(to, `${(amountCents / 100).toLocaleString("fr-FR")} € en route vers votre compte`, layout({
-    title: `C'est parti, ${esc(firstName)}.`,
-    body: `Votre retrait de <strong style="color:${INK}">${(amountCents / 100).toLocaleString("fr-FR")} €</strong> a été envoyé. Il arrive sur votre compte bancaire sous 1 à 3 jours ouvrés.<br/><br/><span style="font-size:13px;color:#9C95A4">Ces sommes peuvent être imposables selon votre situation : impots.gouv.fr (économie collaborative). Votre relevé annuel est disponible dans votre portefeuille.</span>`,
-    cta: { label: "Voir mes gains", href: `${APP_URL}/participant/wallet` },
+export async function sendPayoutSent(to: string, firstName: string, amountCents: number, lang: Lang = "fr") {
+  return send(to, pick(lang, `${eur(amountCents, lang)} en route vers votre compte`, `${eur(amountCents, lang)} on its way to your account`), layout({
+    lang,
+    title: pick(lang, `C'est parti, ${esc(firstName)}.`, `On its way, ${esc(firstName)}.`),
+    body: pick(lang,
+      `Votre retrait de <strong style="color:${INK}">${eur(amountCents, lang)}</strong> a été envoyé. Il arrive sur votre compte bancaire sous 1 à 3 jours ouvrés.`,
+      `Your withdrawal of <strong style="color:${INK}">${eur(amountCents, lang)}</strong> has been sent. It reaches your bank account within 1 to 3 business days.`)
+      + `<br/><br/><span style="font-size:13px;color:#9C95A4">${TAX_NOTE[lang]}</span>`,
+    cta: { label: pick(lang, "Voir mes gains", "See my earnings"), href: `${APP_URL}/participant/wallet` },
   }));
 }
 
@@ -272,41 +315,56 @@ export async function sendDemoConfirmation(to: string, firstName: string, lang: 
 }
 
 /** Entretien en autonomie : le participant répond quand il veut, face caméra. */
-export async function sendAsyncInvitation(to: string, firstName: string, studyTitle: string, interviewId: string, questions: number, deadline: Date | null) {
-  const until = deadline ? ` avant le ${new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(deadline)}` : "";
-  return send(to, "Une marque attend vos réponses", layout({
-    title: `À vous, ${esc(firstName)}.`,
-    body: `Une marque a retenu votre profil pour l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong>. Pas de rendez-vous à caler : vous répondez seul(e), face caméra, à ${questions} questions qui s'affichent une par une. Comptez une quinzaine de minutes, quand vous voulez${until}.`,
-    aside: "Installez-vous au calme, avec une bonne lumière. Vos réponses sont enregistrées et transcrites pour la marque.",
-    cta: { label: "Commencer quand je veux", href: `${APP_URL}/participant/interview/${interviewId}` },
+export async function sendAsyncInvitation(to: string, firstName: string, studyTitle: string, interviewId: string, questions: number, deadline: Date | null, lang: Lang = "fr") {
+  const day = deadline ? new Intl.DateTimeFormat(loc(lang), { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(deadline) : "";
+  const until = deadline ? pick(lang, ` avant le ${day}`, ` before ${day}`) : "";
+  return send(to, pick(lang, "Une marque attend vos réponses", "A brand is waiting for your answers"), layout({
+    lang,
+    title: pick(lang, `À vous, ${esc(firstName)}.`, `Over to you, ${esc(firstName)}.`),
+    body: pick(lang,
+      `Une marque a retenu votre profil pour l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong>. Pas de rendez-vous à caler : vous répondez seul(e), face caméra, à ${questions} questions qui s'affichent une par une. Comptez une quinzaine de minutes, quand vous voulez${until}.`,
+      `A brand has selected your profile for the study <strong style="color:${INK}">${esc(studyTitle)}</strong>. No appointment to arrange: you answer ${questions} questions on your own, on camera, shown one at a time. It takes about fifteen minutes, whenever you like${until}.`),
+    aside: pick(lang, "Installez-vous au calme, avec une bonne lumière. Vos réponses sont enregistrées et transcrites pour la marque.", "Find a quiet spot with good light. Your answers are recorded and transcribed for the brand."),
+    cta: { label: pick(lang, "Commencer quand je veux", "Start whenever I want"), href: `${APP_URL}/participant/interview/${interviewId}` },
   }));
 }
 
-export async function sendAvailabilityProposed(to: string, contactFirstName: string, participantFirstName: string, studyTitle: string, studyId: string, slots: Date[]) {
-  const list = slots.map((d) => `<li style="margin:4px 0;text-transform:capitalize">${esc(fmtDateTime(d))}</li>`).join("");
-  return send(to, `${participantFirstName} propose ses disponibilités`, layout({
-    title: `${esc(participantFirstName)} propose ${slots.length} créneau${slots.length > 1 ? "x" : ""}.`,
-    body: `${contactFirstName ? `Bonjour ${esc(contactFirstName)}, p` : "P"}our l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong>, choisissez celui qui vous convient : l'entretien est confirmé immédiatement.`,
+export async function sendAvailabilityProposed(to: string, contactFirstName: string, participantFirstName: string, studyTitle: string, studyId: string, slots: Date[], lang: Lang = "fr") {
+  const list = slots.map((d) => `<li style="margin:4px 0;text-transform:capitalize">${esc(fmtDateTime(d, lang))}</li>`).join("");
+  return send(to, pick(lang, `${participantFirstName} propose ses disponibilités`, `${participantFirstName} has suggested times`), layout({
+    lang,
+    title: pick(lang,
+      `${esc(participantFirstName)} propose ${slots.length} créneau${slots.length > 1 ? "x" : ""}.`,
+      `${esc(participantFirstName)} suggests ${slots.length} slot${slots.length > 1 ? "s" : ""}.`),
+    body: pick(lang,
+      `${contactFirstName ? `Bonjour ${esc(contactFirstName)}, p` : "P"}our l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong>, choisissez celui qui vous convient : l'entretien est confirmé immédiatement.`,
+      `${contactFirstName ? `Hello ${esc(contactFirstName)}, f` : "F"}or the study <strong style="color:${INK}">${esc(studyTitle)}</strong>, pick the one that suits you: the interview is confirmed right away.`),
     aside: `<ul style="margin:0;padding-left:18px">${list}</ul>`,
-    cta: { label: "Choisir un créneau", href: `${APP_URL}/brand/studies/${studyId}` },
+    cta: { label: pick(lang, "Choisir un créneau", "Choose a slot"), href: `${APP_URL}/brand/studies/${studyId}` },
   }));
 }
 
-export async function sendAvailabilityRequested(to: string, firstName: string, studyTitle: string, applicationId: string) {
-  return send(to, "Une marque veut vous entendre", layout({
-    title: `Bonne nouvelle, ${esc(firstName)}.`,
-    body: `Une marque a retenu votre profil pour l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong>. Indiquez quand vous êtes disponible : elle s'adapte à vous.`,
-    cta: { label: "Proposer mes créneaux", href: `${APP_URL}/participant/studies/${applicationId}` },
+export async function sendAvailabilityRequested(to: string, firstName: string, studyTitle: string, applicationId: string, lang: Lang = "fr") {
+  return send(to, pick(lang, "Une marque veut vous entendre", "A brand wants to hear from you"), layout({
+    lang,
+    title: pick(lang, `Bonne nouvelle, ${esc(firstName)}.`, `Good news, ${esc(firstName)}.`),
+    body: pick(lang,
+      `Une marque a retenu votre profil pour l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong>. Indiquez quand vous êtes disponible : elle s'adapte à vous.`,
+      `A brand has selected your profile for the study <strong style="color:${INK}">${esc(studyTitle)}</strong>. Tell us when you're available: they'll fit around you.`),
+    cta: { label: pick(lang, "Proposer mes créneaux", "Suggest my slots"), href: `${APP_URL}/participant/studies/${applicationId}` },
   }));
 }
 
-export async function sendWorkEmailCode(to: string, firstName: string, code: string) {
+export async function sendWorkEmailCode(to: string, firstName: string, code: string, lang: Lang = "fr") {
   const html = layout({
-    title: "Votre code de vérification",
-    body: `Bonjour ${esc(firstName || "")},<br>Voici le code qui confirme que vous travaillez bien ici. Il est valable 15 minutes.`,
+    lang,
+    title: pick(lang, "Votre code de vérification", "Your verification code"),
+    body: pick(lang,
+      `Bonjour ${esc(firstName || "")},<br>Voici le code qui confirme que vous travaillez bien ici. Il est valable 15 minutes.`,
+      `Hello ${esc(firstName || "")},<br>Here is the code that confirms you work here. It is valid for 15 minutes.`),
     aside: `<div style="font-size:30px;font-weight:700;letter-spacing:.3em;text-align:center;">${esc(code)}</div>`,
   });
-  return send(to, `${code} · votre code Rarelyst`, html);
+  return send(to, pick(lang, `${code} · votre code Rarelyst`, `${code} · your Rarelyst code`), html);
 }
 
 // ── Fiabilité des entretiens : absences, reports, problèmes techniques ──
@@ -317,14 +375,24 @@ export async function cancelScheduledEmails(ids: string[]) {
   return Promise.allSettled(ids.map((id) => r.emails.cancel(id)));
 }
 
-export async function sendRescheduleNotice(to: string, firstName: string, studyTitle: string, opts: { byWhom: string; reason: string; forParticipant: boolean; href: string }) {
-  return send(to, `Entretien reporté · ${studyTitle}`, layout({
-    title: `L'entretien est reporté${firstName ? `, ${esc(firstName)}` : ""}.`,
+export async function sendRescheduleNotice(to: string, firstName: string, studyTitle: string, opts: { byWhom: string; self: boolean; reason: string; forParticipant: boolean; href: string; lang?: Lang }) {
+  const lang = opts.lang ?? "fr";
+  const asked = opts.self
+    ? pick(lang, "Vous avez demandé", "You asked")
+    : pick(lang, `${esc(opts.byWhom)} a demandé`, `${esc(opts.byWhom)} asked`);
+  const study = `<strong style="color:${INK}">${esc(studyTitle)}</strong>`;
+  return send(to, pick(lang, `Entretien reporté · ${studyTitle}`, `Interview rescheduled · ${studyTitle}`), layout({
+    lang,
+    title: pick(lang, `L'entretien est reporté${firstName ? `, ${esc(firstName)}` : ""}.`, `The interview is rescheduled${firstName ? `, ${esc(firstName)}` : ""}.`),
     body: opts.forParticipant
-      ? `${esc(opts.byWhom)} a demandé à reporter l'entretien pour <strong style="color:${INK}">${esc(studyTitle)}</strong>. Proposez de nouveaux créneaux : la marque en choisira un. Les rappels de l'ancien créneau sont annulés.`
-      : `${esc(opts.byWhom)} a demandé à reporter l'entretien pour <strong style="color:${INK}">${esc(studyTitle)}</strong>. Le participant va proposer de nouveaux créneaux ; vous choisirez celui qui vous convient. Vos crédits restent réservés.`,
-    aside: opts.reason ? `Raison indiquée : « ${esc(opts.reason)} »` : undefined,
-    cta: { label: opts.forParticipant ? "Proposer de nouveaux créneaux" : "Voir l'étude", href: opts.href },
+      ? pick(lang,
+        `${asked} à reporter l'entretien pour ${study}. Proposez de nouveaux créneaux : la marque en choisira un. Les rappels de l'ancien créneau sont annulés.`,
+        `${asked} to reschedule the interview for ${study}. Suggest new slots: the brand will pick one. Reminders for the old slot are cancelled.`)
+      : pick(lang,
+        `${asked} à reporter l'entretien pour ${study}. Le participant va proposer de nouveaux créneaux ; vous choisirez celui qui vous convient. Vos crédits restent réservés.`,
+        `${asked} to reschedule the interview for ${study}. The participant will suggest new slots; you'll choose the one that suits you. Your credits stay reserved.`),
+    aside: opts.reason ? pick(lang, `Raison indiquée : « ${esc(opts.reason)} »`, `Reason given: “${esc(opts.reason)}”`) : undefined,
+    cta: { label: opts.forParticipant ? pick(lang, "Proposer de nouveaux créneaux", "Suggest new slots") : pick(lang, "Voir l'étude", "See the study"), href: opts.href },
   }));
 }
 
@@ -340,20 +408,32 @@ export async function sendIncidentAdmin(d: { kind: "reschedule" | "technical" | 
   }));
 }
 
-export async function sendTechnicalIssueToOther(to: string, firstName: string, studyTitle: string, who: string, problem: string, href: string) {
-  return send(to, `Souci technique signalé · ${studyTitle}`, layout({
-    title: `${esc(who)} rencontre un souci technique.`,
-    body: `Pour l'entretien <strong style="color:${INK}">${esc(studyTitle)}</strong>${firstName ? `, ${esc(firstName)}` : ""} : ${esc(problem)}. Restez dans la salle quelques minutes ; si l'entretien ne peut pas avoir lieu, il pourra être reporté sans frais.`,
-    cta: { label: "Ouvrir la salle", href },
+export async function sendTechnicalIssueToOther(to: string, firstName: string, studyTitle: string, who: string, problem: string, href: string, lang: Lang = "fr") {
+  return send(to, pick(lang, `Souci technique signalé · ${studyTitle}`, `Technical issue reported · ${studyTitle}`), layout({
+    lang,
+    title: pick(lang, `${esc(who)} rencontre un souci technique.`, `${esc(who)} is having a technical issue.`),
+    body: pick(lang,
+      `Pour l'entretien <strong style="color:${INK}">${esc(studyTitle)}</strong>${firstName ? `, ${esc(firstName)}` : ""} : ${esc(problem)}. Restez dans la salle quelques minutes ; si l'entretien ne peut pas avoir lieu, il pourra être reporté sans frais.`,
+      `For the interview <strong style="color:${INK}">${esc(studyTitle)}</strong>${firstName ? `, ${esc(firstName)}` : ""}: ${esc(problem)}. Stay in the room for a few minutes; if the interview can't happen, it can be rescheduled at no cost.`),
+    cta: { label: pick(lang, "Ouvrir la salle", "Open the room"), href },
   }));
 }
 
-export async function sendNoShowNotice(to: string, firstName: string, studyTitle: string, forBrand: boolean, opts: { participantName?: string; credits?: number; href: string }) {
-  return send(to, forBrand ? `Absence constatée · ${studyTitle}` : `Entretien manqué · ${studyTitle}`, layout({
-    title: forBrand ? "Le participant n'est pas venu." : `Vous avez manqué votre entretien${firstName ? `, ${esc(firstName)}` : ""}.`,
+export async function sendNoShowNotice(to: string, firstName: string, studyTitle: string, forBrand: boolean, opts: { participantName?: string; credits?: number; href: string; lang?: Lang }) {
+  const lang = opts.lang ?? "fr";
+  const study = `<strong style="color:${INK}">${esc(studyTitle)}</strong>`;
+  return send(to, forBrand ? pick(lang, `Absence constatée · ${studyTitle}`, `No-show · ${studyTitle}`) : pick(lang, `Entretien manqué · ${studyTitle}`, `Missed interview · ${studyTitle}`), layout({
+    lang,
+    title: forBrand
+      ? pick(lang, "Le participant n'est pas venu.", "The participant didn't show up.")
+      : pick(lang, `Vous avez manqué votre entretien${firstName ? `, ${esc(firstName)}` : ""}.`, `You missed your interview${firstName ? `, ${esc(firstName)}` : ""}.`),
     body: forBrand
-      ? `${esc(opts.participantName ?? "Le participant")} ne s'est pas connecté à l'entretien pour <strong style="color:${INK}">${esc(studyTitle)}</strong>.${opts.credits ? ` Vos ${opts.credits} crédits sont revenus sur votre compte.` : ""} Nous pouvons vous proposer un autre profil.`
-      : `Vous ne vous êtes pas connecté(e) à l'entretien pour <strong style="color:${INK}">${esc(studyTitle)}</strong>. S'il s'agit d'une erreur, répondez à cet email : nous regardons avec vous.`,
-    cta: { label: forBrand ? "Voir l'étude" : "Mon espace", href: opts.href },
+      ? pick(lang,
+        `${esc(opts.participantName ?? "Le participant")} ne s'est pas connecté à l'entretien pour ${study}.${opts.credits ? ` Vos ${opts.credits} crédits sont revenus sur votre compte.` : ""} Nous pouvons vous proposer un autre profil.`,
+        `${esc(opts.participantName ?? "The participant")} didn't join the interview for ${study}.${opts.credits ? ` Your ${opts.credits} credits are back in your account.` : ""} We can suggest another profile.`)
+      : pick(lang,
+        `Vous ne vous êtes pas connecté(e) à l'entretien pour ${study}. S'il s'agit d'une erreur, répondez à cet email : nous regardons avec vous.`,
+        `You didn't join the interview for ${study}. If this is a mistake, reply to this email and we'll look into it with you.`),
+    cta: { label: forBrand ? pick(lang, "Voir l'étude", "See the study") : pick(lang, "Mon espace", "My space"), href: opts.href },
   }));
 }

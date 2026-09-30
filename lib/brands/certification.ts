@@ -48,6 +48,15 @@ export const CERT_TITLES: Record<CertLevel, { roman: string; name: string; meani
   3: { roman: "III", name: "Maison vérifiée", meaning: "Société identifiée au registre officiel et domaine prouvé, ou contrôlée par l'équipe." },
 };
 
+export const CERT_TITLES_EN: typeof CERT_TITLES = {
+  0: { roman: "", name: "Brand account", meaning: "Personal address: the brand is not yet linked to a domain." },
+  1: { roman: "I", name: "Work address", meaning: "The account uses an address on the company's domain." },
+  2: { roman: "II", name: "Domain confirmed", meaning: "The brand has proven it controls this address." },
+  3: { roman: "III", name: "Verified house", meaning: "Company found in the official register and domain proven, or checked by the team." },
+};
+
+export const certTitles = (lang: "fr" | "en" = "fr") => (lang === "en" ? CERT_TITLES_EN : CERT_TITLES);
+
 export type CertInput = {
   email: string;
   domainVerifiedAt: Date | string | null;
@@ -68,9 +77,14 @@ export function certLevel(b: CertInput): CertLevel {
 
 export type CertStep = { level: CertLevel; done: boolean; how: string };
 
-export function certSteps(b: CertInput): CertStep[] {
+export function certSteps(b: CertInput, lang: "fr" | "en" = "fr"): CertStep[] {
   const lvl = certLevel(b);
   const pro = isProDomain(emailDomain(b.email));
+  if (lang === "en") return [
+    { level: 1, done: lvl >= 1, how: pro ? "Address on your domain." : "Use an address on your company's domain (not Gmail or Outlook)." },
+    { level: 2, done: lvl >= 2, how: "Log in once with Google, LinkedIn or a code sent by email: it proves the address is yours." },
+    { level: 3, done: lvl >= 3, how: "Find your company in the official register: thirty seconds. Outside France, the team checks for you." },
+  ];
   return [
     { level: 1, done: lvl >= 1, how: pro ? "Adresse sur votre domaine." : "Utilisez une adresse sur le domaine de votre société (pas Gmail ni Outlook)." },
     { level: 2, done: lvl >= 2, how: "Connectez-vous une fois avec Google, LinkedIn ou un code reçu par email : cela prouve que l'adresse est la vôtre." },

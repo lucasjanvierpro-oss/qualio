@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { updateParticipantProfile } from "@/app/actions/participant";
+import { useTT } from "@/lib/i18n/client";
 
 const INTERESTS_OPTIONS = ["Fashion", "Streetwear", "Luxury", "Beauty", "Tech", "Music", "Food", "Travel", "Sport", "Gaming", "Design", "Sustainability"];
 
@@ -30,6 +31,7 @@ const inputStyle = {
 };
 
 export default function ParticipantProfileClient({ profile }: { profile: ProfileData }) {
+  const tt = useTT();
   const [form, setForm] = useState({
     firstName: profile.firstName,
     lastName: profile.lastName,
@@ -89,10 +91,10 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
         setIdStatus("PENDING");
       } else {
         const data = await res.json() as { error: string };
-        setUploadError(data.error === "too_large" ? "Fichier trop volumineux (max 10 Mo)" : data.error === "invalid_type" ? "Format non supporté (JPG, PNG, PDF)" : "Erreur lors de l'envoi");
+        setUploadError(data.error === "too_large" ? tt("Fichier trop volumineux (max 10 Mo)", "File too large (10 MB max)") : data.error === "invalid_type" ? tt("Format non supporté (JPG, PNG, PDF)", "Unsupported format (JPG, PNG, PDF)") : tt("Erreur lors de l'envoi", "Upload error"));
       }
     } catch {
-      setUploadError("Erreur réseau");
+      setUploadError(tt("Erreur réseau", "Network error"));
     } finally {
       setUploading(false);
     }
@@ -108,19 +110,19 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
   return (
     <div style={{ maxWidth: "720px", margin: "0 auto", padding: "40px 32px" }}>
       <h1 style={{ fontFamily: "var(--font-display)", fontSize: "28px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
-        Mon profil
+        {tt("Mon profil", "My profile")}
       </h1>
       <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: "0 0 28px" }}>
-        Un profil complet augmente vos chances d'être sélectionné(e) pour des études.
+        {tt("Un profil complet augmente vos chances d'être sélectionné(e) pour des études.", "A complete profile increases your chances of being selected for studies.")}
       </p>
 
       {/* Barre de complétion */}
       <div style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "10px", padding: "16px 20px", marginBottom: "32px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)" }}>Profil complété à {completionPct}%</span>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)" }}>{tt("Profil complété à", "Profile completed:")} {completionPct}%</span>
           <span style={{ fontSize: "12px", color: "var(--color-text-secondary)" }}>
-            {profile.idVerificationStatus !== "VERIFIED" && "ID non vérifié · "}
-            {profile.stripeConnectStatus !== "active" && "Compte bancaire non connecté"}
+            {profile.idVerificationStatus !== "VERIFIED" && tt("ID non vérifié · ", "ID not verified · ")}
+            {profile.stripeConnectStatus !== "active" && tt("Compte bancaire non connecté", "Bank account not connected")}
           </span>
         </div>
         <div style={{ height: "6px", background: "var(--color-surface-2)", borderRadius: "999px", overflow: "hidden" }}>
@@ -133,16 +135,16 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
         {/* Infos personnelles */}
         <section>
           <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "1px solid var(--color-border)" }}>
-            Informations personnelles
+            {tt("Informations personnelles", "Personal information")}
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             {([
-              ["Prénom", "firstName"],
-              ["Nom", "lastName"],
-              ["Date de naissance", "dateOfBirth", "date"],
-              ["Profession", "profession"],
-              ["Ville", "city"],
-              ["Pays", "country"],
+              [tt("Prénom", "First name"), "firstName"],
+              [tt("Nom", "Last name"), "lastName"],
+              [tt("Date de naissance", "Date of birth"), "dateOfBirth", "date"],
+              [tt("Profession", "Occupation"), "profession"],
+              [tt("Ville", "City"), "city"],
+              [tt("Pays", "Country"), "country"],
             ] as [string, keyof typeof form, string?][]).map(([label, key, type]) => (
               <div key={key}>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
@@ -173,7 +175,7 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
         {/* Centres d'intérêt */}
         <section>
           <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "1px solid var(--color-border)" }}>
-            Centres d'intérêt
+            {tt("Centres d'intérêt", "Interests")}
           </h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
             {INTERESTS_OPTIONS.map((i) => (
@@ -193,7 +195,7 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
           </div>
 
           <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            Affinités marques
+            {tt("Affinités marques", "Favourite brands")}
           </label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
             {brandAffinities.map((b) => (
@@ -208,7 +210,7 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
               value={newBrand}
               onChange={(e) => setNewBrand(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addBrand()}
-              placeholder="Ajouter une marque…"
+              placeholder={tt("Ajouter une marque…", "Add a brand…")}
               style={{ flex: 1, padding: "9px 12px", border: "1px solid var(--color-border)", borderRadius: "8px", fontSize: "14px", background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
             />
             <button onClick={addBrand} style={{ padding: "9px 16px", background: "var(--color-surface-2)", border: "1px solid var(--color-border)", borderRadius: "8px", fontSize: "13px", fontWeight: 600, cursor: "pointer", color: "var(--color-text-primary)" }}>+</button>
@@ -218,13 +220,13 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
         {/* Réseaux sociaux */}
         <section>
           <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 16px", paddingBottom: "10px", borderBottom: "1px solid var(--color-border)" }}>
-            Réseaux sociaux
+            {tt("Réseaux sociaux", "Social media")}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {([
-              ["LinkedIn", "linkedinUrl", "linkedin.com/in/votre-profil"],
-              ["Instagram", "instagramUrl", "@votre_compte"],
-              ["TikTok", "tiktokUrl", "@votre_compte"],
+              ["LinkedIn", "linkedinUrl", tt("linkedin.com/in/votre-profil", "linkedin.com/in/your-profile")],
+              ["Instagram", "instagramUrl", tt("@votre_compte", "@your_account")],
+              ["TikTok", "tiktokUrl", tt("@votre_compte", "@your_account")],
             ] as [string, keyof typeof form, string][]).map(([label, key, placeholder]) => (
               <div key={key} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ width: "80px", fontSize: "13px", fontWeight: 600, color: "var(--color-text-secondary)", flexShrink: 0 }}>{label}</span>
@@ -242,26 +244,26 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
         {/* Vérification d'identité */}
         <section>
           <h2 style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 4px", paddingBottom: "10px", borderBottom: "1px solid var(--color-border-base)" }}>
-            Vérification d'identité
+            {tt("Vérification d'identité", "Identity verification")}
           </h2>
           <p style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginBottom: "16px", lineHeight: 1.6 }}>
-            Votre document est chiffré et uniquement utilisé pour vérifier votre identité. Il ne sera jamais partagé avec les marques.
+            {tt("Votre document est chiffré et uniquement utilisé pour vérifier votre identité. Il ne sera jamais partagé avec les marques.", "Your document is encrypted and only used to verify your identity. It is never shared with brands.")}
           </p>
 
           {/* Status banner */}
           {idStatus === "VERIFIED" && (
             <div style={{ padding: "12px 16px", background: "var(--color-success-light)", border: "1px solid var(--color-success)", borderRadius: "3px", fontSize: "13px", color: "var(--color-success)", fontWeight: 600, marginBottom: "12px" }}>
-              ✓ Identité vérifiée
+              ✓ {tt("Identité vérifiée", "Identity verified")}
             </div>
           )}
           {idStatus === "PENDING" && (
             <div style={{ padding: "12px 16px", background: "var(--color-warning-light)", border: "1px solid var(--color-warning)", borderRadius: "3px", fontSize: "13px", color: "var(--color-warning)", fontWeight: 500, marginBottom: "12px" }}>
-              Vérification en cours — généralement 24–48h
+              {tt("Vérification en cours — généralement 24–48h", "Verification in progress, usually 24–48h")}
             </div>
           )}
           {idStatus === "REJECTED" && (
             <div style={{ padding: "12px 16px", background: "var(--color-error-light)", border: "1px solid var(--color-error)", borderRadius: "3px", fontSize: "13px", color: "var(--color-error)", fontWeight: 500, marginBottom: "12px" }}>
-              Document refusé — veuillez renvoyer une pièce d'identité valide
+              {tt("Document refusé — veuillez renvoyer une pièce d'identité valide", "Document declined, please upload a valid ID")}
             </div>
           )}
           {uploadError && (
@@ -285,15 +287,15 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
             style={{ fontSize: "13px", opacity: uploading || idStatus === "VERIFIED" ? 0.5 : 1 }}
           >
             {uploading
-              ? "Envoi en cours…"
+              ? tt("Envoi en cours…", "Uploading…")
               : idStatus === "VERIFIED"
-              ? "Document vérifié ✓"
+              ? tt("Document vérifié ✓", "Document verified ✓")
               : idStatus === "PENDING"
-              ? "Renvoyer le document"
-              : "Envoyer ma pièce d'identité"}
+              ? tt("Renvoyer le document", "Upload again")
+              : tt("Envoyer ma pièce d'identité", "Upload my ID")}
           </button>
           <p style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "8px" }}>
-            Formats acceptés : JPG, PNG, PDF · Max 10 Mo · Carte d'identité ou passeport
+            {tt("Formats acceptés : JPG, PNG, PDF · Max 10 Mo · Carte d'identité ou passeport", "Accepted formats: JPG, PNG, PDF · 10 MB max · ID card or passport")}
           </p>
         </section>
 
@@ -304,9 +306,9 @@ export default function ParticipantProfileClient({ profile }: { profile: Profile
             className="q-btn q-btn-primary"
             style={{ fontSize: "14px" }}
           >
-            {isPending ? "Enregistrement…" : "Enregistrer le profil"}
+            {isPending ? tt("Enregistrement…", "Saving…") : tt("Enregistrer le profil", "Save profile")}
           </button>
-          {saved && <span style={{ fontSize: "13px", color: "var(--color-success)", fontWeight: 600 }}>✓ Profil mis à jour</span>}
+          {saved && <span style={{ fontSize: "13px", color: "var(--color-success)", fontWeight: 600 }}>✓ {tt("Profil mis à jour", "Profile updated")}</span>}
         </div>
       </div>
     </div>

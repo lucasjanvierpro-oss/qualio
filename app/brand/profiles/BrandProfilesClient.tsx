@@ -5,6 +5,7 @@ import type { EarnedBadge } from "@/lib/participants/badges";
 import { BadgeChips } from "@/components/badges/BadgeShelf";
 import LoupeMascot from "@/components/brand/LoupeMascot";
 import LoupeLoading from "@/components/brand/LoupeLoading";
+import { useLang, useTT } from "@/lib/i18n/client";
 
 type GhostSummary = {
   overallQualityScore: number | null;
@@ -35,7 +36,7 @@ type ProfileCard = {
 const PROFILE_TYPES = ["expert", "insider", "influencer", "creative", "enthusiast"];
 const EXPERTISE = ["luxe", "streetwear", "mode contemporaine", "beauté", "retail", "styling", "accessories"];
 const INFLUENCE_TIERS = [
-  { value: "none", label: "Pas d'influence (<1k)" },
+  { value: "none", label: "Pas d'influence (<1k)", en: "No influence (<1k)" },
   { value: "nano", label: "Nano (1k–10k)" },
   { value: "micro", label: "Micro (10k–50k)" },
   { value: "macro", label: "Macro (50k+)" },
@@ -71,6 +72,7 @@ const EMPTY_FILTERS: Filters = {
 };
 
 function ProfileCard({ p, onClick }: { p: ProfileCard; onClick: () => void }) {
+  const tt = useTT();
   const score = p.ghostFile?.overallQualityScore ?? null;
   return (
     <div
@@ -132,18 +134,18 @@ function ProfileCard({ p, onClick }: { p: ProfileCard; onClick: () => void }) {
       </div>
 
       {/* Médailles confirmées */}
-      {p.badges?.length > 0 && <div style={{ marginBottom: "10px" }}><BadgeChips badges={p.badges} max={3} /></div>}
+      {p.badges?.length > 0 && <div style={{ marginBottom: "10px" }}><BadgeChips badges={p.badges} max={3} lang={tt("fr", "en") as "fr" | "en"} /></div>}
 
       {/* Historique entre marques */}
       {p.trust && (
         <div style={{ fontSize: "12px", color: "var(--color-text-secondary)", margin: "0 0 10px", display: "flex", flexWrap: "wrap", gap: "4px 10px" }}>
           {p.trust.interviewsDone > 0 ? (
             <>
-              <strong style={{ color: "var(--color-text-primary)" }}>{p.trust.interviewsDone} entretien{p.trust.interviewsDone > 1 ? "s" : ""}</strong>
-              {p.trust.rating !== null && <span><span style={{ color: "#d9a83e" }}>★</span> {p.trust.rating.toLocaleString("fr-FR")} ({p.trust.reviewCount} avis)</span>}
-              {p.trust.brands.length > 0 && <span>Déjà interrogé·e par {p.trust.brands.join(", ")}</span>}
+              <strong style={{ color: "var(--color-text-primary)" }}>{p.trust.interviewsDone} {tt(`entretien${p.trust.interviewsDone > 1 ? "s" : ""}`, `interview${p.trust.interviewsDone > 1 ? "s" : ""}`)}</strong>
+              {p.trust.rating !== null && <span><span style={{ color: "#d9a83e" }}>★</span> {p.trust.rating.toLocaleString(tt("fr-FR", "en-GB"))} ({p.trust.reviewCount} {tt("avis", "reviews")})</span>}
+              {p.trust.brands.length > 0 && <span>{tt("Déjà interrogé·e par", "Already interviewed by")} {p.trust.brands.join(", ")}</span>}
             </>
-          ) : <span>Jamais interrogé·e sur Rarelyst</span>}
+          ) : <span>{tt("Jamais interrogé·e sur Rarelyst", "Never interviewed on Rarelyst")}</span>}
         </div>
       )}
 
@@ -186,6 +188,8 @@ function subscribeNarrow(onChange: () => void) {
 }
 
 export default function BrandProfilesClient() {
+  const tt = useTT();
+  const en = useLang() === "en";
   const [profiles, setProfiles] = useState<ProfileCard[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -267,58 +271,58 @@ export default function BrandProfilesClient() {
       }}>
         <div style={{ width: narrow ? "100%" : "240px", padding: "24px 20px", display: "flex", flexDirection: "column", gap: "18px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-text-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Filtres</span>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-text-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{tt("Filtres", "Filters")}</span>
             {hasFilters && <button onClick={clearAll} style={{ fontSize: "12px", color: "var(--color-text-tertiary)", background: "none", border: "none", cursor: "pointer" }}>Tout effacer</button>}
           </div>
 
           {/* Type de profil */}
           <div>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>Type de profil</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>{tt("Type de profil", "Profile type")}</label>
             <select style={selectSel} value={filters.profileType} onChange={(e) => updateFilter("profileType", e.target.value)}>
-              <option value="">Tous les types</option>
+              <option value="">{tt("Tous les types", "All types")}</option>
               {PROFILE_TYPES.map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
             </select>
           </div>
 
           {/* Expertise */}
           <div>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>Expertise principale</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>{tt("Expertise principale", "Main expertise")}</label>
             <select style={selectSel} value={filters.primaryExpertise} onChange={(e) => updateFilter("primaryExpertise", e.target.value)}>
-              <option value="">Toutes les expertises</option>
+              <option value="">{tt("Toutes les expertises", "All expertise")}</option>
               {EXPERTISE.map((e) => <option key={e} value={e}>{e.charAt(0).toUpperCase() + e.slice(1)}</option>)}
             </select>
           </div>
 
           {/* Score minimum */}
           <div>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>Score Rarelyst minimum</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>{tt("Score Rarelyst minimum", "Minimum Rarelyst score")}</label>
             <select style={selectSel} value={filters.minScore} onChange={(e) => updateFilter("minScore", e.target.value)}>
-              <option value="">Tous les scores</option>
+              <option value="">{tt("Tous les scores", "All scores")}</option>
               {[5, 6, 7, 8, 9].map((s) => <option key={s} value={String(s)}>{s}+/10</option>)}
             </select>
           </div>
 
           {/* Influence */}
           <div>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>Niveau d'influence</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>{tt("Niveau d'influence", "Influence level")}</label>
             <select style={selectSel} value={filters.influenceTier} onChange={(e) => updateFilter("influenceTier", e.target.value)}>
-              <option value="">Tous</option>
-              {INFLUENCE_TIERS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              <option value="">{tt("Tous", "All")}</option>
+              {INFLUENCE_TIERS.map((t) => <option key={t.value} value={t.value}>{en && "en" in t ? t.en : t.label}</option>)}
             </select>
           </div>
 
           {/* Génération */}
           <div>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>Génération</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>{tt("Génération", "Generation")}</label>
             <select style={selectSel} value={filters.generationTag} onChange={(e) => updateFilter("generationTag", e.target.value)}>
-              <option value="">Toutes les générations</option>
+              <option value="">{tt("Toutes les générations", "All generations")}</option>
               {GENERATIONS.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
 
           {/* Ville */}
           <div>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>Ville</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "6px" }}>{tt("Ville", "City")}</label>
             <input
               style={inpStyle}
               value={filters.city}
@@ -338,7 +342,7 @@ export default function BrandProfilesClient() {
             onClick={() => setFiltersOpen(!filtersOpen)}
             style={{ padding: "8px 14px", background: "var(--color-surface-2)", border: "1px solid var(--color-border)", borderRadius: "7px", fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap" }}
           >
-            {filtersOpen ? (narrow ? "Masquer les filtres" : "← Masquer filtres") : (narrow ? "Filtres" : "→ Filtres")}
+            {filtersOpen ? (narrow ? tt("Masquer les filtres", "Hide filters") : tt("← Masquer filtres", "← Hide filters")) : (narrow ? tt("Filtres", "Filters") : tt("→ Filtres", "→ Filters"))}
           </button>
 
           {/* NL Search */}
@@ -347,7 +351,7 @@ export default function BrandProfilesClient() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              placeholder='Recherche naturelle — ex: "Je cherche un buyer senior spécialisé luxe japonais"'
+              placeholder={tt('Recherche naturelle — ex: "Je cherche un buyer senior spécialisé luxe japonais"', 'Natural search, e.g. "I\'m looking for a senior buyer specialised in Japanese luxury"')}
               style={{
                 width: "100%", padding: "10px 16px",
                 border: "1px solid var(--color-border)", borderRadius: "8px",
@@ -362,18 +366,18 @@ export default function BrandProfilesClient() {
             disabled={loading}
             style={{ padding: "10px 20px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", opacity: loading ? 0.7 : 1 }}
           >
-            {loading ? "…" : "Rechercher"}
+            {loading ? "…" : tt("Rechercher", "Search")}
           </button>
         </div>
 
         {/* Results header */}
         <div style={{ padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
-            {loading ? "Recherche…" : `${total} profil${total > 1 ? "s" : ""} trouvé${total > 1 ? "s" : ""}`}
+            {loading ? tt("Recherche…", "Searching…") : tt(`${total} profil${total > 1 ? "s" : ""} trouvé${total > 1 ? "s" : ""}`, `${total} profile${total > 1 ? "s" : ""} found`)}
           </span>
           {hasFilters && (
             <button onClick={clearAll} style={{ fontSize: "12px", color: "var(--color-text-tertiary)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-              Effacer les filtres
+              {tt("Effacer les filtres", "Clear filters")}
             </button>
           )}
         </div>
@@ -385,14 +389,14 @@ export default function BrandProfilesClient() {
           ))}
           {loading && profiles.length === 0 && (
             <div style={{ gridColumn: "1 / -1" }}>
-              <LoupeLoading variant="profiles" compact lines={["Claude lit votre recherche…", "On parcourt le panel…", "On classe les profils…"]} />
+              <LoupeLoading variant="profiles" compact lines={en ? ["Claude is reading your search…", "Going through the panel…", "Ranking profiles…"] : ["Claude lit votre recherche…", "On parcourt le panel…", "On classe les profils…"]} />
             </div>
           )}
           {!loading && profiles.length === 0 && (
             <div style={{ gridColumn: "1 / -1", padding: "60px", textAlign: "center", color: "var(--color-text-secondary)" }}>
               <LoupeMascot size={64} mood="puzzled" className="rl-empty-mascot" />
-              <div style={{ fontSize: "15px", fontWeight: 600, marginBottom: "6px", color: "var(--color-text-primary)" }}>Aucun profil trouvé</div>
-              <div style={{ fontSize: "13px" }}>Modifiez vos critères ou élargissez votre recherche.</div>
+              <div style={{ fontSize: "15px", fontWeight: 600, marginBottom: "6px", color: "var(--color-text-primary)" }}>{tt("Aucun profil trouvé", "No profiles found")}</div>
+              <div style={{ fontSize: "13px" }}>{tt("Modifiez vos critères ou élargissez votre recherche.", "Change your criteria or broaden your search.")}</div>
             </div>
           )}
         </div>
@@ -404,7 +408,7 @@ export default function BrandProfilesClient() {
               onClick={() => { const next = page + 1; setPage(next); load(query, filters, next); }}
               style={{ padding: "10px 28px", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "8px", fontSize: "14px", cursor: "pointer" }}
             >
-              Charger plus ({profiles.length}/{total})
+              {tt("Charger plus", "Load more")} ({profiles.length}/{total})
             </button>
           </div>
         )}
@@ -439,8 +443,8 @@ export default function BrandProfilesClient() {
                   {selected.ghostFile?.overallQualityScore}
                 </div>
                 <div>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-text-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Score Rarelyst</div>
-                  <div style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginTop: "2px" }}>Évaluation qualitative de l'expertise</div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-text-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{tt("Score Rarelyst", "Rarelyst score")}</div>
+                  <div style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginTop: "2px" }}>{tt("Évaluation qualitative de l'expertise", "Qualitative assessment of expertise")}</div>
                 </div>
               </div>
             )}
@@ -466,7 +470,7 @@ export default function BrandProfilesClient() {
             {/* Points forts */}
             {(selected.ghostFile?.aiStrengths ?? []).length > 0 && (
               <div style={{ marginBottom: "20px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>Points forts</div>
+                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>{tt("Points forts", "Strengths")}</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   {selected.ghostFile!.aiStrengths.map((s, i) => (
                     <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "var(--color-text-primary)" }}>
@@ -480,7 +484,7 @@ export default function BrandProfilesClient() {
             {/* Affinités marques */}
             {selected.brandAffinities.length > 0 && (
               <div style={{ marginBottom: "20px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>Affinités marques</div>
+                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>{tt("Affinités marques", "Brand affinities")}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {selected.brandAffinities.map((b) => (
                     <span key={b} style={{ padding: "3px 10px", borderRadius: "4px", fontSize: "12px", background: "var(--color-surface-2)", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}>{b}</span>
@@ -492,7 +496,7 @@ export default function BrandProfilesClient() {
             {/* Marques recommandées */}
             {(selected.ghostFile?.aiRecommendedBrands ?? []).length > 0 && (
               <div>
-                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>Études idéales pour ce profil</div>
+                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>{tt("Études idéales pour ce profil", "Ideal studies for this profile")}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {selected.ghostFile!.aiRecommendedBrands.map((b) => (
                     <span key={b} style={{ padding: "3px 10px", borderRadius: "999px", fontSize: "12px", background: "var(--color-accent-light)", color: "var(--color-accent)", border: "1px solid var(--color-accent)" }}>{b}</span>
@@ -503,12 +507,12 @@ export default function BrandProfilesClient() {
 
             {/* Contacter l'équipe */}
             <div style={{ marginTop: "28px", padding: "18px 20px", background: "var(--color-surface-2)", borderRadius: "10px", border: "1px solid var(--color-border)" }}>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>Intéressé par ce profil ?</div>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>{tt("Intéressé par ce profil ?", "Interested in this profile?")}</div>
               <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.6 }}>
-                Créez une étude ou contactez notre équipe — nous nous chargeons de shortlister ce profil pour vous.
+                {tt("Créez une étude ou contactez notre équipe — nous nous chargeons de shortlister ce profil pour vous.", "Create a study or contact our team, and we'll shortlist this profile for you.")}
               </div>
               <a href="/brand/studies/new" style={{ display: "inline-block", marginTop: "12px", padding: "9px 18px", background: "var(--color-accent)", color: "#fff", borderRadius: "7px", fontSize: "13px", fontWeight: 600, textDecoration: "none" }}>
-                Créer une étude →
+                {tt("Créer une étude", "Create a study")} →
               </a>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { sendRewardAvailable } from "@/lib/resend/emails";
+import { langOf, sendRewardAvailable } from "@/lib/resend/emails";
 import { grantReferralBonuses } from "@/lib/referral/referral";
 import { applyNoShow } from "@/lib/interviews/reliability";
 
@@ -62,7 +62,8 @@ export async function PATCH(
         email,
         interview.application.participantProfile.firstName,
         reward.amountCents,
-        reward.type as "CASH" | "VOUCHER"
+        reward.type as "CASH" | "VOUCHER",
+        langOf(interview.application.participantProfile.preferredLanguage),
       ).catch(() => null);
     }
 

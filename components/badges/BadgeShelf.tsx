@@ -45,14 +45,14 @@ export default function BadgeShelf({ badges, lang = "fr", size = 88, reveal, exp
 }
 
 /** Rangée compacte pour la fiche vue par une marque : médaille + nom. */
-export function BadgeChips({ badges, max = 4 }: { badges: EarnedBadge[]; max?: number }) {
+export function BadgeChips({ badges, max = 4, lang = "fr" }: { badges: EarnedBadge[]; max?: number; lang?: Lang }) {
   if (!badges.length) return null;
   return (
     <div className={css.shelfCompact}>
       {badges.slice(0, max).map((b) => (
-        <span key={b.id} className={css.chip} title={BADGES[b.id].meaning.fr}>
-          <Medallion id={b.id} size={30} />
-          {BADGES[b.id].name.fr}
+        <span key={b.id} className={css.chip} title={BADGES[b.id].meaning[lang]}>
+          <Medallion id={b.id} size={30} lang={lang} />
+          {BADGES[b.id].name[lang]}
         </span>
       ))}
     </div>

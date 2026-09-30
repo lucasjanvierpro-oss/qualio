@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getLang } from "@/lib/i18n/server";
+import { pickTT } from "@/lib/i18n/tt";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -63,6 +65,7 @@ export default async function ParticipantWalletPage() {
   ]);
 
   const year = new Date().getFullYear();
+  const tt = pickTT(await getLang());
   return (
     <>
     <ParticipantWalletClient
@@ -76,10 +79,10 @@ export default async function ParticipantWalletPage() {
     {/* Information fiscale due à chaque participant (art. 242 bis du CGI). */}
     <section style={{ maxWidth: 860, margin: "0 auto", padding: "0 32px 48px" }}>
       <div style={{ border: "1px solid var(--color-border)", borderRadius: 12, padding: "16px 18px", background: "var(--color-surface)", fontSize: 13.5, lineHeight: 1.55, color: "var(--color-text-secondary)" }}>
-        <strong style={{ color: "var(--color-text-primary)" }}>Vos gains et les impôts.</strong> Les sommes perçues sur Rarelyst peuvent être imposables et soumises à cotisations sociales selon votre situation (impots.gouv.fr, rubrique « économie collaborative » ; urssaf.fr). Rarelyst les déclare chaque année à l&apos;administration et vous envoie un relevé avant le 31 janvier.{" "}
-        <Link href={`/participant/wallet/releve?year=${year}`} style={{ color: "var(--color-accent)", fontWeight: 600 }}>Mon relevé {year}</Link>
+        <strong style={{ color: "var(--color-text-primary)" }}>{tt("Vos gains et les impôts.", "Your earnings and tax.")}</strong> {tt("Les sommes perçues sur Rarelyst peuvent être imposables et soumises à cotisations sociales selon votre situation (impots.gouv.fr, rubrique « économie collaborative » ; urssaf.fr). Rarelyst les déclare chaque année à l'administration et vous envoie un relevé avant le 31 janvier.", "Amounts earned on Rarelyst may be taxable and subject to social contributions depending on your situation. Rarelyst reports them to the tax authorities each year and sends you a statement before 31 January.")}{" "}
+        <Link href={`/participant/wallet/releve?year=${year}`} style={{ color: "var(--color-accent)", fontWeight: 600 }}>{tt("Mon relevé", "My statement")} {year}</Link>
         {" · "}
-        <Link href="/participant/settings" style={{ color: "var(--color-accent)", fontWeight: 600 }}>Mes informations fiscales</Link>
+        <Link href="/participant/settings" style={{ color: "var(--color-accent)", fontWeight: 600 }}>{tt("Mes informations fiscales", "My tax information")}</Link>
       </div>
     </section>
     </>

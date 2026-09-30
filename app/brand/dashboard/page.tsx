@@ -4,20 +4,25 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import s from "./dashboard.module.css";
 import LoupeMascot from "@/components/brand/LoupeMascot";
+import { getLang } from "@/lib/i18n/server";
+import { locale, pickTT } from "@/lib/i18n/tt";
 
-const STATUS_META: Record<string, { label: string; color: string }> = {
-  ACTIVE:      { label: "Actif",      color: "var(--color-success)" },
-  MATCHING:    { label: "Matching",   color: "var(--color-warning)" },
-  COMPLETED:   { label: "Terminé",    color: "var(--color-text-tertiary)" },
-  DRAFT:       { label: "Brouillon",  color: "var(--color-text-tertiary)" },
-  IN_PROGRESS: { label: "En cours",   color: "var(--color-info)" },
-  CANCELLED:   { label: "Annulé",     color: "var(--color-error)" },
-};
+const STATUS_META = (tt: (fr: string, en: string) => string): Record<string, { label: string; color: string }> => ({
+  ACTIVE:      { label: tt("Actif", "Active"),        color: "var(--color-success)" },
+  MATCHING:    { label: "Matching",                   color: "var(--color-warning)" },
+  COMPLETED:   { label: tt("Terminé", "Completed"),   color: "var(--color-text-tertiary)" },
+  DRAFT:       { label: tt("Brouillon", "Draft"),     color: "var(--color-text-tertiary)" },
+  IN_PROGRESS: { label: tt("En cours", "In progress"), color: "var(--color-info)" },
+  CANCELLED:   { label: tt("Annulé", "Cancelled"),    color: "var(--color-error)" },
+});
 
 export default async function BrandDashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const lang = await getLang();
+  const tt = pickTT(lang);
+  const META = STATUS_META(tt);
 
   const dbUser = await prisma.user.findUnique({
     where: { supabaseId: user.id },
@@ -41,10 +46,10 @@ export default async function BrandDashboard() {
   const pendingReview    = studies.reduce((n, s) => n + s.applications.filter((a) => a.status === "SHORTLISTED").length, 0);
   const pendingStudy     = studies.find((s) => s.applications.some((a) => a.status === "SHORTLISTED"));
 
-  const companyName = bp?.companyName ?? "vous";
+  const companyName = bp?.companyName ?? tt("vous", "there");
 
   const fmtDate = (d: Date | null) =>
-    d ? new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : null;
+    d ? new Date(d).toLocaleDateString(locale(lang), { day: "numeric", month: "short" }) : null;
 
   return (
     <div style={{ maxWidth: "var(--content-max)", margin: "0 auto", padding: "44px 40px" }}>
@@ -52,7 +57,7 @@ export default async function BrandDashboard() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "40px" }}>
         <div>
-          <p className="q-label" style={{ marginBottom: "8px" }}>Tableau de bord</p>
+          <p className="q-label" style={{ marginBottom: "8px" }}>{tt("Tableau de bord", "Dashboard")}</p>
           <h1 style={{
             fontFamily: "var(--font-display)",
             fontSize: "32px",
@@ -63,11 +68,11 @@ export default async function BrandDashboard() {
             margin: 0,
             lineHeight: 1.1,
           }}>
-            Bonjour, {companyName}
+            {tt("Bonjour", "Hello")}, {companyName}
           </h1>
         </div>
         <Link href="/brand/studies/new" className="q-btn q-btn-primary">
-          + Nouvelle étude
+          + {tt("Nouvelle étude", "New study")}
         </Link>
       </div>
 
@@ -75,24 +80,24 @@ export default async function BrandDashboard() {
       <div className={s.stats}>
         {[
           {
-            label: "Études actives",
+            label: tt("Études actives", "Active studies"),
             value: activeStudies.length,
             color: activeStudies.length > 0 ? "var(--color-text-primary)" : "var(--color-text-tertiary)",
           },
           {
-            label: "Profils à valider",
+            label: tt("Profils à valider", "Profiles to review"),
             value: pendingReview,
             color: pendingReview > 0 ? "var(--color-warning)" : "var(--color-text-tertiary)",
             alert: pendingReview > 0,
           },
           {
-            label: "Crédits disponibles",
+            label: tt("Crédits disponibles", "Available credits"),
             value: bp?.credits ?? 0,
             color: (bp?.credits ?? 0) < 3 ? "var(--color-warning)" : "var(--color-text-primary)",
             alert: (bp?.credits ?? 0) < 3,
           },
           {
-            label: "Études complétées",
+            label: tt("Études complétées", "Completed studies"),
             value: completedStudies.length,
             color: "var(--color-text-primary)",
           },
@@ -134,14 +139,14 @@ export default async function BrandDashboard() {
           alignItems: "center",
         }}>
           <div style={{ fontSize: "13px", color: "var(--color-warning)", fontWeight: 500 }}>
-            {pendingReview} profil{pendingReview > 1 ? "s" : ""} proposé{pendingReview > 1 ? "s" : ""} par l'équipe Rarelyst —{" "}
+            {pendingReview} {tt(`profil${pendingReview > 1 ? "s" : ""} proposé${pendingReview > 1 ? "s" : ""} par l'équipe Rarelyst`, `profile${pendingReview > 1 ? "s" : ""} suggested by the Rarelyst team`)} —{" "}
             <span style={{ fontWeight: 400 }}>{pendingStudy.title}</span>
           </div>
           <Link
             href={`/brand/studies/${pendingStudy.id}`}
             style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-warning)", textDecoration: "none", whiteSpace: "nowrap", marginLeft: "16px" }}
           >
-            Valider →
+            {tt("Valider", "Review")} →
           </Link>
         </div>
       )}
@@ -149,10 +154,10 @@ export default async function BrandDashboard() {
       {/* Studies */}
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-          <p className="q-label">Études récentes</p>
+          <p className="q-label">{tt("Études récentes", "Recent studies")}</p>
           {studies.length > 5 && (
             <Link href="/brand/studies" style={{ fontSize: "12px", color: "var(--color-accent)", textDecoration: "none", fontWeight: 500 }}>
-              Voir toutes →
+              {tt("Voir toutes", "See all")} →
             </Link>
           )}
         </div>
@@ -160,16 +165,16 @@ export default async function BrandDashboard() {
         {studies.length === 0 ? (
           <div className="q-card q-empty">
             <LoupeMascot size={64} mood="search" className="rl-empty-mascot" />
-            <p className="q-empty-title">Aucune étude pour le moment</p>
-            <p className="q-empty-sub">Créez votre première étude pour recevoir des profils ciblés sous 72h.</p>
+            <p className="q-empty-title">{tt("Aucune étude pour le moment", "No studies yet")}</p>
+            <p className="q-empty-sub">{tt("Créez votre première étude pour recevoir des profils ciblés sous 72h.", "Create your first study to receive targeted profiles within 72h.")}</p>
             <Link href="/brand/studies/new" className="q-btn q-btn-primary" style={{ marginTop: "20px" }}>
-              Créer une étude →
+              {tt("Créer une étude", "Create a study")} →
             </Link>
           </div>
         ) : (
           <div className="q-card" style={{ padding: 0, overflow: "hidden" }}>
             {studies.slice(0, 6).map((study, i) => {
-              const meta    = STATUS_META[study.status] ?? STATUS_META.ACTIVE;
+              const meta    = META[study.status] ?? META.ACTIVE;
               const confirmed = study.applications.filter((a) => a.status === "CONFIRMED" || a.status === "COMPLETED").length;
               const deadline  = fmtDate(study.deadlineAt);
 
@@ -186,13 +191,13 @@ export default async function BrandDashboard() {
                       {study.title}
                     </div>
                     <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)" }}>
-                      {study.studyType === "ONE_ON_ONE" ? "Entretien 1:1" : "Focus group"}
+                      {study.studyType === "ONE_ON_ONE" ? tt("Entretien 1:1", "1:1 interview") : "Focus group"}
                     </div>
                   </div>
 
                   {/* Deadline */}
                   <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", textAlign: "center" }}>
-                    {deadline ? `Avant ${deadline}` : "—"}
+                    {deadline ? `${tt("Avant", "Before")} ${deadline}` : "—"}
                   </div>
 
                   {/* Progress */}

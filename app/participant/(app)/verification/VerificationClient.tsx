@@ -1,33 +1,35 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useLang } from "@/lib/i18n/client";
 
-const STATUS_CONFIG = {
+type TT = (fr: string, en: string) => string;
+const STATUS_CONFIG = (tt: TT) => ({
   PENDING: {
     bg: "var(--color-warning-light)",
     border: "var(--color-warning)",
     color: "var(--color-warning)",
     icon: "⏳",
-    title: "Vérification en cours",
-    body: "Votre document a bien été reçu. Notre équipe le vérifie généralement sous 24–48h. Vous serez notifié(e) par email.",
+    title: tt("Vérification en cours", "Verification in progress"),
+    body: tt("Votre document a bien été reçu. Notre équipe le vérifie généralement sous 24–48h. Vous serez notifié(e) par email.", "Your document has been received. Our team usually checks it within 24–48h. You will be notified by email."),
   },
   VERIFIED: {
     bg: "var(--color-success-light)",
     border: "var(--color-success)",
     color: "var(--color-success)",
     icon: "✓",
-    title: "Identité vérifiée",
-    body: "Votre identité a été confirmée. Vous pouvez maintenant participer à toutes les études Rarelyst.",
+    title: tt("Identité vérifiée", "Identity verified"),
+    body: tt("Votre identité a été confirmée. Vous pouvez maintenant participer à toutes les études Rarelyst.", "Your identity is confirmed. You can now take part in every Rarelyst study."),
   },
   REJECTED: {
     bg: "var(--color-error-light)",
     border: "var(--color-error)",
     color: "var(--color-error)",
     icon: "✗",
-    title: "Document refusé",
-    body: "Votre document n'a pas pu être validé (document illisible, expiré, ou mauvais format). Veuillez renvoyer une pièce d'identité valide.",
+    title: tt("Document refusé", "Document declined"),
+    body: tt("Votre document n'a pas pu être validé (document illisible, expiré, ou mauvais format). Veuillez renvoyer une pièce d'identité valide.", "Your document could not be validated (unreadable, expired or wrong format). Please upload a valid ID."),
   },
-} as const;
+});
 
 export default function VerificationClient({
   profileId,
@@ -42,13 +44,16 @@ export default function VerificationClient({
   verifiedAt: string | null;
   firstName: string;
 }) {
+  const en = useLang() === "en";
+  const tt: TT = (fr, e) => (en ? e : fr);
   const [currentStatus, setCurrentStatus] = useState(status);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const cfg = STATUS_CONFIG[currentStatus as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.PENDING;
+  const configs = STATUS_CONFIG(tt);
+  const cfg = configs[currentStatus as keyof typeof configs] ?? configs.PENDING;
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -67,12 +72,12 @@ export default function VerificationClient({
         setUploadSuccess(true);
       } else {
         const data = await res.json() as { error: string };
-        if (data.error === "too_large") setUploadError("Fichier trop volumineux (max 10 Mo)");
-        else if (data.error === "invalid_type") setUploadError("Format non supporté — utilisez JPG, PNG ou PDF");
-        else setUploadError("Erreur lors de l'envoi. Réessayez.");
+        if (data.error === "too_large") setUploadError(tt("Fichier trop volumineux (max 10 Mo)", "File too large (10 MB max)"));
+        else if (data.error === "invalid_type") setUploadError(tt("Format non supporté — utilisez JPG, PNG ou PDF", "Unsupported format, use JPG, PNG or PDF"));
+        else setUploadError(tt("Erreur lors de l'envoi. Réessayez.", "Upload error. Please try again."));
       }
     } catch {
-      setUploadError("Erreur réseau. Vérifiez votre connexion.");
+      setUploadError(tt("Erreur réseau. Vérifiez votre connexion.", "Network error. Check your connection."));
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -83,7 +88,7 @@ export default function VerificationClient({
     <div style={{ maxWidth: "580px", margin: "0 auto", padding: "48px 32px" }}>
 
       {/* Header */}
-      <p className="q-label" style={{ marginBottom: "10px" }}>Vérification</p>
+      <p className="q-label" style={{ marginBottom: "10px" }}>{tt("Vérification", "Verification")}</p>
       <h1 style={{
         fontFamily: "var(--font-display)",
         fontSize: "28px", fontWeight: 800, fontStyle: "normal",
@@ -91,10 +96,10 @@ export default function VerificationClient({
         color: "var(--color-text-primary)",
         margin: "0 0 6px",
       }}>
-        Votre pièce d'identité
+        {tt("Votre pièce d'identité", "Your ID")}
       </h1>
       <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "32px" }}>
-        La vérification est requise pour participer aux études et recevoir vos récompenses.
+        {tt("La vérification est requise pour participer aux études et recevoir vos récompenses.", "Verification is required to take part in studies and receive your rewards.")}
       </p>
 
       {/* Status card */}
@@ -118,7 +123,7 @@ export default function VerificationClient({
           </div>
           {verifiedAt && currentStatus === "VERIFIED" && (
             <div style={{ fontSize: "11px", color: cfg.color, opacity: 0.6, marginTop: "8px" }}>
-              Vérifié le {new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(verifiedAt))}
+              {tt("Vérifié le", "Verified on")} {new Intl.DateTimeFormat(en ? "en-GB" : "fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(verifiedAt))}
             </div>
           )}
         </div>
@@ -126,7 +131,7 @@ export default function VerificationClient({
 
       {uploadSuccess && (
         <div style={{ padding: "12px 16px", background: "var(--color-success-light)", border: "1px solid var(--color-success)", borderRadius: "4px", fontSize: "13px", color: "var(--color-success)", marginBottom: "20px", fontWeight: 500 }}>
-          ✓ Document envoyé avec succès — vérification sous 24–48h.
+          ✓ {tt("Document envoyé avec succès — vérification sous 24–48h.", "Document uploaded, verification within 24–48h.")}
         </div>
       )}
       {uploadError && (
@@ -141,13 +146,13 @@ export default function VerificationClient({
           <div style={{ marginBottom: "16px" }}>
             <h2 style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
               {hasDocument && currentStatus === "PENDING"
-                ? "Renvoyer un document"
+                ? tt("Renvoyer un document", "Upload another document")
                 : currentStatus === "REJECTED"
-                ? "Renvoyer votre document"
-                : "Envoyer votre document"}
+                ? tt("Renvoyer votre document", "Upload your document again")
+                : tt("Envoyer votre document", "Upload your document")}
             </h2>
             <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.6, margin: 0 }}>
-              Carte d'identité nationale (recto) ou passeport. Le document doit être en cours de validité, lisible et non découpé.
+              {tt("Carte d'identité nationale (recto) ou passeport. Le document doit être en cours de validité, lisible et non découpé.", "National ID card (front) or passport. The document must be valid, readable and uncropped.")}
             </p>
           </div>
 
@@ -169,15 +174,15 @@ export default function VerificationClient({
             onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--color-border-strong)"; }}
           >
             {uploading ? (
-              <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>Envoi en cours…</div>
+              <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>{tt("Envoi en cours…", "Uploading…")}</div>
             ) : (
               <>
                 <div style={{ fontSize: "32px", marginBottom: "10px", opacity: 0.4 }}>📄</div>
                 <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "4px" }}>
-                  Cliquez pour choisir un fichier
+                  {tt("Cliquez pour choisir un fichier", "Click to choose a file")}
                 </div>
                 <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)" }}>
-                  JPG, PNG ou PDF · Max 10 Mo
+                  {tt("JPG, PNG ou PDF · Max 10 Mo", "JPG, PNG or PDF · 10 MB max")}
                 </div>
               </>
             )}
@@ -192,7 +197,7 @@ export default function VerificationClient({
           />
 
           <p style={{ fontSize: "11px", color: "var(--color-text-tertiary)", lineHeight: 1.6 }}>
-            🔒 Votre document est chiffré et stocké de manière sécurisée. Il n'est jamais partagé avec les marques. Seule l'équipe Rarelyst y a accès pour vérification.
+            🔒 {tt("Votre document est chiffré et stocké de manière sécurisée. Il n'est jamais partagé avec les marques. Seule l'équipe Rarelyst y a accès pour vérification.", "Your document is encrypted and stored securely. It is never shared with brands. Only the Rarelyst team can access it, to verify it.")}
           </p>
         </div>
       )}
@@ -201,7 +206,7 @@ export default function VerificationClient({
       {currentStatus === "VERIFIED" && (
         <div className="q-card" style={{ marginTop: "8px" }}>
           <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.7, margin: 0 }}>
-            Votre identité est confirmée. Si vous souhaitez mettre à jour votre document (document expiré, changement de nom), contactez-nous à{" "}
+            {tt("Votre identité est confirmée. Si vous souhaitez mettre à jour votre document (document expiré, changement de nom), contactez-nous à", "Your identity is confirmed. To update your document (expired, change of name), contact us at")}{" "}
             <a href="mailto:support@rarelyst.co" style={{ color: "var(--color-accent)", textDecoration: "none" }}>
               support@rarelyst.co
             </a>.

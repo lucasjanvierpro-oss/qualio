@@ -3,24 +3,32 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import LoupeMascot from "@/components/brand/LoupeMascot";
+import { getLang } from "@/lib/i18n/server";
+import { locale, pickTT } from "@/lib/i18n/tt";
 
-const TYPE_LABEL: Record<string, string> = {
-  ONE_ON_ONE: "Entretien 1:1",
+type TT = (fr: string, en: string) => string;
+const TYPE_LABEL = (tt: TT): Record<string, string> => ({
+  ONE_ON_ONE: tt("Entretien 1:1", "1:1 interview"),
   FOCUS_GROUP: "Focus group",
-};
+});
 
-const STATUS_LABEL: Record<string, { label: string; bg: string; text: string }> = {
-  SHORTLISTED: { label: "Proposée", bg: "var(--color-info-light)", text: "var(--color-info)" },
-  INVITED:     { label: "Invitation reçue", bg: "var(--color-warning-light)", text: "var(--color-warning)" },
-  CONFIRMED:   { label: "Confirmée", bg: "var(--color-success-light)", text: "var(--color-success)" },
-  COMPLETED:   { label: "Terminée", bg: "var(--color-surface-2)", text: "var(--color-text-tertiary)" },
-  REJECTED:    { label: "Non retenu(e)", bg: "var(--color-error-light)", text: "var(--color-error)" },
-};
+const STATUS_LABEL = (tt: TT): Record<string, { label: string; bg: string; text: string }> => ({
+  SHORTLISTED: { label: tt("Proposée", "Proposed"), bg: "var(--color-info-light)", text: "var(--color-info)" },
+  INVITED:     { label: tt("Invitation reçue", "Invitation received"), bg: "var(--color-warning-light)", text: "var(--color-warning)" },
+  CONFIRMED:   { label: tt("Confirmée", "Confirmed"), bg: "var(--color-success-light)", text: "var(--color-success)" },
+  COMPLETED:   { label: tt("Terminée", "Completed"), bg: "var(--color-surface-2)", text: "var(--color-text-tertiary)" },
+  REJECTED:    { label: tt("Non retenu(e)", "Not selected"), bg: "var(--color-error-light)", text: "var(--color-error)" },
+});
 
 export default async function ParticipantStudiesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const lang = await getLang();
+  const tt = pickTT(lang);
+  const loc = locale(lang);
+  const TYPES = TYPE_LABEL(tt);
+  const STATUSES = STATUS_LABEL(tt);
 
   const dbUser = await prisma.user.findUnique({
     where: { supabaseId: user.id },
@@ -60,44 +68,44 @@ export default async function ParticipantStudiesPage() {
 
   function fmtDate(d: Date | null) {
     if (!d) return null;
-    return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" }).format(new Date(d));
+    return new Intl.DateTimeFormat(loc, { day: "numeric", month: "long" }).format(new Date(d));
   }
 
   function fmtReward(amountCents: number, type: string) {
     const euros = (amountCents / 100).toFixed(0);
-    return type === "VOUCHER" ? `${euros}€ en bon d'achat` : `${euros}€`;
+    return type === "VOUCHER" ? `${euros}€ ${tt("en bon d'achat", "voucher")}` : `${euros}€`;
   }
 
   return (
     <div style={{ maxWidth: "860px", margin: "0 auto", padding: "40px 32px" }}>
       <h1 style={{ fontFamily: "var(--font-display)", fontSize: "26px", fontWeight: 800, color: "var(--color-text-primary)", margin: "0 0 6px" }}>
-        Mes études
+        {tt("Mes études", "My studies")}
       </h1>
       <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: "0 0 36px" }}>
-        Les études pour lesquelles vous avez été sélectionné(e).
+        {tt("Les études pour lesquelles vous avez été sélectionné(e).", "The studies you have been selected for.")}
       </p>
 
       {/* Études actives */}
       <section style={{ marginBottom: "40px" }}>
         <h2 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 16px" }}>
-          En cours ({active.length})
+          {tt("En cours", "Active")} ({active.length})
         </h2>
 
         {active.length === 0 ? (
           <div style={{ padding: "48px 32px", textAlign: "center", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "12px" }}>
             <LoupeMascot size={64} mood="search" className="rl-empty-mascot" />
-            <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>Aucune étude pour le moment</div>
+            <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "6px" }}>{tt("Aucune étude pour le moment", "No studies yet")}</div>
             <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: 0 }}>
-              Complétez votre profil pour augmenter vos chances d'être sélectionné(e).
+              {tt("Complétez votre profil pour augmenter vos chances d'être sélectionné(e).", "Complete your profile to increase your chances of being selected.")}
             </p>
             <Link href="/participant/profile" style={{ display: "inline-block", marginTop: "16px", padding: "9px 20px", background: "var(--color-accent)", color: "#fff", borderRadius: "8px", fontSize: "13px", fontWeight: 600, textDecoration: "none" }}>
-              Compléter mon profil
+              {tt("Compléter mon profil", "Complete my profile")}
             </Link>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {active.map((app) => {
-              const st = STATUS_LABEL[app.status] ?? STATUS_LABEL.SHORTLISTED;
+              const st = STATUSES[app.status] ?? STATUSES.SHORTLISTED;
               const hasInterview = app.interview && app.interview.status === "scheduled";
               return (
                 <Link
@@ -127,14 +135,14 @@ export default async function ParticipantStudiesPage() {
                         </span>
                       </div>
                       <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                        <span>{TYPE_LABEL[app.study.studyType] ?? app.study.studyType}</span>
+                        <span>{TYPES[app.study.studyType] ?? app.study.studyType}</span>
                         <span>·</span>
                         <span>{app.study.interviewDuration} min</span>
-                        {app.study.deadlineAt && <><span>·</span><span>avant le {fmtDate(app.study.deadlineAt)}</span></>}
+                        {app.study.deadlineAt && <><span>·</span><span>{tt("avant le", "before")} {fmtDate(app.study.deadlineAt)}</span></>}
                       </div>
                       {hasInterview && (
                         <div style={{ marginTop: "6px", fontSize: "12px", color: "var(--color-success)", fontWeight: 600 }}>
-                          📅 Entretien prévu — {new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(app.interview!.scheduledAt))}
+                          📅 {tt("Entretien prévu", "Interview scheduled")} — {new Intl.DateTimeFormat(loc, { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(app.interview!.scheduledAt))}
                         </div>
                       )}
                     </div>
@@ -144,7 +152,7 @@ export default async function ParticipantStudiesPage() {
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: "16px", fontWeight: 700, color: "var(--color-accent)" }}>
                         {fmtReward(app.participantPayCents ?? app.study.rewardAmount, app.study.rewardType)}
                       </div>
-                      <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "2px" }}>récompense</div>
+                      <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "2px" }}>{tt("récompense", "reward")}</div>
                     </div>
 
                     <div style={{ color: "var(--color-text-tertiary)", fontSize: "18px" }}>›</div>
@@ -160,11 +168,11 @@ export default async function ParticipantStudiesPage() {
       {past.length > 0 && (
         <section>
           <h2 style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 16px" }}>
-            Historique ({past.length})
+            {tt("Historique", "History")} ({past.length})
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {past.map((app) => {
-              const st = STATUS_LABEL[app.status] ?? STATUS_LABEL.COMPLETED;
+              const st = STATUSES[app.status] ?? STATUSES.COMPLETED;
               return (
                 <div
                   key={app.id}

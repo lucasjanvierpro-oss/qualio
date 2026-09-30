@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { createWherebyRoom } from "@/lib/whereby/rooms";
-import { sendInterviewConfirmed, scheduleInterviewReminders } from "@/lib/resend/emails";
+import { langOf, sendInterviewConfirmed, scheduleInterviewReminders } from "@/lib/resend/emails";
 import { appUrl } from "@/lib/appUrl";
 
 // ── Planification d'un entretien individuel ───────────────────────────
@@ -92,11 +92,13 @@ export async function confirmInterview(applicationId: string, startTime: string)
   const brand = application.study.brandProfile;
   const title = application.study.title;
   const common = { interviewId: interview.id, durationMinutes };
+  const pLang = langOf(participant.preferredLanguage);
+  const bLang = langOf(brand.preferredLanguage);
   const sent = await Promise.allSettled([
-    sendInterviewConfirmed(participant.user.email, participant.firstName, title, scheduledAt, urls.participant, true, common),
-    sendInterviewConfirmed(brand.user.email, brand.contactFirstName ?? "", title, scheduledAt, urls.brand, false, common),
-    scheduleInterviewReminders({ to: participant.user.email, firstName: participant.firstName, scheduledAt, joinUrl: urls.participant }),
-    scheduleInterviewReminders({ to: brand.user.email, firstName: brand.contactFirstName || "bonjour", scheduledAt, joinUrl: urls.brand }),
+    sendInterviewConfirmed(participant.user.email, participant.firstName, title, scheduledAt, urls.participant, true, { ...common, lang: pLang }),
+    sendInterviewConfirmed(brand.user.email, brand.contactFirstName ?? "", title, scheduledAt, urls.brand, false, { ...common, lang: bLang }),
+    scheduleInterviewReminders({ to: participant.user.email, firstName: participant.firstName, scheduledAt, joinUrl: urls.participant, lang: pLang }),
+    scheduleInterviewReminders({ to: brand.user.email, firstName: brand.contactFirstName || (bLang === "en" ? "there" : "bonjour"), scheduledAt, joinUrl: urls.brand, lang: bLang }),
   ]);
   // On garde les identifiants des rappels : un report les annule.
   const reminderIds = sent.slice(2).flatMap((r) => (r.status === "fulfilled" ? reminderIdsOf(r.value) : []));

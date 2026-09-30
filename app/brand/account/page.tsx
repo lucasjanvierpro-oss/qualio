@@ -7,11 +7,14 @@ import { certLevel, certSteps } from "@/lib/brands/certification";
 import { getPricingConfig } from "@/lib/pricing/quotes";
 import { TIERS } from "@/lib/pricing/config";
 import InvoiceList from "@/components/billing/InvoiceList";
+import { getLang } from "@/lib/i18n/server";
+import { locale } from "@/lib/i18n/tt";
 
 export default async function BrandAccountPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const lang = await getLang();
 
   const dbUser = await prisma.user.findUnique({
     where: { supabaseId: user.id },
@@ -38,7 +41,7 @@ export default async function BrandAccountPage() {
   return (
     <>
     <div style={{ maxWidth: "860px", margin: "0 auto", padding: "40px 32px 0" }}>
-      <CertificationCard level={certLevel(cert)} steps={certSteps(cert)} companyName={profile?.companyName ?? ""} />
+      <CertificationCard level={certLevel(cert)} steps={certSteps(cert, lang)} companyName={profile?.companyName ?? ""} lang={lang} />
     </div>
     <BrandAccountClient
       packs={cfg.packs}
@@ -54,12 +57,12 @@ export default async function BrandAccountPage() {
           type: t.type,
           amount: t.amount,
           desc: t.description ?? "",
-          date: t.createdAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }),
+          date: t.createdAt.toLocaleDateString(locale(lang), { day: "numeric", month: "long", year: "numeric" }),
           balance: t.balanceAfter,
         })) ?? []
       }
     />
-    <InvoiceList invoices={profile?.invoices ?? []} hrefBase="/brand/account/invoices" />
+    <InvoiceList invoices={profile?.invoices ?? []} hrefBase="/brand/account/invoices" lang={lang} />
     </>
   );
 }
