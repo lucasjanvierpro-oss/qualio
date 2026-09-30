@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import LoupeLoading from "@/components/brand/LoupeLoading";
 
 type Participant = {
   id: string;
@@ -308,8 +309,9 @@ export default function AdminReportClient({ study }: { study: Study }) {
                 cursor: canGenerate && !generating ? "pointer" : "default",
               }}
             >
-              {generating ? "⏳ Analyse en cours (20–40 secondes)…" : `✨ Générer le rapport (${filledVerbatims.length} entretien${filledVerbatims.length > 1 ? "s" : ""})`}
+              {generating ? "Analyse en cours (20 à 40 secondes)…" : `✨ Générer le rapport (${filledVerbatims.length} entretien${filledVerbatims.length > 1 ? "s" : ""})`}
             </button>
+            {generating && <LoupeLoading compact lines={["La loupe relit les entretiens…", "Elle rassemble les citations…", "Elle répond aux questions du brief…"]} />}
           </div>
 
           {/* Right: Verbatims per participant */}

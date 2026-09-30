@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { EarnedBadge } from "@/lib/participants/badges";
 import { BadgeChips } from "@/components/badges/BadgeShelf";
 import LoupeMascot from "@/components/brand/LoupeMascot";
+import LoupeLoading from "@/components/brand/LoupeLoading";
 
 type GhostSummary = {
   overallQualityScore: number | null;
@@ -370,6 +371,11 @@ export default function BrandProfilesClient() {
           {profiles.map((p) => (
             <ProfileCard key={p.id} p={p} onClick={() => setSelected(p)} />
           ))}
+          {loading && profiles.length === 0 && (
+            <div style={{ gridColumn: "1 / -1" }}>
+              <LoupeLoading variant="profiles" compact lines={["Claude lit votre recherche…", "On parcourt le panel…", "On classe les profils…"]} />
+            </div>
+          )}
           {!loading && profiles.length === 0 && (
             <div style={{ gridColumn: "1 / -1", padding: "60px", textAlign: "center", color: "var(--color-text-secondary)" }}>
               <LoupeMascot size={64} mood="puzzled" className="rl-empty-mascot" />

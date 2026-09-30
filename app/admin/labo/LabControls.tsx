@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { digestLab, runLab } from "@/app/actions/lab";
+import LoupeLoading from "@/components/brand/LoupeLoading";
 import a from "../admin.module.css";
 import l from "./labo.module.css";
 
@@ -41,6 +42,7 @@ export default function LabControls() {
         <button type="button" className={a.btn} onClick={run} disabled={pending}>{pending ? "Simulation en cours… (1 à 2 min)" : "Lancer une marque simulée"}</button>
         <button type="button" className={`${a.btn} ${a.btnGhost}`} onClick={synth} disabled={digesting || pending}>{digesting ? "Synthèse…" : "Synthétiser les leçons"}</button>
       </div>
+      {pending && <div style={{ flex: "1 1 100%" }}><LoupeLoading tone="dark" compact lines={["Claude invente une marque…", "Elle écrit son brief…", "Notre lecteur le lit…", "Elle réagit, sans filtre…"]} /></div>}
       {msg && <p className={`${a.msg} ${msg.ok ? a.good : a.warn}`} style={{ margin: 0 }}>{msg.text}</p>}
       {digest && <div className={l.digest}>{digest}</div>}
     </div>
