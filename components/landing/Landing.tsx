@@ -371,11 +371,13 @@ export default function Landing({ tiers, lang = "fr" }: { tiers: LandingTier[]; 
             <span className={styles.brand}><Logo size={24} />Rarelyst</span>
             <nav>
               <Link href="/pricing">{c.footer.links.pricing}</Link>
+              <Link href={lang === "en" ? "/en/guides" : "/guides"}>Guides</Link>
               <Link href="/login">{c.footer.links.login}</Link>
               <a href="mailto:contact@rarelyst.co">{c.footer.links.contact}</a>
               <Link href="/confidentialite">{c.footer.links.privacy}</Link>
               <Link href="/conditions">{c.footer.links.terms}</Link>
               <Link href="/mentions-legales">{c.footer.links.legal}</Link>
+              <a href="https://www.linkedin.com/company/rarelyst" rel="me noopener" target="_blank">LinkedIn</a>
             </nav>
             <LangSwitch lang={lang} hrefs={{ fr: "/", en: "/en" }} tone="dark" />
           </div>

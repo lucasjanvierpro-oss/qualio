@@ -11,8 +11,8 @@ export const ORG = {
   city: "Paris",
   country: "FR",
   logo: `${SITE_URL}/icon.png`,
-  /** À compléter avec l'adresse de la page LinkedIn de l'entreprise, dès qu'elle est publique. */
-  sameAs: [] as string[],
+  /** Les profils officiels de Rarelyst ailleurs : ils relient le site à l'entreprise pour Google et les IA. */
+  sameAs: ["https://www.linkedin.com/company/rarelyst"],
 };
 
 export const DESCRIPTION = {
@@ -29,3 +29,5 @@ export const SECTORS = {
   fr: ["mode", "luxe", "beauté", "joaillerie", "sneakers", "seconde main", "art de vivre"],
   en: ["fashion", "luxury", "beauty", "jewellery", "sneakers", "second-hand", "lifestyle"],
 };
+
+export const LINKEDIN_URL = "https://www.linkedin.com/company/rarelyst";

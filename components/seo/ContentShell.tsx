@@ -35,6 +35,7 @@ export default function ContentShell({ lang, audience = "marques", children }: {
           <Link href="/mentions-legales">{t.legal}</Link>
           <Link href="/confidentialite">{t.privacy}</Link>
           <a href="mailto:contact@rarelyst.co">contact@rarelyst.co</a>
+          <a href="https://www.linkedin.com/company/rarelyst" rel="me noopener" target="_blank">LinkedIn</a>
           <span>{t.tagline}</span>
         </div>
       </footer>
