@@ -1,0 +1,56 @@
+/* Studio : formats pour les réseaux. Une seule police (Familjen Grotesk). */
+
+.frame {
+  --ink: #1c1624; --ink-2: #5f5868; --ink-3: #9c95a4; --line: #eae6ee; --soft: #f6f4f8;
+  --accent: #6a43db; --accent-soft: #efeafd; --accent-dim: #cbbef5; --g1: #1b1128; --g2: #4b2bb5; --g3: #8c68f2; --g4: #3b4fe0;
+  --ok: #1f7a4d; --ok-soft: #e7f4ec;
+  position: relative; overflow: hidden; isolation: isolate; box-sizing: border-box;
+  font-family: var(--font-body), system-ui, sans-serif; color: var(--ink);
+  -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
+}
+.frame * { box-sizing: border-box; }
+
+/* Fonds */
+.bgLight { background: radial-gradient(90% 60% at 10% 0%, #efe6ff 0%, transparent 60%), radial-gradient(80% 60% at 100% 100%, #ffe4f2 0%, transparent 60%), #fbf9ff; }
+.bgLilac { background: radial-gradient(120% 80% at 0% 0%, #e9deff 0%, transparent 55%), radial-gradient(90% 70% at 100% 90%, #ffd9ec 0%, transparent 60%), radial-gradient(70% 50% at 90% 10%, #fff0d6 0%, transparent 60%), #f7f2ff; }
+.bgInk { color: #fff; background: radial-gradient(70% 55% at 15% 10%, rgba(140, 104, 242, 0.55), transparent 70%), radial-gradient(60% 50% at 90% 85%, rgba(215, 96, 158, 0.35), transparent 70%), linear-gradient(170deg, #241636, #120b1d); }
+
+/* Marque */
+.brand { position: absolute; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 19px; letter-spacing: -0.035em; }
+.brand img { width: 26px; height: 26px; }
+
+/* Typo */
+.kicker { font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: 0.01em; margin: 0; }
+.h1 { margin: 0; font-size: 56px; font-weight: 600; letter-spacing: -0.055em; line-height: 0.96; }
+.h2 { margin: 0; font-size: 40px; font-weight: 600; letter-spacing: -0.05em; line-height: 1.02; }
+.h3 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.12; }
+.lead { margin: 0; font-size: 18px; line-height: 1.45; color: var(--ink-2); }
+.grad { background: linear-gradient(100deg, #5b35d0 0%, #8f4fe0 50%, #d7609e 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.gradGold { background: linear-gradient(100deg, #f7d58b, #fff3cf 45%, #f2c46d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.caret { display: inline-block; width: 4px; height: 0.82em; margin-left: 4px; background: var(--accent); border-radius: 2px; vertical-align: -0.05em; }
+
+/* Pièces */
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 9px 15px; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); font-size: 17px; font-weight: 500; white-space: nowrap; }
+.chipDash { background: #fff; box-shadow: none; border: 1.5px dashed #d5d0db; color: var(--ink-2); }
+.chipRare { box-shadow: inset 0 0 0 1.5px var(--accent-dim); }
+.chipRare::before { content: "◆"; color: var(--accent); font-size: 11px; }
+.chipHolo { background: linear-gradient(110deg, #f7e3ff, #e2d8ff 30%, #d6f1ff 55%, #ffe5f5 80%, #f7e3ff); background-size: 250% 100%; box-shadow: 0 6px 20px -10px rgba(106, 67, 219, 0.5); }
+.chipHolo::before { content: "✦"; color: var(--accent); font-size: 13px; }
+.card { border-radius: 22px; background: #fff; box-shadow: 0 30px 60px -36px rgba(40, 20, 90, 0.45), 0 0 0 1px var(--line); }
+.cardInk { border-radius: 22px; color: #f1edf6; background: radial-gradient(120% 80% at 100% 0%, rgba(140, 104, 242, 0.5), transparent 60%), radial-gradient(90% 70% at 0% 100%, rgba(75, 43, 181, 0.55), transparent 60%), linear-gradient(160deg, #241636, #120b1d); box-shadow: 0 40px 70px -40px rgba(40, 18, 80, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.row { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 20px 40px -32px rgba(40, 20, 90, 0.5); }
+.av { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 20px; }
+.rowName { font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
+.rowRole { font-size: 13.5px; color: var(--ink-2); }
+.tag { font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 24px; border-radius: 14px; background: var(--ink); color: #fff; font-weight: 700; font-size: 18px; }
+.btnAccent { background: linear-gradient(110deg, var(--g2), var(--g3)); }
+.url { font-weight: 700; font-size: 22px; letter-spacing: -0.03em; }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 16px; height: 16px; border-radius: 50%; background: var(--line); }
+.dots i[data-on="true"] { background: #2fa36b; }
+.bubble { position: relative; padding: 16px 20px; border-radius: 22px 22px 22px 6px; background: #fff; font-size: 24px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.2; box-shadow: 0 24px 50px -30px rgba(40, 20, 90, 0.55), 0 0 0 1px var(--line); }
+.ticket { border-radius: 20px; padding: 20px; color: #5c4210; background: linear-gradient(140deg, #fff3cf, #f4cd6b 60%, #e9b54c); box-shadow: 0 30px 60px -30px rgba(120, 80, 10, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.5); }
+.strike { position: absolute; left: -4px; right: -4px; top: 50%; height: 2.5px; background: #d7263d; border-radius: 2px; transform-origin: left; }
+.check { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(140deg, var(--g3), var(--g2)); color: #fff; font-size: 15px; font-weight: 800; flex-shrink: 0; }
+.cross { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #f1eef4; color: #b5aebc; font-size: 14px; font-weight: 800; flex-shrink: 0; }
