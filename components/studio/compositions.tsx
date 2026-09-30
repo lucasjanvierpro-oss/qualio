@@ -121,7 +121,7 @@ function Marques(t: number, lang: Lang) {
         </div>
 
         {/* Le film : la visio */}
-        <div style={{ position: "absolute", left: 26, right: 26, top: 190, opacity: seg(t, 8.7, 9.0) * (1 - seg(t, 12.1, 12.4)) }}>
+        <div style={{ position: "absolute", left: 26, right: 26, top: 190, opacity: seg(t, 8.7, 9.0) * (1 - seg(t, 11.3, 11.6)) }}>
           <h2 className={s.h2} style={{ ...rise(t, 8.7), marginBottom: 26, fontSize: 36 }}>{c.film}</h2>
           <div style={rise(t, 8.9, 0.6, 30)}>
             <div style={{ width: 880, transform: "scale(0.556)", transformOrigin: "left top" }}>
@@ -130,16 +130,16 @@ function Marques(t: number, lang: Lang) {
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: -150 }}>
             {(lang === "en" ? ["Recorded", "Transcribed live", "Your guide on screen"] : ["Enregistré", "Transcrit en direct", "Votre guide à l'écran"]).map((x, i) => (
-              <span key={x} className={s.chip} style={{ ...pop(t, 9.8 + i * 0.3), fontSize: 15 }}><span className={s.check} style={{ width: 22, height: 22, fontSize: 12 }}>✓</span>{x}</span>
+              <span key={x} className={s.chip} style={{ ...pop(t, 9.5 + i * 0.25), fontSize: 15 }}><span className={s.check} style={{ width: 22, height: 22, fontSize: 12 }}>✓</span>{x}</span>
             ))}
           </div>
         </div>
 
         {/* Le livrable */}
-        <div style={{ position: "absolute", left: 36, right: 36, top: 330, opacity: seg(t, 12.4, 12.7) }}>
-          <h2 className={s.h2} style={rise(t, 12.4)}>{c.delivTitle}</h2>
+        <div style={{ position: "absolute", left: 36, right: 36, top: 330, opacity: seg(t, 11.6, 11.9) }}>
+          <h2 className={s.h2} style={rise(t, 11.6)}>{c.delivTitle}</h2>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 28 }}>
-            {c.deliv.map((d, i) => <span key={d} className={s.chip} style={{ ...pop(t, 12.8 + i * 0.25), fontSize: 20, padding: "12px 18px" }}><span className={s.check}>✓</span>{d}</span>)}
+            {c.deliv.map((d, i) => <span key={d} className={s.chip} style={{ ...pop(t, 12.0 + i * 0.3), fontSize: 20, padding: "12px 18px" }}><span className={s.check}>✓</span>{d}</span>)}
           </div>
         </div>
       </div>
