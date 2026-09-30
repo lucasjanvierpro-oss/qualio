@@ -76,3 +76,16 @@
   .two, .call, .tiers { grid-template-columns: 1fr; }
   .steps { display: none; }
 }
+
+/* Téléphone : tout s'empile, la loupe rapetisse, les boutons restent sur une ligne. */
+.cover { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; }
+.coverLoupe { display: block; }
+.nav button { white-space: nowrap; }
+@media (max-width: 700px) {
+  .cover { grid-template-columns: 1fr; }
+  .coverLoupe { display: none; }
+  .foot > span { display: none; }
+  .foot { justify-content: flex-end; }
+  .top { padding: 14px 16px; }
+  .stage { padding: 4px 16px 20px; }
+}

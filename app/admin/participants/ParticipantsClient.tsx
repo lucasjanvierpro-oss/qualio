@@ -65,7 +65,8 @@ export default function ParticipantsClient({ participants }: { participants: Par
         </select>
       </div>
 
-      <div style={{ background: "#1A1917", border: "1px solid #2A2926", borderRadius: "10px", overflow: "hidden" }}>
+      <div style={{ background: "#1A1917", border: "1px solid #2A2926", borderRadius: "10px", overflowX: "auto" }}>
+        <div style={{ minWidth: 820 }}>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 2fr 80px 70px 90px", padding: "10px 20px", borderBottom: "1px solid #2A2926" }}>
           {["Participant", "Ville / Âge", "Métier", "Intérêts", "Statut", "Études", "Action"].map((h) => (
             <span key={h} style={{ fontSize: "11px", fontWeight: 700, color: "#6B6760", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</span>
@@ -110,6 +111,7 @@ export default function ParticipantsClient({ participants }: { participants: Par
             );
           })
         )}
+        </div>
       </div>
     </div>
   );

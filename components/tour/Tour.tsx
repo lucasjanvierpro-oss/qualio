@@ -108,7 +108,11 @@ export default function Tour({ id, steps, lang = "fr", delay = 700 }: { id: stri
   const vh = window.innerHeight;
   const BUBBLE_H = 210;
   const tall = rect.height > vh * 0.55;
-  const side = !tall && rect.bottom + PAD + 14 + BUBBLE_H < vh ? "below"
+  // Sur téléphone, la bulle reste en bas de l'écran : elle ne court plus après
+  // l'élément pendant le défilement (elle tremblait).
+  const phone = vw < 600;
+  const side = phone ? "inside"
+    : !tall && rect.bottom + PAD + 14 + BUBBLE_H < vh ? "below"
     : !tall && rect.top - PAD - 14 - BUBBLE_H > 0 ? "above"
     : "inside";
   const bubbleW = Math.min(372, vw - 24);
@@ -129,7 +133,7 @@ export default function Tour({ id, steps, lang = "fr", delay = 700 }: { id: stri
         data-side={side}
         style={{
           left, width: bubbleW,
-          ...(side === "below" ? { top: rect.bottom + PAD + 14 } : side === "above" ? { bottom: vh - rect.top + PAD + 14 } : { bottom: 20 }),
+          ...(side === "below" ? { top: rect.bottom + PAD + 14 } : side === "above" ? { bottom: vh - rect.top + PAD + 14 } : { bottom: phone ? 12 : 20 }),
           ["--ax" as string]: `${arrowX}px`,
         }}
       >

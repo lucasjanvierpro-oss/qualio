@@ -129,14 +129,14 @@ export default function DemoDeck({ brandName, lang, data, tiers }: { brandName: 
       <main className={s.stage}>
         <div className={s.inner}>
           {step === 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 24, alignItems: "center" }}>
+            <div className={s.cover}>
               <div style={{ display: "grid", gap: 22 }}>
                 <p className={s.kicker}>{c.coverKicker(brandName)}</p>
                 <h1 className={s.h1}>{c.cover1}<br /><span className={s.grad}>{c.cover2}</span></h1>
                 <p className={s.lead}>{c.coverLead}</p>
                 {data.topic && <p className={s.chip} style={{ justifySelf: "start", fontSize: 15 }}>{data.topic}</p>}
               </div>
-              <LoupeMascot size={220} mood="search" />
+              <span className={s.coverLoupe}><LoupeMascot size={220} mood="search" /></span>
             </div>
           )}
 
