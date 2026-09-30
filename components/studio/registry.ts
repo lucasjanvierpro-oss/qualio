@@ -2,9 +2,9 @@
 // compositions.tsx) : lisible par les pages serveur comme par le navigateur.
 
 export type Lang = "fr" | "en";
-export type Format = "story" | "post" | "square" | "banner" | "avatar";
+export type Format = "story" | "post" | "square" | "banner" | "cover" | "avatar";
 export const SIZES: Record<Format, [number, number]> = {
-  story: [540, 960], post: [540, 675], square: [540, 540], banner: [792, 198], avatar: [200, 200],
+  story: [540, 960], post: [540, 675], square: [540, 540], banner: [792, 198], cover: [1128, 191], avatar: [200, 200],
 };
 export type CompositionMeta = {
   id: string; title: string; format: Format;
@@ -35,6 +35,17 @@ export const REGISTRY: CompositionMeta[] = [
   { id: "banniere-noir-brief", title: "Bannière noire : un brief très précis", format: "banner", duration: 0, langs: ["fr", "en"] },
   { id: "banniere-noir-profils", title: "Bannière noire : des profils très précis", format: "banner", duration: 0, langs: ["fr", "en"] },
   { id: "banniere-noir-logo", title: "Bannière noire : logo", format: "banner", duration: 0, langs: ["fr", "en"] },
+  { id: "page-noir-casting", title: "Couverture de la page entreprise LinkedIn : le casting", format: "cover", duration: 0, langs: ["fr", "en"] },
+  { id: "page-noir-ticker", title: "Couverture de la page entreprise LinkedIn : parlez aux gens", format: "cover", duration: 0, langs: ["fr", "en"] },
+  { id: "page-noir-brief", title: "Couverture de la page entreprise LinkedIn : un brief précis", format: "cover", duration: 0, langs: ["fr", "en"] },
+  { id: "page-noir-profils", title: "Couverture de la page entreprise LinkedIn : des profils très précis", format: "cover", duration: 0, langs: ["fr", "en"] },
+  { id: "page-noir-logo", title: "Couverture de la page entreprise LinkedIn : logo", format: "cover", duration: 0, langs: ["fr", "en"] },
+  { id: "casting-stars", title: "Vidéo casting (vertical) : styliste de stars", format: "story", duration: 12.5, still: 5.6, langs: ["fr", "en"] },
+  { id: "casting-stars-post", title: "Vidéo casting (4:5) : styliste de stars", format: "post", duration: 12.5, still: 5.6, langs: ["fr", "en"] },
+  { id: "casting-influence", title: "Vidéo casting (vertical) : micro-influenceuses", format: "story", duration: 12.5, still: 5.6, langs: ["fr", "en"] },
+  { id: "casting-influence-post", title: "Vidéo casting (4:5) : micro-influenceuses", format: "post", duration: 12.5, still: 5.6, langs: ["fr", "en"] },
+  { id: "casting-genz", title: "Vidéo casting (vertical) : Gen Z sur Vinted", format: "story", duration: 12.5, still: 5.6, langs: ["fr", "en"] },
+  { id: "casting-genz-post", title: "Vidéo casting (4:5) : Gen Z sur Vinted", format: "post", duration: 12.5, still: 5.6, langs: ["fr", "en"] },
   { id: "serie-1", title: "Série stories 1/4 : le brief", format: "story", duration: 7, still: 5.5, langs: ["fr", "en"] },
   { id: "serie-2", title: "Série stories 2/4 : les profils", format: "story", duration: 7, still: 5.5, langs: ["fr", "en"] },
   { id: "serie-3", title: "Série stories 3/4 : l'entretien", format: "story", duration: 7, still: 5.5, langs: ["fr", "en"] },

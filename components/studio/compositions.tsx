@@ -847,20 +847,28 @@ const NIGHT_TEXT: React.CSSProperties = { background: "linear-gradient(100deg, #
 const glass: React.CSSProperties = { background: "rgba(255,255,255,.045)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.1)" };
 
 /** Fond noir : lueur violette discrète et trame de points qui s'efface vers la gauche. */
-function Night({ children, glowAt = "88% 0%", brand = true }: { children: React.ReactNode; glowAt?: string; brand?: boolean }) {
+// Page entreprise LinkedIn : couverture de 1128×191, que LinkedIn recadre sur
+// les côtés sur mobile, avec le logo de la page en bas à gauche. Le contenu du
+// format 792×198 y est recentré, sans le petit logo (la page l'affiche déjà).
+const COVER = { w: 1128, h: 191, dx: 58, dy: -4 };
+
+function Night({ children, glowAt = "88% 0%", brand = true, cover = false }: { children: React.ReactNode; glowAt?: string; brand?: boolean; cover?: boolean }) {
   return (
-    <div className={s.frame} style={{ width: 792, height: 198, color: "#f4f1f8", background: `radial-gradient(55% 130% at ${glowAt}, rgba(106,67,219,.34), transparent 70%), radial-gradient(35% 90% at 100% 100%, rgba(215,96,158,.16), transparent 70%), #0a090d` }}>
+    <div className={s.frame} style={{ width: cover ? COVER.w : 792, height: cover ? COVER.h : 198, color: "#f4f1f8", background: `radial-gradient(55% 130% at ${glowAt}, rgba(106,67,219,.34), transparent 70%), radial-gradient(35% 90% at 100% 100%, rgba(215,96,158,.16), transparent 70%), #0a090d` }}>
       <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(255,255,255,.13) 0.8px, transparent 1.1px)", backgroundSize: "12px 12px", WebkitMaskImage: "linear-gradient(90deg, transparent 20%, #000 75%)", maskImage: "linear-gradient(90deg, transparent 20%, #000 75%)" }} />
-      {brand && <Brand x={24} y={20} light />}
-      {children}
+      {cover ? (
+        <div style={{ position: "absolute", left: COVER.dx, top: COVER.dy, width: 792, height: 198 }}>{children}</div>
+      ) : (
+        <>{brand && <Brand x={24} y={20} light />}{children}</>
+      )}
     </div>
   );
 }
 
-function BanniereNoirCasting({ lang }: { lang: Lang }) {
+function BanniereNoirCasting({ lang, cover = false }: { lang: Lang; cover?: boolean }) {
   const c = BNN[lang];
   return (
-    <Night>
+    <Night cover={cover}>
       <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 38, fontSize: 31, lineHeight: 1.02, color: "#fff" }}>{c.c1}<br /><span style={NIGHT_TEXT}>{c.c2}</span></h2>
       <p style={{ position: "absolute", left: 232, top: 122, width: 225, margin: 0, fontSize: 12.5, lineHeight: 1.45, color: "rgba(244,241,248,.62)" }}>{c.cSub}</p>
       <div style={{ position: "absolute", left: 478, top: 20, display: "grid", gridTemplateColumns: "150px 150px", gap: 7 }}>
@@ -878,10 +886,10 @@ function BanniereNoirCasting({ lang }: { lang: Lang }) {
   );
 }
 
-function BanniereNoirTicker({ lang }: { lang: Lang }) {
+function BanniereNoirTicker({ lang, cover = false }: { lang: Lang; cover?: boolean }) {
   const c = BNN[lang];
   return (
-    <Night glowAt="75% 50%">
+    <Night glowAt="75% 50%" cover={cover}>
       <p style={{ position: "absolute", left: 232, top: 30, margin: 0, fontSize: 12, fontWeight: 700, color: "#b9a2ff" }}>{c.tk}</p>
       <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 50, fontSize: 30, lineHeight: 1.02, color: "#fff" }}>{c.t1}<br />{c.t2}<br /><span style={NIGHT_TEXT}>{c.t3}</span></h2>
       <div style={{ position: "absolute", left: 520, right: 0, top: 0, bottom: 0, WebkitMaskImage: "linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent)", maskImage: "linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent)" }}>
@@ -894,10 +902,10 @@ function BanniereNoirTicker({ lang }: { lang: Lang }) {
   );
 }
 
-function BanniereNoirBrief({ lang }: { lang: Lang }) {
+function BanniereNoirBrief({ lang, cover = false }: { lang: Lang; cover?: boolean }) {
   const c = BNN[lang];
   return (
-    <Night>
+    <Night cover={cover}>
       <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 34, fontSize: 36, lineHeight: 1, color: "#fff" }}>{c.q1}<br /><span style={NIGHT_TEXT}>{c.q2}</span></h2>
       <p style={{ position: "absolute", left: 232, top: 124, width: 235, margin: 0, fontSize: 12.5, lineHeight: 1.45, color: "rgba(244,241,248,.62)" }}>{c.qSub}</p>
       <div style={{ ...glass, position: "absolute", left: 494, right: 20, top: 18, bottom: 18, padding: "12px 14px", borderRadius: 16, background: "rgba(255,255,255,.05)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.12), 0 30px 60px -30px rgba(0,0,0,.8)" }}>
@@ -917,10 +925,10 @@ function BanniereNoirBrief({ lang }: { lang: Lang }) {
   );
 }
 
-function BanniereNoirProfils({ lang }: { lang: Lang }) {
+function BanniereNoirProfils({ lang, cover = false }: { lang: Lang; cover?: boolean }) {
   const c = BNN[lang];
   return (
-    <Night glowAt="70% 20%">
+    <Night glowAt="70% 20%" cover={cover}>
       <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 34, fontSize: 36, lineHeight: 1, color: "#fff" }}>{c.p1}<br /><span style={NIGHT_TEXT}>{c.p2}</span></h2>
       <p style={{ position: "absolute", left: 232, top: 124, width: 215, margin: 0, fontSize: 12, lineHeight: 1.45, color: "rgba(244,241,248,.62)" }}>{c.pSub}</p>
       <div style={{ position: "absolute", left: 462, right: 18, top: 22, display: "flex", flexWrap: "wrap", gap: 7, justifyContent: "flex-end" }}>
@@ -934,10 +942,10 @@ function BanniereNoirProfils({ lang }: { lang: Lang }) {
   );
 }
 
-function BanniereNoirLogo({ lang }: { lang: Lang }) {
+function BanniereNoirLogo({ lang, cover = false }: { lang: Lang; cover?: boolean }) {
   const c = BNN[lang];
   return (
-    <Night glowAt="85% 50%" brand={false}>
+    <Night glowAt="85% 50%" brand={false} cover={cover}>
       <div style={{ position: "absolute", left: 232, top: 40, display: "flex", alignItems: "center", gap: 14 }}>
         <Image src="/brand/logo.png" alt="" width={56} height={56} style={{ filter: "brightness(0) invert(1)" }} />
         <span style={{ fontSize: 60, fontWeight: 700, letterSpacing: "-0.055em", lineHeight: 1, color: "#fff" }}>Rarelyst</span>
@@ -1087,6 +1095,103 @@ function Serie(i: number, t: number, lang: Lang) {
   );
 }
 
+// ── Vidéos « casting » : un profil pointu, trouvé vite, payé seulement s'il sert ──
+// Le style de la bannière noire (liste de profils qui défile), animé. La liste
+// tourne comme une machine à sous et s'arrête sur le profil demandé.
+const CAST_ROLES = {
+  fr: ["Personal shopper", "Early adopter mode", "Styliste de stars", "Micro-influenceuse beauté", "Gen Z · revendeuse Vinted", "Cliente VIC", "Maquilleuse backstage", "Collectionneur de sneakers", "Acheteuse de grand magasin", "Vendeuse en boutique de luxe"],
+  en: ["Personal shopper", "Fashion early adopter", "Celebrity stylist", "Beauty micro-influencer", "Gen Z · Vinted reseller", "VIC client", "Backstage makeup artist", "Sneaker collector", "Department store buyer", "Luxury boutique associate"],
+};
+const CAST = {
+  fr: {
+    kicker: "Qui voulez-vous entendre ?",
+    hooks: { stars: "Il vous faut une styliste de stars ?", influence: "Il vous faut des micro-influenceuses beauté ?", genz: "Il vous faut des Gen Z qui revendent sur Vinted ?" },
+    found: { stars: "Trouvée. Vérifiée.", influence: "Trouvées. Vérifiées.", genz: "Trouvées. Vérifiées." },
+    fast1: "Sous 72 h.", fast2: "Pas en plusieurs semaines de relances.",
+    pay: { stars: "Payée seulement si vous la gardez.", influence: "Payées seulement si vous les gardez.", genz: "Payées seulement si vous les gardez." },
+    price: "Dès 390 € HT le profil, rémunération comprise.",
+    end1: "Des profils très précis.", end2: "Plus vite. Sans rien payer d'avance.",
+  },
+  en: {
+    kicker: "Who do you want to hear from?",
+    hooks: { stars: "Need a celebrity stylist?", influence: "Need beauty micro-influencers?", genz: "Need Gen Z Vinted resellers?" },
+    found: { stars: "Found. Verified.", influence: "Found. Verified.", genz: "Found. Verified." },
+    fast1: "Within 72 h.", fast2: "Not after weeks of chasing.",
+    pay: { stars: "Paid only if you keep her.", influence: "Paid only if you keep them.", genz: "Paid only if you keep them." },
+    price: "From €390 per profile, incentive included.",
+    end1: "Very specific profiles.", end2: "Faster. Nothing paid upfront.",
+  },
+};
+type CastVariant = keyof typeof CAST.fr.hooks;
+const CAST_TARGET: Record<CastVariant, number> = { stars: 2, influence: 3, genz: 4 };
+
+function Casting(t: number, lang: Lang, v: CastVariant, post: boolean) {
+  const c = CAST[lang];
+  const roles = CAST_ROLES[lang];
+  const N = roles.length;
+  const W = 540, H = post ? 675 : 960;
+  // Mise en page : vertical (stories, reels) ou 4:5 (fil LinkedIn et Instagram).
+  const L = post
+    ? { kicker: 74, hook: 98, hookSize: 38, center: 338, gap: 46, size: 25, found: 440, block: 150, end: 170 }
+    : { kicker: 150, hook: 178, hookSize: 46, center: 480, gap: 56, size: 29, found: 610, block: 300, end: 280 };
+  // La liste : dérive lente, puis tour rapide qui ralentit jusqu'au profil voulu.
+  const target = CAST_TARGET[v] + N * 2;
+  const spin = easeOut(seg(t, 2.3, 4.9));
+  const pos = t < 2.3 ? t * 0.35 : 2.3 * 0.35 + (target - 2.3 * 0.35) * spin;
+  const landed = t >= 4.9;
+  const hookShown = typed(c.hooks[v], t, 0.45, 28);
+  const phase1 = 1 - seg(t, 5.9, 6.3);
+  const phase2 = seg(t, 6.2, 6.5) * (1 - seg(t, 9.3, 9.7));
+  const grid: React.CSSProperties = { position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(255,255,255,.12) 0.8px, transparent 1.1px)", backgroundSize: "14px 14px", WebkitMaskImage: "radial-gradient(80% 60% at 70% 50%, #000, transparent)", maskImage: "radial-gradient(80% 60% at 70% 50%, #000, transparent)" };
+  return (
+    <div className={s.frame} style={{ width: W, height: H, color: "#f4f1f8", background: "radial-gradient(70% 45% at 80% 45%, rgba(106,67,219,.38), transparent 70%), radial-gradient(50% 35% at 0% 100%, rgba(215,96,158,.16), transparent 70%), #0a090d" }}>
+      <div style={grid} />
+      {post ? <Brand x={28} y={28} light /> : <Brand story light />}
+
+      <div style={{ opacity: phase1 }}>
+        <p className={s.kicker} style={{ position: "absolute", left: 36, top: L.kicker, color: "#b9a2ff", ...rise(t, 0.1) }}>{c.kicker}</p>
+        <h1 className={s.h1} style={{ position: "absolute", left: 36, right: 36, top: L.hook, fontSize: L.hookSize, lineHeight: 1.04, color: "#fff" }}>
+          {hookShown}{t < 2.4 && <i className={s.caret} style={{ background: "#b9a2ff" }} />}
+        </h1>
+        {/* La liste qui défile */}
+        <div style={{ position: "absolute", left: 0, right: 0, top: L.center - L.gap * 2.6, height: L.gap * 5.2, overflow: "hidden", WebkitMaskImage: "linear-gradient(180deg, transparent, #000 28%, #000 72%, transparent)", maskImage: "linear-gradient(180deg, transparent, #000 28%, #000 72%, transparent)", ...rise(t, 0.5, 0.6, 30) }}>
+          {Array.from({ length: 7 }, (_, k) => {
+            const base = Math.floor(pos) - 3 + k;
+            const d = base - pos;
+            const role = roles[((base % N) + N) % N];
+            const on = landed && Math.abs(d) < 0.5;
+            const near = 1 - Math.min(1, Math.abs(d) / 2.5);
+            return (
+              <div key={k} style={{ position: "absolute", left: 36, right: 36, top: L.gap * 2.6 + d * L.gap - L.gap / 2, height: L.gap, display: "flex", alignItems: "center", gap: 10, fontSize: on ? L.size * 1.18 : L.size, fontWeight: 600, letterSpacing: "-0.035em", whiteSpace: "nowrap", color: on ? undefined : `rgba(244,241,248,${0.18 + 0.5 * near})`, ...(on ? NIGHT_TEXT : {}) }}>
+                {on && <span style={{ ...NIGHT_TEXT, ...pop(t, 4.9, 0.35) }}>✦</span>}{role}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ position: "absolute", left: 36, top: L.found, display: "flex", gap: 8, ...pop(t, 5.0) }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 999, fontSize: 16, fontWeight: 700, color: "#8fe0b4", background: "rgba(47,163,107,.16)", boxShadow: "inset 0 0 0 1px rgba(143,224,180,.3)" }}>✓ {c.found[v]}</span>
+        </div>
+      </div>
+
+      {/* Vite, et payé seulement s'il sert */}
+      <div style={{ position: "absolute", left: 36, right: 36, top: L.block, opacity: phase2 }}>
+        <h1 className={s.h1} style={{ fontSize: post ? 64 : 76, ...NIGHT_TEXT, ...rise(t, 6.2) }}>{c.fast1}</h1>
+        <p style={{ margin: "12px 0 0", fontSize: post ? 20 : 23, fontWeight: 600, letterSpacing: "-0.02em", color: "rgba(244,241,248,.7)", ...rise(t, 6.5) }}>{c.fast2}</p>
+        <div style={{ height: 1, margin: post ? "26px 0" : "34px 0", background: "linear-gradient(90deg, rgba(185,162,255,.6), transparent)", transformOrigin: "left", transform: `scaleX(${easeOut(seg(t, 7.0, 7.6))})` }} />
+        <h2 className={s.h2} style={{ fontSize: post ? 32 : 38, color: "#fff", ...rise(t, 7.4) }}>{c.pay[v]}</h2>
+        <p style={{ margin: "14px 0 0", fontSize: post ? 17 : 19, color: "rgba(244,241,248,.7)", ...rise(t, 8.1) }}>{c.price}</p>
+      </div>
+
+      {/* Fin */}
+      <div style={{ position: "absolute", left: 30, right: 30, top: L.end, display: "grid", justifyItems: "center", gap: 18, textAlign: "center", opacity: seg(t, 9.6, 9.9) }}>
+        <div style={{ ...pop(t, 9.6), filter: "drop-shadow(0 0 30px rgba(140,104,242,.55))" }}><LoupeMascot size={post ? 96 : 118} mood="wow" /></div>
+        <h2 className={s.h2} style={{ fontSize: post ? 36 : 42, color: "#fff", ...rise(t, 9.8) }}>{c.end1}<br /><span style={NIGHT_TEXT}>{c.end2}</span></h2>
+        <div className={`${s.btn} ${s.btnAccent}`} style={pop(t, 10.3)}>rarelyst.co →</div>
+      </div>
+    </div>
+  );
+}
+
 const RENDERS: Record<string, Render> = {
   marques: Marques,
   participants: Participants,
@@ -1110,6 +1215,15 @@ const RENDERS: Record<string, Render> = {
   "banniere-noir-brief": (_t, lang) => <BanniereNoirBrief lang={lang} />,
   "banniere-noir-profils": (_t, lang) => <BanniereNoirProfils lang={lang} />,
   "banniere-noir-logo": (_t, lang) => <BanniereNoirLogo lang={lang} />,
+  "page-noir-casting": (_t, lang) => <BanniereNoirCasting lang={lang} cover />,
+  "page-noir-ticker": (_t, lang) => <BanniereNoirTicker lang={lang} cover />,
+  "page-noir-brief": (_t, lang) => <BanniereNoirBrief lang={lang} cover />,
+  "page-noir-profils": (_t, lang) => <BanniereNoirProfils lang={lang} cover />,
+  "page-noir-logo": (_t, lang) => <BanniereNoirLogo lang={lang} cover />,
+  ...Object.fromEntries((["stars", "influence", "genz"] as CastVariant[]).flatMap((v) => [
+    [`casting-${v}`, (t: number, lang: Lang) => Casting(t, lang, v, false)],
+    [`casting-${v}-post`, (t: number, lang: Lang) => Casting(t, lang, v, true)],
+  ])),
   ...Object.fromEntries([1, 2, 3, 4].map((i) => [`serie-${i}`, (t: number, lang: Lang) => Serie(i, t, lang)])),
   "post-question": (_t, lang) => <PostQuestion lang={lang} />,
   ...Object.fromEntries(Array.from({ length: 7 }, (_, i) => [`carrousel-marques-${i + 1}`, (_t: number, lang: Lang) => <CarrouselMarques i={i + 1} lang={lang} />])),

@@ -35,7 +35,9 @@ const SB = env.NEXT_PUBLIC_SUPABASE_URL;
 const OUT = path.join(os.homedir(), "Desktop", "Rarelyst-visuels");
 
 // Même liste que components/studio/registry.ts
-const SIZES = { story: [540, 960], post: [540, 675], square: [540, 540], banner: [792, 198], avatar: [200, 200] };
+const SIZES = { story: [540, 960], post: [540, 675], square: [540, 540], banner: [792, 198], cover: [1128, 191], avatar: [200, 200] };
+// Bannières et couvertures : aussi une version « grand » (×4), plus nette une fois recadrée par LinkedIn.
+const BIG = new Set(["banner", "cover"]);
 const src = fs.readFileSync("components/studio/registry.ts", "utf8");
 const ALL = [...src.matchAll(/\{ id: "([^"]+)", title: "[^"]*", format: "(\w+)", duration: ([\d.]+),(?: still: ([\d.]+),)? langs: \[([^\]]*)\] \}/g)]
   .map((m) => [m[1], m[2], Number(m[3]), m[5].match(/"(\w+)"/g).map((x) => x.replace(/"/g, "")), m[4] ? Number(m[4]) : null]);
@@ -98,6 +100,17 @@ for (const [id, format, duration, langs, still] of ALL) {
     } else if (!duration) {
       await setTime(page, 99);
       await page.screenshot({ path: path.join(OUT, "images", `${name}.png`), clip });
+      if (BIG.has(format)) {
+        const big = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 4 });
+        await big.addCookies(cookies);
+        const bp = await big.newPage();
+        await bp.goto(`${BASE}/studio/${id}?lang=${lang}&capture=1`, { waitUntil: "networkidle" });
+        await bp.waitForFunction(() => window.__studioReady === true && document.fonts.status === "loaded", null, { timeout: 30000 });
+        await bp.waitForTimeout(600);
+        await setTime(bp, 99);
+        await bp.screenshot({ path: path.join(OUT, "images", `${name}-grand.png`), clip });
+        await big.close();
+      }
       console.log("image :", name);
     } else {
       const dir = fs.mkdtempSync(path.join(os.tmpdir(), `studio-${id}-`));
