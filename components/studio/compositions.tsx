@@ -17,9 +17,12 @@ import { REGISTRY, type Lang } from "./registry";
 
 type Render = (t: number, lang: Lang) => React.ReactNode;
 
-function Brand({ x = 28, y = 30, light = false }: { x?: number; y?: number; light?: boolean }) {
+function Brand({ x = 28, y = 30, light = false, story = false }: { x?: number; y?: number; light?: boolean; story?: boolean }) {
+  // En story, le haut de l'écran est recouvert par Instagram et TikTok : le
+  // logo se place en bas, au-dessus de la zone des légendes.
+  const pos: React.CSSProperties = story ? { left: 0, right: 0, top: 792, justifyContent: "center" } : { left: x, top: y };
   return (
-    <div className={s.brand} style={{ left: x, top: y, color: light ? "#fff" : "var(--ink)" }}>
+    <div className={s.brand} style={{ ...pos, color: light ? "#fff" : "var(--ink)" }}>
       <Image src="/brand/logo.png" alt="" width={26} height={26} />Rarelyst
     </div>
   );
@@ -75,10 +78,10 @@ function Marques(t: number, lang: Lang) {
   const medals: BadgeId[][] = [["verifie", "linkedin"], ["verifie", "emploi"], ["verifie", "portfolio"]];
   return (
     <div className={`${s.frame} ${s.bgLight}`} style={{ width: 540, height: 960 }}>
-      <Brand />
+      <Brand story />
       <div style={fadeBefore(t, 14)}>
         {/* Accroche tapée */}
-        <div style={{ position: "absolute", left: 36, right: 36, top: 150 + head * 130, transform: `scale(${0.62 + 0.38 * head})`, transformOrigin: "left top" }}>
+        <div style={{ position: "absolute", left: 36, right: 36, top: 150 + head * 130, transform: `scale(${0.62 + 0.38 * head})`, transformOrigin: "left top", opacity: 1 - seg(t, 8.3, 8.7) }}>
           <h1 className={s.h1} style={{ fontSize: 64 }}>
             {shown.slice(0, c.q1.length)}
             {shown.length > c.q1.length && <><br /><span className={s.grad}>{shown.slice(c.q1.length + 1)}</span></>}
@@ -118,17 +121,22 @@ function Marques(t: number, lang: Lang) {
         </div>
 
         {/* Le film : la visio */}
-        <div style={{ position: "absolute", left: 26, right: 26, top: 170, opacity: seg(t, 8.7, 9.0) * (1 - seg(t, 12.1, 12.4)) }}>
-          <h3 className={s.h3} style={{ ...rise(t, 8.7), marginBottom: 20 }}>{c.film}</h3>
+        <div style={{ position: "absolute", left: 26, right: 26, top: 190, opacity: seg(t, 8.7, 9.0) * (1 - seg(t, 12.1, 12.4)) }}>
+          <h2 className={s.h2} style={{ ...rise(t, 8.7), marginBottom: 26, fontSize: 36 }}>{c.film}</h2>
           <div style={rise(t, 8.9, 0.6, 30)}>
             <div style={{ width: 880, transform: "scale(0.556)", transformOrigin: "left top" }}>
               <FilmWindow lang={lang} sceneIndex={3} t={2 + (t - 8.9) * 1.6} />
             </div>
           </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: -150 }}>
+            {(lang === "en" ? ["Recorded", "Transcribed live", "Your guide on screen"] : ["Enregistré", "Transcrit en direct", "Votre guide à l'écran"]).map((x, i) => (
+              <span key={x} className={s.chip} style={{ ...pop(t, 9.8 + i * 0.3), fontSize: 15 }}><span className={s.check} style={{ width: 22, height: 22, fontSize: 12 }}>✓</span>{x}</span>
+            ))}
+          </div>
         </div>
 
         {/* Le livrable */}
-        <div style={{ position: "absolute", left: 36, right: 36, top: 300, opacity: seg(t, 12.4, 12.7) }}>
+        <div style={{ position: "absolute", left: 36, right: 36, top: 330, opacity: seg(t, 12.4, 12.7) }}>
           <h2 className={s.h2} style={rise(t, 12.4)}>{c.delivTitle}</h2>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 28 }}>
             {c.deliv.map((d, i) => <span key={d} className={s.chip} style={{ ...pop(t, 12.8 + i * 0.25), fontSize: 20, padding: "12px 18px" }}><span className={s.check}>✓</span>{d}</span>)}
@@ -163,19 +171,19 @@ function Participants(t: number, lang: Lang) {
   const medals: BadgeId[] = ["verifie", "linkedin", "emploi", "cv", "portfolio"];
   return (
     <div className={`${s.frame} ${s.bgInk}`} style={{ width: 540, height: 960 }}>
-      <Brand light />
+      <Brand light story />
       <div style={fadeBefore(t, 12)}>
         {c.who.map((w, i) => (
-          <h1 key={w} className={s.h1} style={{ position: "absolute", left: 36, right: 36, top: 380, fontSize: 60, ...rise(t, i * 0.95, 0.4, 30, i * 0.95 + 0.75) }}>{w}</h1>
+          <h1 key={w} className={s.h1} style={{ position: "absolute", left: 36, right: 36, top: 400, fontSize: 60, ...rise(t, i * 0.95, 0.4, 30, i * 0.95 + 0.75) }}>{w}</h1>
         ))}
-        <div style={{ position: "absolute", left: 36, right: 36, top: 250, opacity: seg(t, 3.0, 3.3) * (1 - seg(t, 5.9, 6.2)) }}>
+        <div style={{ position: "absolute", left: 36, right: 36, top: 290, opacity: seg(t, 3.0, 3.3) * (1 - seg(t, 5.9, 6.2)) }}>
           <h1 className={s.h1} style={rise(t, 3.0)}>{c.title1}<br /><span className={s.gradGold}>{c.title2}</span></h1>
           <div style={{ marginTop: 44, ...rise(t, 3.8) }}>
             <div style={{ fontSize: 88, fontWeight: 700, letterSpacing: "-0.05em", lineHeight: 1 }}>90 – {pay} €</div>
             <p style={{ margin: "10px 0 0", fontSize: 18, color: "rgba(255,255,255,.72)" }}>{c.paySub}</p>
           </div>
         </div>
-        <div style={{ position: "absolute", left: 36, right: 36, top: 260, opacity: seg(t, 6.2, 6.5) * (1 - seg(t, 8.9, 9.2)) }}>
+        <div style={{ position: "absolute", left: 36, right: 36, top: 320, opacity: seg(t, 6.2, 6.5) * (1 - seg(t, 8.9, 9.2)) }}>
           <h2 className={s.h2} style={{ ...rise(t, 6.2), color: "#fff" }}>{c.proof}</h2>
           <div style={{ display: "flex", gap: 6, marginTop: 34 }}>
             {medals.map((m, i) => <span key={m} style={pop(t, 6.8 + i * 0.22)}><Medallion id={m} size={82} /></span>)}
@@ -187,7 +195,7 @@ function Participants(t: number, lang: Lang) {
             </div>
           </div>
         </div>
-        <div style={{ position: "absolute", left: 30, right: 30, top: 300, opacity: seg(t, 9.2, 9.5) }}>
+        <div style={{ position: "absolute", left: 30, right: 30, top: 360, opacity: seg(t, 9.2, 9.5) }}>
           <div className={s.card} style={{ padding: 26, color: "var(--ink)", ...rise(t, 9.2, 0.5, 40) }}>
             <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--ink-3)" }}>{c.solde}</div>
             <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: "-0.04em", marginTop: 6 }}>{pressed ? "0" : "180"} €</div>
@@ -210,7 +218,7 @@ function Parrainage(t: number) {
   const tilt = 12 * (1 - easeOut(seg(t, 0.4, 1.4)));
   return (
     <div className={`${s.frame} ${s.bgLilac}`} style={{ width: 540, height: 960 }}>
-      <Brand />
+      <Brand story />
       <div style={fadeBefore(t, 8.2)}>
         <p className={s.kicker} style={{ position: "absolute", left: 36, top: 130, ...rise(t, 0.1) }}>Parrainage</p>
         <h1 className={s.h1} style={{ position: "absolute", left: 36, right: 36, top: 160, ...rise(t, 0.2) }}>Invitez les profils rares que vous connaissez.</h1>
@@ -242,7 +250,7 @@ function ProfilRare(t: number) {
   const medals: BadgeId[] = ["verifie", "linkedin", "emploi", "portfolio"];
   return (
     <div className={`${s.frame} ${s.bgLight}`} style={{ width: 540, height: 960 }}>
-      <Brand />
+      <Brand story />
       <div style={fadeBefore(t, 8.6)}>
         <p className={s.kicker} style={{ position: "absolute", left: 36, top: 120, ...rise(t, 0.1) }}>Le genre de profil que nous trouvons</p>
         <h2 className={s.h2} style={{ position: "absolute", left: 36, right: 36, top: 148, ...rise(t, 0.25) }}>Introuvable ailleurs. <span className={s.grad}>Vérifié ici.</span></h2>
@@ -279,7 +287,7 @@ function LoupeSePresente(t: number) {
   const bob = Math.sin(t * 2.2) * 8;
   return (
     <div className={`${s.frame} ${s.bgLilac}`} style={{ width: 540, height: 960 }}>
-      <Brand />
+      <Brand story />
       <div style={fadeBefore(t, 9.6)}>
         <div style={{ position: "absolute", left: "50%", top: 470, transform: `translate(-50%, ${bob}px)`, ...{ opacity: seg(t, 0, 0.4) } }}>
           <LoupeMascot size={220} mood={mood as "wow" | "search" | "happy"} look={{ x: t > 3.2 && t < 6.2 ? Math.sin(t * 1.5) * 2.4 : 0, y: t > 6.4 ? -1.5 : 0 }} />
@@ -316,7 +324,7 @@ function AvantApres(t: number) {
   ];
   return (
     <div className={`${s.frame} ${s.bgLight}`} style={{ width: 540, height: 960 }}>
-      <Brand />
+      <Brand story />
       <div style={fadeBefore(t, 8.4)}>
         <h1 className={s.h1} style={{ position: "absolute", left: 36, right: 36, top: 120, fontSize: 52, ...rise(t, 0.1) }}><span className={s.grad}>Moins de relances.</span><br />Plus de réponses.</h1>
         <div style={{ position: "absolute", left: 24, right: 24, top: 300, display: "grid", gap: 12 }}>
@@ -348,7 +356,7 @@ function Synthese(t: number) {
   ];
   return (
     <div className={`${s.frame} ${s.bgLilac}`} style={{ width: 540, height: 960 }}>
-      <Brand />
+      <Brand story />
       <div style={fadeBefore(t, 7.6)}>
         <h2 className={s.h2} style={{ position: "absolute", left: 36, right: 36, top: 120, ...rise(t, 0.1) }}>Des réponses,<br /><span className={s.grad}>pas un compte rendu.</span></h2>
         <div className={s.card} style={{ position: "absolute", left: 26, right: 26, top: 290, padding: 22, ...rise(t, 0.6, 0.5, 40) }}>
@@ -447,12 +455,12 @@ function PostParrainage() {
 function StoryCitation() {
   return (
     <div className={`${s.frame} ${s.bgLight}`} style={{ width: 540, height: 960, padding: 40 }}>
-      <Brand />
+      <Brand story />
       <p className={s.kicker} style={{ marginTop: 200 }}>Ce que vos clientes pensent vraiment</p>
       <div style={{ fontSize: 120, lineHeight: 0.6, color: "var(--accent-dim)", marginTop: 30, fontWeight: 700 }}>«</div>
       <h1 className={s.h1} style={{ fontSize: 50, marginTop: 10 }}>Si c&apos;est écrit recyclé, je pense <span className={s.grad}>seconde main.</span></h1>
       <p className={s.lead} style={{ marginTop: 24 }}>Vendeuse en boutique de luxe, 8 ans de métier</p>
-      <div className={s.card} style={{ position: "absolute", left: 40, right: 40, bottom: 60, padding: 20, display: "flex", gap: 14, alignItems: "center" }}>
+      <div className={s.card} style={{ position: "absolute", left: 40, right: 40, bottom: 200, padding: 20, display: "flex", gap: 14, alignItems: "center" }}>
         <LoupeMascot size={64} animated={false} />
         <span style={{ fontSize: 16, lineHeight: 1.4 }}>Des entretiens avec les bonnes personnes, et une synthèse qui répond à vos questions. <b>rarelyst.co</b></span>
       </div>
@@ -464,7 +472,7 @@ function StoryLangues() {
   const flags = ["fr", "gb", "it", "es", "de", "cn", "jp", "kr", "ae"] as const;
   return (
     <div className={`${s.frame} ${s.bgLilac}`} style={{ width: 540, height: 960, padding: 40 }}>
-      <Brand />
+      <Brand story />
       <p className={s.kicker} style={{ marginTop: 180 }}>Nouveau</p>
       <h1 className={s.h1} style={{ marginTop: 12 }}>Les entretiens en anglais <span className={s.grad}>sont ouverts.</span></h1>
       <p className={s.lead} style={{ marginTop: 20 }}>Français et anglais aujourd&apos;hui. Les autres langues arrivent, une à une.</p>
@@ -476,7 +484,7 @@ function StoryLangues() {
           </div>
         ))}
       </div>
-      <div className={s.url} style={{ position: "absolute", left: 40, bottom: 50 }}>rarelyst.co</div>
+      <div className={s.url} style={{ position: "absolute", left: 40, bottom: 210 }}>rarelyst.co</div>
     </div>
   );
 }
