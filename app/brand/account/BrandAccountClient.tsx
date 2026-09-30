@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { redeemInviteCode } from "@/app/actions/inviteCodes";
+import { saveHouse } from "@/app/actions/house";
 
 type Transaction = { id: string; type: string; amount: number; desc: string; date: string; balance: number };
 
@@ -17,6 +18,7 @@ export default function BrandAccountClient({
   packs,
   tiers,
   creditValueCents,
+  house,
 }: {
   isActivated: boolean;
   credits: number;
@@ -25,6 +27,7 @@ export default function BrandAccountClient({
   packs: Pack[];
   tiers: TierInfo[];
   creditValueCents: number;
+  house: { industry: string; website: string; houseNotes: string };
 }) {
   const [tab, setTab] = useState<"credits" | "profile">("credits");
   const [inviteCode, setInviteCode] = useState("");
@@ -236,29 +239,46 @@ export default function BrandAccountClient({
         </div>
       )}
 
-      {tab === "profile" && (
-        <div style={{ maxWidth: "520px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-            {[
-              { label: "Nom de l'entreprise", value: companyName },
-              { label: "Email", value: "" },
-            ].map((field) => (
-              <div key={field.label}>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                  {field.label}
-                </label>
-                <input
-                  defaultValue={field.value}
-                  style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--color-border-base)", borderRadius: "8px", fontSize: "14px", background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none", boxSizing: "border-box" }}
-                />
-              </div>
-            ))}
-            <button style={{ alignSelf: "flex-start", marginTop: "8px", padding: "10px 24px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
-              Enregistrer
-            </button>
-          </div>
-        </div>
-      )}
+      {tab === "profile" && <HouseForm companyName={companyName} house={house} />}
+    </div>
+  );
+}
+
+// Votre maison : secteur, site, et ce que l'IA doit savoir pour vos synthèses.
+function HouseForm({ companyName, house }: { companyName: string; house: { industry: string; website: string; houseNotes: string } }) {
+  const [industry, setIndustry] = useState(house.industry);
+  const [website, setWebsite] = useState(house.website);
+  const [notes, setNotes] = useState(house.houseNotes);
+  const [state, setState] = useState<"idle" | "saving" | "saved" | string>("idle");
+  const field = { width: "100%", padding: "10px 14px", border: "1px solid var(--color-border-base)", borderRadius: "8px", fontSize: "14px", background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none", boxSizing: "border-box" as const, font: "inherit" };
+  const label = { display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "6px", textTransform: "uppercase" as const, letterSpacing: "0.04em" };
+  async function save() {
+    setState("saving");
+    const r = await saveHouse({ industry, website, houseNotes: notes });
+    setState("error" in r ? r.error : "saved");
+  }
+  return (
+    <div style={{ maxWidth: "640px", display: "flex", flexDirection: "column", gap: "18px" }}>
+      <div><span style={label}>Maison</span><div style={{ fontSize: "16px", fontWeight: 600 }}>{companyName}</div></div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+        <div><label style={label} htmlFor="industry">Secteur</label><input id="industry" style={field} value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="Maroquinerie de luxe" /></div>
+        <div><label style={label} htmlFor="website">Site</label><input id="website" style={field} value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://…" /></div>
+      </div>
+      <div>
+        <label style={label} htmlFor="house">Votre maison, pour nos synthèses</label>
+        <p style={{ margin: "0 0 8px", fontSize: "13.5px", color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
+          Quelques lignes suffisent : votre positionnement, vos clientes et clients, vos concurrents, les mots que vous employez en interne, ce que vous avez déjà appris. L&apos;IA qui écrit vos synthèses le lit avant chaque étude, et ne le partage avec personne.
+        </p>
+        <textarea id="house" rows={8} style={{ ...field, resize: "vertical", lineHeight: 1.55 }} value={notes} onChange={(e) => setNotes(e.target.value)}
+          placeholder={"Ex. : Maison parisienne de maroquinerie fondée en 1998, positionnée luxe accessible (sacs de 450 à 900 €). Clientèle 30-45 ans, urbaine, fidèle. Nous parlons de « pièces » et jamais de « produits ». Concurrents suivis : Polène, Sézane. Étude 2025 : la couleur prime sur le logo."} />
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+        <button type="button" onClick={save} disabled={state === "saving"} style={{ padding: "10px 24px", background: "var(--color-accent)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
+          {state === "saving" ? "Enregistrement…" : "Enregistrer"}
+        </button>
+        {state === "saved" && <span style={{ fontSize: "13px", color: "var(--color-success)" }}>Enregistré.</span>}
+        {state !== "idle" && state !== "saving" && state !== "saved" && <span style={{ fontSize: "13px", color: "var(--color-error)" }}>{state}</span>}
+      </div>
     </div>
   );
 }

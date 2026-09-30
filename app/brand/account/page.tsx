@@ -45,6 +45,7 @@ export default async function BrandAccountPage() {
       isActivated={profile?.isActivated ?? false}
       credits={profile?.credits ?? 0}
       companyName={profile?.companyName ?? ""}
+      house={{ industry: profile?.industry ?? "", website: profile?.website ?? "", houseNotes: profile?.houseNotes ?? "" }}
       transactions={
         profile?.creditTransactions.map((t) => ({
           id: t.id,

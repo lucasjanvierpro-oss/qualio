@@ -3,10 +3,14 @@ import { demandOverview } from "@/lib/lab/demand";
 import type { LabBrand, LabReview } from "@/lib/lab/simulate";
 import type { BriefDraft } from "@/lib/studies/briefTypes";
 import LabControls from "./LabControls";
+import BenchPanel from "./BenchPanel";
+import type { BenchResult } from "@/lib/lab/synthesisBench";
 import a from "../admin.module.css";
 import l from "./labo.module.css";
 
 export const dynamic = "force-dynamic";
+// Une simulation ou un banc d'essai de synthèse prend une à trois minutes.
+export const maxDuration = 300;
 
 const CATEGORY: Record<string, string> = { pro: "Métier", consumer: "Client", creator: "Créateur", expert: "Expert" };
 const fmt = (iso: Date | string) => new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).format(new Date(iso));
@@ -129,6 +133,7 @@ export default async function LabPage() {
                       {v.unknowns?.length > 0 && <><h4>Ce que nous ne savons pas encore</h4><ul>{v.unknowns.map((x) => <li key={x}>{x}</li>)}</ul></>}
                     </div>
                   </div>
+                  <BenchPanel runId={r.id} result={(r.synthesis ?? null) as unknown as BenchResult | null} />
                   <p className={a.muted} style={{ fontSize: 11.5, margin: "8px 0 0" }}>Terrain : {r.theme} · {fmt(r.createdAt)}</p>
                 </div>
               </details>

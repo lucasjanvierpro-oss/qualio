@@ -34,3 +34,9 @@
 .dialogue p { padding: 8px 10px; border-radius: 8px; background: #121110; margin: 0; }
 .dialogue p[data-who="rarelyst"] { background: #1d1830; margin-left: 18px; }
 .dialogue b { display: block; font-size: 11px; color: #8a8782; margin-bottom: 2px; }
+
+.bench { margin-top: 16px; padding: 14px 16px; border-radius: 12px; background: #16141a; border: 1px solid #2c2838; display: grid; gap: 10px; }
+.benchHead { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.benchHead h3 { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #a58bf5; }
+.benchKpis { display: flex; gap: 22px; flex-wrap: wrap; font-size: 12px; color: #8a8782; }
+.benchKpis b { display: block; font-size: 20px; color: #f2f0ec; letter-spacing: -0.02em; }

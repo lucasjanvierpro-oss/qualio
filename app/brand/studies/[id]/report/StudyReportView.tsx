@@ -13,7 +13,9 @@ type Theme = { nom: string; resume: string; intensite: number; tonalite?: Tonali
 type Verbatim = { content: string; participant: string; theme?: string; tonalite?: Tonalite };
 type Persona = { nom: string; portrait: string; posture: string };
 type Reco = { titre: string; detail: string };
-type Reponse = { question: string; reponse: string; appui?: string; verbatim?: string; participant?: string };
+type Reponse = { question: string; reponse: string; appui?: string; confiance?: "forte" | "moyenne" | "faible"; verbatim?: string; participant?: string };
+type Segment = { profil: string; difference: string };
+const CONFIANCE: Record<string, string> = { forte: "Confiance forte", moyenne: "Confiance moyenne", faible: "Confiance faible" };
 
 export type StructuredReport = {
   titre?: string;
@@ -30,6 +32,8 @@ export type StructuredReport = {
   recommandations?: Reco[];
   /** Réponses aux questions que la marque voulait trancher (brief). */
   reponses?: Reponse[];
+  segments?: Segment[];
+  qualite?: { citations: number; verifiees: number; corrigees: number; retirees: number };
   methodologie?: string;
 };
 
@@ -171,11 +175,20 @@ export default function StudyReportView({
                 {report.reponses!.map((rp) => (
                   <li key={rp.question}>
                     <strong>{rp.question}</strong>
+                    {rp.confiance && <span className={`${s.badge} ${rp.confiance === "forte" ? s.badgeOk : rp.confiance === "moyenne" ? s.badgeWait : s.badgePlain}`} style={{ justifySelf: "start" }}>{CONFIANCE[rp.confiance] ?? rp.confiance}</span>}
                     <span className={s.muted}>{rp.reponse}{rp.appui ? ` · ${rp.appui}` : ""}</span>
                     {rp.verbatim && <Quote text={rp.verbatim} who={rp.participant} />}
                   </li>
                 ))}
               </ol>
+            </div>
+          )}
+          {(report.segments ?? []).length > 0 && (
+            <div className={s.card}>
+              <h3 className={s.h3}>Ce que chaque profil voit autrement</h3>
+              <ul className={r.list}>
+                {report.segments!.map((sg) => <li key={sg.profil}><strong>{sg.profil}</strong> — {sg.difference}</li>)}
+              </ul>
             </div>
           )}
           {report.problematique && (
@@ -323,7 +336,10 @@ export default function StudyReportView({
         <section className={r.panel} data-show={show("methode")} aria-label="Méthodologie">
           <h2 className={r.printTitle}>Méthodologie</h2>
           <div className={s.cardSoft}><p className={s.muted} style={{ margin: 0 }}>{report.methodologie}</p></div>
-          <p className={`${s.small} ${s.faint}`}>Synthèse produite à partir des transcriptions des entretiens, avec l&apos;aide d&apos;une IA. Document confidentiel.</p>
+          <p className={`${s.small} ${s.faint}`}>
+            Synthèse produite à partir des transcriptions des entretiens, avec l&apos;aide d&apos;une IA. Document confidentiel.
+            {report.qualite && report.qualite.citations > 0 && ` Chaque citation a été retrouvée dans les transcriptions (${report.qualite.citations - report.qualite.retirees} sur ${report.qualite.citations}${report.qualite.retirees ? ` ; ${report.qualite.retirees} retirée${report.qualite.retirees > 1 ? "s" : ""} faute de preuve` : ""}).`}
+          </p>
         </section>
       )}
     </div>

@@ -6,9 +6,11 @@ import {
   REPORT_MODEL,
   buildUserMessage,
   generateReport,
+  houseContext,
   type ParticipantInput,
   type VerbatimInput,
 } from "@/lib/reports/generate";
+import { checkAndRepairQuotes } from "@/lib/reports/quality";
 
 // Le rapport complet demande plus de 100 s à Claude.
 // Sans cette ligne, Vercel coupe la fonction bien avant la réponse.
@@ -39,7 +41,7 @@ export async function POST(
 
   const study = await prisma.study.findUnique({
     where: { id },
-    include: { brandProfile: { select: { companyName: true } } },
+    include: { brandProfile: { select: { companyName: true, houseNotes: true } } },
   });
   if (!study) return NextResponse.json({ error: "Study not found" }, { status: 404 });
 
@@ -57,21 +59,30 @@ export async function POST(
     return NextResponse.json({ error: "Au moins un verbatim est requis" }, { status: 400 });
   }
 
+  const house = await houseContext(study.brandProfileId, study.id);
   const { raw, structured } = await generateReport(
     buildUserMessage({
       studyObjective,
-      brandContext: brandContext || `Étude menée pour ${study.brandProfile.companyName}`,
+      brandContext: brandContext || house.brandContext,
       participantProfiles,
       studyFormat,
       verbatims,
       additionalContext,
       decisions: study.decisions,
+      brief: study.brief,
+      guide: study.guide,
+      houseNotes: study.brandProfile.houseNotes,
+      previousLearnings: house.previousLearnings,
+      language: study.preferredLanguage === "en" ? "en" : "fr",
     })
   );
 
   if (!structured) {
     return NextResponse.json({ error: "Le rapport généré est invalide (JSON). Réessayez." }, { status: 502 });
   }
+  // Les citations doivent exister dans les verbatims fournis.
+  const q = await checkAndRepairQuotes(structured, verbatims.map((v) => v.content));
+  structured.qualite = { citations: q.total, verifiees: q.verified, corrigees: q.repaired, retirees: q.removed };
 
   const report = await prisma.studyReport.upsert({
     where: { studyId: id },

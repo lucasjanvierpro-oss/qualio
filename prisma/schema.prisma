@@ -132,6 +132,9 @@ model BrandProfile {
 
   // Fonctions en bêta ouvertes à cette marque (ex. "async" : entretiens en autonomie).
   betaFeatures String[] @default([])
+  // Mémoire de la maison : positionnement, clientèle, concurrents, vocabulaire,
+  // enseignements passés. Donnée à l'IA qui écrit les synthèses.
+  houseNotes   String?  @db.Text
 
   @@map("brand_profiles")
 }
@@ -713,6 +716,8 @@ model LabRun {
   draft     Json?
   review    Json?
   error     String?
+  // Banc d'essai de la synthèse : entretiens simulés, synthèse produite, contrôles.
+  synthesis Json?
 
   @@map("lab_runs")
 }
