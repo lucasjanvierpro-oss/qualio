@@ -1192,6 +1192,98 @@ function Casting(t: number, lang: Lang, v: CastVariant, post: boolean) {
   );
 }
 
+// ── Vidéos « panel » : donner envie aux experts, influenceurs et clients de rejoindre ──
+// Même style que « casting », mais la liste montre ce que chaque profil gagne
+// (paliers réels du barème pour 45 min ; jusqu'à 560 € pour un profil rare, long et très demandé).
+const PANEL_ROLES = {
+  fr: [["Client·e passionné·e", "90 €"], ["Vendeuse en boutique de luxe", "180 €"], ["Styliste de stars", "350 €"], ["Micro-influenceuse beauté", "180 €"], ["Gen Z · revendeuse Vinted", "90 €"], ["Acheteuse de grand magasin", "180 €"], ["Collectionneur reconnu", "350 €"], ["Maquilleuse backstage", "180 €"]],
+  en: [["Passionate customer", "€90"], ["Luxury boutique associate", "€180"], ["Celebrity stylist", "€350"], ["Beauty micro-influencer", "€180"], ["Gen Z · Vinted reseller", "€90"], ["Department store buyer", "€180"], ["Renowned collector", "€350"], ["Backstage makeup artist", "€180"]],
+};
+const PANEL = {
+  fr: {
+    kicker: "Rejoignez le panel Rarelyst",
+    hooks: { expert: "Pas le temps ? 45 minutes suffisent.", influence: "Vos abonnés vous écoutent. Les marques aussi.", conso: "Vous connaissez les marques mieux que leurs équipes ?" },
+    chip: "✓ Par entretien de 45 min, en visio",
+    b1: "Quand vous voulez.", b2: "Vous proposez vos créneaux. La marque choisit.",
+    b3: "Payé par virement.", b4: "Retrait dès 50 €. Jusqu'à 560 € pour les profils les plus rares.",
+    end1: "Votre regard a de la valeur.", end2: "Faites-le payer.",
+  },
+  en: {
+    kicker: "Join the Rarelyst panel",
+    hooks: { expert: "No time? 45 minutes is enough.", influence: "Your followers listen to you. So do brands.", conso: "Do you know brands better than their own teams?" },
+    chip: "✓ Per 45-min video interview",
+    b1: "Whenever you want.", b2: "You suggest time slots. The brand picks one.",
+    b3: "Paid by bank transfer.", b4: "Withdraw from €50. Up to €560 for the rarest profiles.",
+    end1: "Your perspective is worth something.", end2: "Get paid for it.",
+  },
+};
+type PanelVariant = keyof typeof PANEL.fr.hooks;
+const PANEL_TARGET: Record<PanelVariant, number> = { expert: 2, influence: 3, conso: 4 };
+
+function PanelVideo(t: number, lang: Lang, v: PanelVariant, post: boolean) {
+  const c = PANEL[lang];
+  const roles = PANEL_ROLES[lang];
+  const N = roles.length;
+  const W = 540, H = post ? 675 : 960;
+  const L = post
+    ? { kicker: 74, hook: 98, hookSize: 38, center: 330, gap: 44, size: 23, found: 470, block: 150, end: 170 }
+    : { kicker: 150, hook: 178, hookSize: 46, center: 470, gap: 54, size: 26, found: 660, block: 300, end: 280 };
+  const target = PANEL_TARGET[v] + N * 2;
+  const spin = easeOut(seg(t, 2.3, 4.9));
+  const pos = t < 2.3 ? t * 0.35 : 2.3 * 0.35 + (target - 2.3 * 0.35) * spin;
+  const landed = t >= 4.9;
+  const phase1 = 1 - seg(t, 5.9, 6.3);
+  const phase2 = seg(t, 6.2, 6.5) * (1 - seg(t, 9.3, 9.7));
+  const grid: React.CSSProperties = { position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(255,255,255,.12) 0.8px, transparent 1.1px)", backgroundSize: "14px 14px", WebkitMaskImage: "radial-gradient(80% 60% at 70% 50%, #000, transparent)", maskImage: "radial-gradient(80% 60% at 70% 50%, #000, transparent)" };
+  const gold: React.CSSProperties = { background: "linear-gradient(100deg, #f7d58b, #fff3cf 45%, #f2c46d)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" };
+  return (
+    <div className={s.frame} style={{ width: W, height: H, color: "#f4f1f8", background: "radial-gradient(70% 45% at 80% 45%, rgba(106,67,219,.34), transparent 70%), radial-gradient(50% 35% at 0% 100%, rgba(242,196,109,.12), transparent 70%), #0a090d" }}>
+      <div style={grid} />
+      {post ? <Brand x={28} y={28} light /> : <Brand story light />}
+
+      <div style={{ opacity: phase1 }}>
+        <p className={s.kicker} style={{ position: "absolute", left: 36, top: L.kicker, color: "#f2c46d", ...rise(t, 0.1) }}>{c.kicker}</p>
+        <h1 className={s.h1} style={{ position: "absolute", left: 36, right: 36, top: L.hook, fontSize: L.hookSize, lineHeight: 1.04, color: "#fff" }}>
+          {typed(c.hooks[v], t, 0.45, 28)}{t < 2.4 && <i className={s.caret} style={{ background: "#f2c46d" }} />}
+        </h1>
+        <div style={{ position: "absolute", left: 0, right: 0, top: L.center - L.gap * 2.6, height: L.gap * 5.2, overflow: "hidden", WebkitMaskImage: "linear-gradient(180deg, transparent, #000 28%, #000 72%, transparent)", maskImage: "linear-gradient(180deg, transparent, #000 28%, #000 72%, transparent)", ...rise(t, 0.5, 0.6, 30) }}>
+          {Array.from({ length: 7 }, (_, k) => {
+            const base = Math.floor(pos) - 3 + k;
+            const d = base - pos;
+            const [role, pay] = roles[((base % N) + N) % N];
+            const on = landed && Math.abs(d) < 0.5;
+            const near = 1 - Math.min(1, Math.abs(d) / 2.5);
+            const dim = `rgba(244,241,248,${0.18 + 0.5 * near})`;
+            return (
+              <div key={k} style={{ position: "absolute", left: 36, right: 36, top: L.gap * 2.6 + d * L.gap - L.gap / 2, height: L.gap, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, fontSize: on ? L.size * 1.15 : L.size, fontWeight: 600, letterSpacing: "-0.035em", whiteSpace: "nowrap" }}>
+                <span style={on ? NIGHT_TEXT : { color: dim }}>{on && "✦ "}{role}</span>
+                <span style={on ? { ...gold, fontWeight: 700 } : { color: dim }}>{pay}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ position: "absolute", left: 36, top: L.found, ...pop(t, 5.0) }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 999, fontSize: 15, fontWeight: 700, color: "#f7d58b", background: "rgba(242,196,109,.12)", boxShadow: "inset 0 0 0 1px rgba(242,196,109,.3)" }}>{c.chip}</span>
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", left: 36, right: 36, top: L.block, opacity: phase2 }}>
+        <h1 className={s.h1} style={{ fontSize: post ? 50 : 58, ...NIGHT_TEXT, ...rise(t, 6.2) }}>{c.b1}</h1>
+        <p style={{ margin: "12px 0 0", fontSize: post ? 19 : 22, fontWeight: 600, letterSpacing: "-0.02em", color: "rgba(244,241,248,.7)", ...rise(t, 6.5) }}>{c.b2}</p>
+        <div style={{ height: 1, margin: post ? "26px 0" : "34px 0", background: "linear-gradient(90deg, rgba(242,196,109,.6), transparent)", transformOrigin: "left", transform: `scaleX(${easeOut(seg(t, 7.0, 7.6))})` }} />
+        <h2 className={s.h2} style={{ fontSize: post ? 40 : 48, ...gold, ...rise(t, 7.4) }}>{c.b3}</h2>
+        <p style={{ margin: "14px 0 0", fontSize: post ? 17 : 19, color: "rgba(244,241,248,.7)", ...rise(t, 8.1) }}>{c.b4}</p>
+      </div>
+
+      <div style={{ position: "absolute", left: 30, right: 30, top: L.end, display: "grid", justifyItems: "center", gap: 18, textAlign: "center", opacity: seg(t, 9.6, 9.9) }}>
+        <div style={{ ...pop(t, 9.6), filter: "drop-shadow(0 0 30px rgba(242,196,109,.35))" }}><LoupeMascot size={post ? 96 : 118} mood="happy" /></div>
+        <h2 className={s.h2} style={{ fontSize: post ? 32 : 38, color: "#fff", ...rise(t, 9.8) }}>{c.end1}<br /><span style={gold}>{c.end2}</span></h2>
+        <div className={`${s.btn} ${s.btnAccent}`} style={pop(t, 10.3)}>rarelyst.co →</div>
+      </div>
+    </div>
+  );
+}
+
 const RENDERS: Record<string, Render> = {
   marques: Marques,
   participants: Participants,
@@ -1220,6 +1312,10 @@ const RENDERS: Record<string, Render> = {
   "page-noir-brief": (_t, lang) => <BanniereNoirBrief lang={lang} cover />,
   "page-noir-profils": (_t, lang) => <BanniereNoirProfils lang={lang} cover />,
   "page-noir-logo": (_t, lang) => <BanniereNoirLogo lang={lang} cover />,
+  ...Object.fromEntries((["expert", "influence", "conso"] as PanelVariant[]).flatMap((v) => [
+    [`panel-${v}`, (t: number, lang: Lang) => PanelVideo(t, lang, v, false)],
+    [`panel-${v}-post`, (t: number, lang: Lang) => PanelVideo(t, lang, v, true)],
+  ])),
   ...Object.fromEntries((["stars", "influence", "genz"] as CastVariant[]).flatMap((v) => [
     [`casting-${v}`, (t: number, lang: Lang) => Casting(t, lang, v, false)],
     [`casting-${v}-post`, (t: number, lang: Lang) => Casting(t, lang, v, true)],
