@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { NDA_VERSION } from "@/lib/legal/nda";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
 import { createWherebyRoom } from "@/lib/whereby/rooms";
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const me = await getSessionUser();
   if (!me?.participantProfileId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const body = (await req.json().catch(() => ({}))) as { action?: string; index?: number; consent?: boolean };
+  const body = (await req.json().catch(() => ({}))) as { action?: string; index?: number; consent?: boolean; nda?: boolean };
   const iv = await prisma.interview.findUnique({
     where: { id },
     include: { application: { select: { id: true, participantProfileId: true, study: { select: { guide: true, status: true } } } } },
@@ -35,6 +36,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   if (body.action === "start") {
     if (!body.consent) return NextResponse.json({ error: "consent_required" }, { status: 400 });
+    if (!body.nda) return NextResponse.json({ error: "nda_required" }, { status: 400 });
+    await prisma.application.update({ where: { id: iv.applicationId }, data: { ndaAcceptedAt: new Date(), ndaVersion: NDA_VERSION } });
     // Une salle vit quelques heures : au-delà, on en ouvre une nouvelle et on
     // reprend depuis la première question.
     const expired = iv.startedAt && Date.now() - iv.startedAt.getTime() > (ROOM_HOURS - 0.5) * 3600_000;

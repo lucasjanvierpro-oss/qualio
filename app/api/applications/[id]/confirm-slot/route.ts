@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { NDA_VERSION } from "@/lib/legal/nda";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
 import { confirmInterview, readSlots } from "@/lib/interviews/schedule";
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const { slotIndex, consent } = (await req.json()) as { slotIndex: number; consent?: boolean };
+  const { slotIndex, consent, nda } = (await req.json()) as { slotIndex: number; consent?: boolean; nda?: boolean };
 
   const application = await prisma.application.findUnique({
     where: { id },
@@ -23,11 +24,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (isOwner && consent !== true) {
     return NextResponse.json({ error: "Merci d'accepter l'enregistrement de l'entretien pour continuer." }, { status: 400 });
   }
+  if (isOwner && nda !== true) {
+    return NextResponse.json({ error: "Merci d'accepter l'accord de confidentialité pour continuer." }, { status: 400 });
+  }
 
   const slot = readSlots(application.proposedSlots)[slotIndex];
   if (!slot) return NextResponse.json({ error: "Créneau invalide." }, { status: 400 });
 
-  if (isOwner) await prisma.application.update({ where: { id }, data: { recordingConsentAt: new Date() } });
+  if (isOwner) await prisma.application.update({ where: { id }, data: { recordingConsentAt: new Date(), ndaAcceptedAt: new Date(), ndaVersion: NDA_VERSION } });
 
   const result = await confirmInterview(id, slot.startTime);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });

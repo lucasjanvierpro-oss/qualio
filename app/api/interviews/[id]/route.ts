@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { sendRewardAvailable } from "@/lib/resend/emails";
-import { generateAndStoreReportFromTranscripts } from "@/lib/reports/generate";
 import { grantReferralBonuses } from "@/lib/referral/referral";
+import { applyNoShow } from "@/lib/interviews/reliability";
 
 export async function PATCH(
   req: NextRequest,
@@ -18,12 +18,6 @@ export async function PATCH(
 
   const { id } = await params;
   const { status } = await req.json() as { status: string };
-
-  // Pour ne rembourser une absence qu'une fois, même si le statut est renvoyé deux fois.
-  const before = await prisma.interview.findUnique({
-    where: { id },
-    select: { application: { select: { status: true } } },
-  });
 
   const interview = await prisma.interview.update({
     where: { id },
@@ -77,33 +71,8 @@ export async function PATCH(
   }
 
   if (status === "no_show") {
-    await prisma.application.update({
-      where: { id: interview.applicationId },
-      data: { status: "NO_SHOW" },
-    });
-
-    // Absence : la marque récupère ce qu'elle a payé pour ce profil.
-    const paid = interview.application.priceCredits ?? 0;
-    if (paid > 0 && before?.application.status !== "NO_SHOW") {
-      const brandProfileId = interview.application.study.brandProfileId;
-      await prisma.$transaction(async (tx) => {
-        const b = await tx.brandProfile.update({
-          where: { id: brandProfileId },
-          data: { credits: { increment: paid } },
-          select: { credits: true },
-        });
-        await tx.creditTransaction.create({
-          data: {
-            brandProfileId, type: "REFUND", amount: paid, balanceAfter: b.credits,
-            description: `Absence remboursée · ${interview.application.participantProfile.firstName}`,
-            studyId: interview.studyId,
-          },
-        });
-      });
-    }
-    // Si cet absent était le dernier entretien attendu, les autres sont peut-être
-    // tous transcrits : on tente le rapport sans attendre une action manuelle.
-    await generateAndStoreReportFromTranscripts(interview.studyId, { requireAll: true }).catch(() => null);
+    // Remboursement (une seule fois) et rapport éventuel : même logique que la détection automatique.
+    await applyNoShow(interview.id);
   }
 
   return NextResponse.json({ ok: true, interview });

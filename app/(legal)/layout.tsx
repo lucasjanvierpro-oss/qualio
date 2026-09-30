@@ -16,6 +16,7 @@ const PAGES = [
   { href: "/mentions-legales", label: "Mentions légales" },
   { href: "/confidentialite", label: "Confidentialité" },
   { href: "/conditions", label: "Conditions" },
+  { href: "/accord-confidentialite", label: "Accord participants" },
 ];
 
 export default function LegalLayout({ children }: { children: ReactNode }) {

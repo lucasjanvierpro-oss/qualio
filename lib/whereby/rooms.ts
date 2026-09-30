@@ -125,3 +125,18 @@ export async function startRecordingTranscription(recordingId: string): Promise<
     return null;
   }
 }
+
+/**
+ * Efface un enregistrement chez Whereby (vidéos conservées 90 jours, cf. politique
+ * de confidentialité). Vrai si l'enregistrement n'existe plus après l'appel.
+ */
+export async function deleteWherebyRecording(recordingId: string): Promise<boolean> {
+  const res = await fetch(`${WHEREBY_BASE}/recordings/${encodeURIComponent(recordingId)}`, { method: "DELETE", headers: wherebyHeaders() });
+  return res.ok || res.status === 404;
+}
+
+/** Efface une transcription chez Whereby (le texte reste dans Rarelyst). */
+export async function deleteWherebyTranscription(transcriptionId: string): Promise<boolean> {
+  const res = await fetch(`${WHEREBY_BASE}/transcriptions/${encodeURIComponent(transcriptionId)}`, { method: "DELETE", headers: wherebyHeaders() });
+  return res.ok || res.status === 404;
+}

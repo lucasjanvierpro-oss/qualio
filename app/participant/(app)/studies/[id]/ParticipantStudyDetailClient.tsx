@@ -86,6 +86,7 @@ export default function ParticipantStudyDetailClient(p: Props) {
   const [selected, setSelected] = useState<string[]>([]);
   const [custom, setCustom] = useState("");
   const [consent, setConsent] = useState(false);
+  const [nda, setNda] = useState(false);
   const [pick, setPick] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -130,7 +131,7 @@ export default function ParticipantStudyDetailClient(p: Props) {
   }
 
   async function sendAvailability() {
-    if (await post(`/api/applications/${p.applicationId}/availability`, { slots: selected, consent })) {
+    if (await post(`/api/applications/${p.applicationId}/availability`, { slots: selected, consent, nda })) {
       setEditing(false); setSelected([]);
     }
   }
@@ -139,6 +140,12 @@ export default function ParticipantStudyDetailClient(p: Props) {
     <label className={s.check} data-tour="inv-consent">
       <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
       <span>J&apos;accepte que l&apos;entretien soit enregistré et transcrit pour produire la synthèse de l&apos;étude. Ma pièce d&apos;identité et mes coordonnées ne sont jamais transmises à la marque.</span>
+    </label>
+  );
+  const ndaBox = (
+    <label className={s.check}>
+      <input type="checkbox" checked={nda} onChange={(e) => setNda(e.target.checked)} />
+      <span>J&apos;accepte l&apos;<a href="/accord-confidentialite" target="_blank" rel="noopener">accord de confidentialité</a> : je garde pour moi tout ce que la marque me montrera ou me dira, sans capture ni enregistrement.</span>
     </label>
   );
 
@@ -211,9 +218,10 @@ export default function ParticipantStudyDetailClient(p: Props) {
 
             <hr className={s.divider} />
             {consentBox}
+            {ndaBox}
             {error && <p className={s.error}>{error}</p>}
             <div className={`${s.row} ${s.sectionGap}`}>
-              <button type="button" className={s.btn} onClick={sendAvailability} disabled={busy || selected.length === 0 || !consent} data-tour="inv-send">
+              <button type="button" className={s.btn} onClick={sendAvailability} disabled={busy || selected.length === 0 || !consent || !nda} data-tour="inv-send">
                 {busy ? "Envoi…" : selected.length ? `Envoyer ${selected.length} créneau${selected.length > 1 ? "x" : ""}` : "Choisissez au moins un créneau"}
               </button>
               {editing && <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => { setEditing(false); setSelected([]); }}>Annuler</button>}
@@ -249,9 +257,10 @@ export default function ParticipantStudyDetailClient(p: Props) {
             </div>
             <hr className={s.divider} />
             {consentBox}
+            {ndaBox}
             {error && <p className={s.error}>{error}</p>}
-            <button type="button" className={`${s.btn} ${s.sectionGap}`} disabled={busy || pick === null || !consent}
-              onClick={() => post(`/api/applications/${p.applicationId}/confirm-slot`, { slotIndex: pick, consent })}>
+            <button type="button" className={`${s.btn} ${s.sectionGap}`} disabled={busy || pick === null || !consent || !nda}
+              onClick={() => post(`/api/applications/${p.applicationId}/confirm-slot`, { slotIndex: pick, consent, nda })}>
               {busy ? "Confirmation…" : "Confirmer ce créneau"}
             </button>
           </section>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { NDA_VERSION } from "@/lib/legal/nda";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
 import { sendAvailabilityProposed } from "@/lib/resend/emails";
@@ -13,10 +14,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!me?.participantProfileId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const { slots, consent } = (await req.json()) as { slots?: string[]; consent?: boolean };
+  const { slots, consent, nda } = (await req.json()) as { slots?: string[]; consent?: boolean; nda?: boolean };
 
   if (consent !== true) {
     return NextResponse.json({ error: "Merci d'accepter l'enregistrement de l'entretien pour continuer." }, { status: 400 });
+  }
+  if (nda !== true) {
+    return NextResponse.json({ error: "Merci d'accepter l'accord de confidentialité pour continuer." }, { status: 400 });
   }
 
   const application = await prisma.application.findUnique({
@@ -45,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const proposed: Slot[] = unique.sort().map((startTime) => ({ startTime, proposedBy: "participant" }));
   await prisma.application.update({
     where: { id },
-    data: { proposedSlots: proposed, recordingConsentAt: new Date() },
+    data: { proposedSlots: proposed, recordingConsentAt: new Date(), ndaAcceptedAt: new Date(), ndaVersion: NDA_VERSION },
   });
 
   const brand = application.study.brandProfile;

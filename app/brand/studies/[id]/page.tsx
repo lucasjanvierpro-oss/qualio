@@ -7,6 +7,7 @@ import { badgesForBrand, TRAIT_LABELS } from "@/lib/participants/badges";
 import { priceProfiles, getPricingConfig } from "@/lib/pricing/quotes";
 import { factorText } from "@/lib/pricing/engine";
 import StudyDetailClient, { type Candidate } from "./StudyDetailClient";
+import { sweepNoShowsSoon } from "@/lib/interviews/reliability";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ function age(dob: Date | null): number | null {
 }
 
 export default async function StudyDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ nouveau?: string }> }) {
+  sweepNoShowsSoon();
   const { id } = await params;
   const { nouveau } = await searchParams;
   const me = await getSessionUser();

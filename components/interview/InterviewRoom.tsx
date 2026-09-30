@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import s from "@/components/rl/rl.module.css";
 import WherebyRoom from "@/components/shared/WherebyRoom";
@@ -18,7 +18,7 @@ type Props = {
   backHref: string;
   status: string;
   // Côté marque : la fiche du participant, visible pendant l'entretien.
-  person?: { name: string; facts: string; summary: string | null; why: string | null };
+  person?: { name: string; facts: string; summary: string | null; why: string | null; nda?: string | null };
   /** Côté marque : le guide d'entretien de l'étude, à cocher au fil de l'appel. */
   guide?: string[];
 };
@@ -79,6 +79,9 @@ export default function InterviewRoom(p: Props) {
     try { localStorage.setItem(guideKey, JSON.stringify(next)); } catch { /* sans stockage, l'état reste dans la page */ }
   }
 
+  // Présence dans la salle : sert à constater une absence automatiquement.
+  const onJoin = useCallback(() => { void fetch(`/api/interviews/${p.interviewId}/presence`, { method: "POST" }).catch(() => null); }, [p.interviewId]);
+
   function saveNotes(v: string) {
     setNotes(v);
     try { localStorage.setItem(notesKey, v); } catch { /* stockage indisponible : les notes restent dans la page */ }
@@ -92,6 +95,7 @@ export default function InterviewRoom(p: Props) {
       </div>
       {p.person.why && <div className={s.cardSoft} style={{ padding: "12px 14px" }}><p className={s.eyebrow} style={{ fontSize: 13, margin: "0 0 4px" }}>Pourquoi ce profil</p><p style={{ margin: 0, fontSize: 14.5 }}>{p.person.why}</p></div>}
       {p.person.summary && <p className={s.muted} style={{ margin: 0, fontSize: 14.5 }}>{p.person.summary}</p>}
+      {p.person.nda && <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "var(--ok, #1f7a4d)" }}>✓ Accord de confidentialité signé le {new Intl.DateTimeFormat("fr-FR", { timeZone: TZ, day: "numeric", month: "long" }).format(new Date(p.person.nda))}</p>}
       {(p.guide ?? []).length > 0 && t !== null && (
         <div data-tour="room-guide">
           <p className={s.label} style={{ margin: "0 0 8px" }}>Votre guide</p>
@@ -158,7 +162,7 @@ export default function InterviewRoom(p: Props) {
         {phase === "open" && p.roomUrl && (
           entered ? (
             <div className={p.role === "brand" ? s.grid2 : undefined} style={p.role === "brand" ? { gridTemplateColumns: "minmax(0, 2.2fr) minmax(260px, 1fr)", alignItems: "start" } : undefined}>
-              <WherebyRoom roomUrl={p.roomUrl} displayName={p.displayName} />
+              <WherebyRoom roomUrl={p.roomUrl} displayName={p.displayName} onJoin={onJoin} />
               {fiche}
             </div>
           ) : (
@@ -192,6 +196,7 @@ export default function InterviewRoom(p: Props) {
           </section>
         )}
       </div>
+      {phase !== "after" && <IncidentBar interviewId={p.interviewId} role={p.role} backHref={p.backHref} />}
       {phase !== "after" && (
         <Tour id={`room-${p.role}`} steps={p.role === "brand" ? [
           { target: "room-wait", title: "La salle ouvre dix minutes avant", text: "Revenez sur cette page à l'heure : le bouton pour entrer apparaîtra ici, comme pour le participant." },
@@ -219,5 +224,73 @@ function NetworkLine() {
       <p className={s.muted} style={{ margin: "6px 0 10px" }}>{VISIO_BLOCKED_HELP.text}</p>
       <button type="button" className={`${s.btn} ${s.btnLight}`} onClick={() => void retry()}>Réessayer</button>
     </div>
+  );
+}
+
+/** Reporter l'entretien ou signaler un problème technique, depuis la salle. */
+function IncidentBar({ interviewId, role, backHref }: { interviewId: string; role: "brand" | "participant"; backHref: string }) {
+  const [open, setOpen] = useState<null | "reschedule" | "technical">(null);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const { state: network } = useVisioCheck();
+
+  async function submit() {
+    if (!open) return;
+    setBusy(true);
+    setMsg(null);
+    const r = await fetch(`/api/interviews/${interviewId}/incident`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: open, reason, network }),
+    }).then((x) => x.json()).catch(() => ({ error: "Connexion impossible. Réessayez." }));
+    setBusy(false);
+    if (r.error) { setMsg({ ok: false, text: r.error }); return; }
+    if (open === "reschedule") {
+      setMsg({ ok: true, text: role === "participant" ? "C'est noté. Proposez maintenant de nouveaux créneaux." : "C'est noté. Le participant va proposer de nouveaux créneaux ; vous recevrez un email." });
+      setTimeout(() => { window.location.href = backHref; }, 2200);
+    } else {
+      setMsg({ ok: true, text: "Envoyé : l'équipe Rarelyst et votre interlocuteur sont prévenus. Restez sur cette page." });
+      setReason("");
+    }
+  }
+
+  const problems = role === "participant"
+    ? ["La visio ne s'affiche pas", "Caméra ou micro ne marchent pas", "La marque n'est pas là", "Le son ou l'image coupent"]
+    : ["La visio ne s'affiche pas", "Caméra ou micro ne marchent pas", "Le participant n'est pas là", "Le son ou l'image coupent"];
+
+  return (
+    <section className={`${s.card} ${s.sectionGap}`} style={{ display: "grid", gap: 12 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <span className={s.muted} style={{ fontSize: 14, marginRight: "auto" }}>Un imprévu ?</span>
+        <button type="button" className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} aria-pressed={open === "technical"} onClick={() => { setOpen(open === "technical" ? null : "technical"); setMsg(null); }}>Problème technique</button>
+        <button type="button" className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} aria-pressed={open === "reschedule"} onClick={() => { setOpen(open === "reschedule" ? null : "reschedule"); setMsg(null); }}>Reporter l&apos;entretien</button>
+      </div>
+      {open === "technical" && (
+        <div style={{ display: "grid", gap: 10 }}>
+          <ul className={s.muted} style={{ margin: 0, paddingLeft: 18, fontSize: 14, display: "grid", gap: 4 }}>
+            <li>Rechargez la page, puis autorisez caméra et micro quand le navigateur le demande.</li>
+            <li>Utilisez Chrome, Safari ou Edge à jour ; fermez les autres applications de visio.</li>
+            <li>Réseau d&apos;entreprise ou Wi-Fi public : passez sur le partage de connexion de votre téléphone.</li>
+          </ul>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {problems.map((pb) => <button key={pb} type="button" className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} style={reason === pb ? { borderColor: "var(--accent, #6a43db)" } : undefined} onClick={() => setReason(pb)}>{pb}</button>)}
+          </div>
+          <textarea className={s.input} rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ce qui se passe, en quelques mots" />
+          <button type="button" className={`${s.btn} ${s.btnSm}`} style={{ justifySelf: "start" }} disabled={busy || reason.trim().length < 2} onClick={submit}>{busy ? "Envoi…" : "Prévenir l'équipe"}</button>
+        </div>
+      )}
+      {open === "reschedule" && (
+        <div style={{ display: "grid", gap: 10 }}>
+          <p className={s.muted} style={{ margin: 0, fontSize: 14 }}>
+            {role === "participant"
+              ? "Le créneau sera libéré et vous proposerez de nouvelles disponibilités ; la marque en choisira une."
+              : "Le créneau sera libéré ; le participant proposera de nouvelles disponibilités. Vos crédits restent réservés."}
+          </p>
+          <textarea className={s.input} rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Pourquoi, en quelques mots (visible par votre interlocuteur)" />
+          <button type="button" className={`${s.btn} ${s.btnSm}`} style={{ justifySelf: "start" }} disabled={busy || reason.trim().length < 3} onClick={submit}>{busy ? "Envoi…" : "Reporter l'entretien"}</button>
+        </div>
+      )}
+      {msg && <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: msg.ok ? "var(--ok, #1f7a4d)" : "#b42318" }}>{msg.text}</p>}
+    </section>
   );
 }

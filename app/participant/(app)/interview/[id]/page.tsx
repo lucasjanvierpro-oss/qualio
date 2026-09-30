@@ -3,10 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
 import InterviewRoom from "@/components/interview/InterviewRoom";
 import AsyncInterview from "@/components/interview/AsyncInterview";
+import { sweepNoShowsSoon } from "@/lib/interviews/reliability";
 
 export const dynamic = "force-dynamic";
 
 export default async function ParticipantInterviewPage({ params }: { params: Promise<{ id: string }> }) {
+  sweepNoShowsSoon();
   const { id } = await params;
   const me = await getSessionUser();
   if (!me) redirect("/login");

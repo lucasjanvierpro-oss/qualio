@@ -307,3 +307,52 @@ export async function sendWorkEmailCode(to: string, firstName: string, code: str
   });
   return send(to, `${code} · votre code Rarelyst`, html);
 }
+
+// ── Fiabilité des entretiens : absences, reports, problèmes techniques ──
+
+/** Annule des emails programmés (rappels d'un entretien reporté). */
+export async function cancelScheduledEmails(ids: string[]) {
+  const r = getResend();
+  return Promise.allSettled(ids.map((id) => r.emails.cancel(id)));
+}
+
+export async function sendRescheduleNotice(to: string, firstName: string, studyTitle: string, opts: { byWhom: string; reason: string; forParticipant: boolean; href: string }) {
+  return send(to, `Entretien reporté · ${studyTitle}`, layout({
+    title: `L'entretien est reporté${firstName ? `, ${esc(firstName)}` : ""}.`,
+    body: opts.forParticipant
+      ? `${esc(opts.byWhom)} a demandé à reporter l'entretien pour <strong style="color:${INK}">${esc(studyTitle)}</strong>. Proposez de nouveaux créneaux : la marque en choisira un. Les rappels de l'ancien créneau sont annulés.`
+      : `${esc(opts.byWhom)} a demandé à reporter l'entretien pour <strong style="color:${INK}">${esc(studyTitle)}</strong>. Le participant va proposer de nouveaux créneaux ; vous choisirez celui qui vous convient. Vos crédits restent réservés.`,
+    aside: opts.reason ? `Raison indiquée : « ${esc(opts.reason)} »` : undefined,
+    cta: { label: opts.forParticipant ? "Proposer de nouveaux créneaux" : "Voir l'étude", href: opts.href },
+  }));
+}
+
+export async function sendIncidentAdmin(d: { kind: "reschedule" | "technical" | "no_show" | "brand_absent"; studyTitle: string; who: string; reason?: string; details?: string; studyId: string }) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return null;
+  const label = { reschedule: "Report demandé", technical: "Problème technique", no_show: "Absence du participant", brand_absent: "Marque absente" }[d.kind];
+  return send(adminEmail, `${label} · ${d.studyTitle}`, layout({
+    title: label,
+    body: `<strong style="color:${INK}">${esc(d.who)}</strong> · étude <strong style="color:${INK}">${esc(d.studyTitle)}</strong>.`,
+    aside: [d.reason ? `« ${esc(d.reason)} »` : "", d.details ? esc(d.details) : ""].filter(Boolean).join("<br/>") || undefined,
+    cta: { label: "Ouvrir l'étude", href: `${APP_URL}/admin/studies/${d.studyId}` },
+  }));
+}
+
+export async function sendTechnicalIssueToOther(to: string, firstName: string, studyTitle: string, who: string, problem: string, href: string) {
+  return send(to, `Souci technique signalé · ${studyTitle}`, layout({
+    title: `${esc(who)} rencontre un souci technique.`,
+    body: `Pour l'entretien <strong style="color:${INK}">${esc(studyTitle)}</strong>${firstName ? `, ${esc(firstName)}` : ""} : ${esc(problem)}. Restez dans la salle quelques minutes ; si l'entretien ne peut pas avoir lieu, il pourra être reporté sans frais.`,
+    cta: { label: "Ouvrir la salle", href },
+  }));
+}
+
+export async function sendNoShowNotice(to: string, firstName: string, studyTitle: string, forBrand: boolean, opts: { participantName?: string; credits?: number; href: string }) {
+  return send(to, forBrand ? `Absence constatée · ${studyTitle}` : `Entretien manqué · ${studyTitle}`, layout({
+    title: forBrand ? "Le participant n'est pas venu." : `Vous avez manqué votre entretien${firstName ? `, ${esc(firstName)}` : ""}.`,
+    body: forBrand
+      ? `${esc(opts.participantName ?? "Le participant")} ne s'est pas connecté à l'entretien pour <strong style="color:${INK}">${esc(studyTitle)}</strong>.${opts.credits ? ` Vos ${opts.credits} crédits sont revenus sur votre compte.` : ""} Nous pouvons vous proposer un autre profil.`
+      : `Vous ne vous êtes pas connecté(e) à l'entretien pour <strong style="color:${INK}">${esc(studyTitle)}</strong>. S'il s'agit d'une erreur, répondez à cet email : nous regardons avec vous.`,
+    cta: { label: forBrand ? "Voir l'étude" : "Mon espace", href: opts.href },
+  }));
+}

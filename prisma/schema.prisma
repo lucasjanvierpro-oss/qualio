@@ -135,6 +135,8 @@ model BrandProfile {
   // Mémoire de la maison : positionnement, clientèle, concurrents, vocabulaire,
   // enseignements passés. Donnée à l'IA qui écrit les synthèses.
   houseNotes   String?  @db.Text
+  /// Langue des emails envoyés à la marque.
+  preferredLanguage String @default("fr")
 
   @@map("brand_profiles")
 }
@@ -149,6 +151,12 @@ model ParticipantProfile {
   lastName    String
   dateOfBirth DateTime?
   city        String?
+  // Informations fiscales (obligations des plateformes : art. 242 bis CGI, DAC7).
+  addressLine      String?
+  postalCode       String?
+  taxId            String?
+  taxCountry       String?
+  taxInfoUpdatedAt DateTime?
   country     String    @default("FR")
   photoUrl    String?
 
@@ -478,6 +486,9 @@ model Application {
 
   // Consentement explicite du participant à l'enregistrement (RGPD).
   recordingConsentAt DateTime?
+  // Accord de confidentialité accepté par le participant, et version du texte.
+  ndaAcceptedAt DateTime?
+  ndaVersion    String?
 
   interview Interview?
   reward    Reward?
@@ -526,6 +537,15 @@ model Interview {
   brandFeedback   String?
   brandReviewTags String[]  @default([])
   brandReviewedAt DateTime?
+  // Présence dans la salle (événement « join » de la visio) : sert à détecter
+  // une absence sans que personne n'ait à la constater.
+  participantJoinedAt   DateTime?
+  brandJoinedAt         DateTime?
+  brandAbsentNotifiedAt DateTime?
+  /// Vidéo effacée chez Whereby (90 jours après l'entretien).
+  recordingDeletedAt    DateTime?
+  /// Rappels programmés chez Resend, annulés si l'entretien est reporté.
+  reminderIds           String[]  @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -706,6 +726,54 @@ model DemoRequest {
 // Laboratoire : une marque inventée par Claude écrit un brief, notre lecteur
 // de brief le traite, puis la marque réagit. Sert à découvrir ce que Rarelyst
 // comprend mal ou ne sait pas encore faire.
+/// Report ou problème technique signalé depuis la salle d'entretien.
+model InterviewIncident {
+  id            String    @id @default(cuid())
+  interviewId   String?
+  applicationId String
+  studyId       String
+  byRole        String // participant | brand | admin
+  kind          String // reschedule | technical
+  reason        String?
+  details       Json?
+  createdAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+
+  @@index([studyId])
+  @@map("interview_incidents")
+}
+
+/// Facture d'un achat de crédits. Numérotée à l'émission (RL-AAAA-0001).
+model Invoice {
+  id              String    @id @default(cuid())
+  number          String?   @unique
+  brandProfileId  String
+  status          String    @default("draft") // draft | issued
+  issuedAt        DateTime?
+  amountCents     Int
+  vatCents        Int       @default(0)
+  totalCents      Int
+  currency        String    @default("EUR")
+  lines           Json
+  issuer          Json?
+  customer        Json?
+  stripeSessionId String?   @unique
+  paidAt          DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([brandProfileId])
+  @@map("invoices")
+}
+
+/// Réglages de l'application (émetteur des factures…), une ligne par clé.
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("app_settings")
+}
+
 /// Démo préparée pour une marque (Admin → Lancer une démo) : son brief, la
 /// fiche lue, des profils d'exemple et une synthèse tirée d'entretiens simulés.
 /// Rien de tout cela ne touche aux vraies études ni au panel.

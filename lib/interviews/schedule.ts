@@ -92,12 +92,24 @@ export async function confirmInterview(applicationId: string, startTime: string)
   const brand = application.study.brandProfile;
   const title = application.study.title;
   const common = { interviewId: interview.id, durationMinutes };
-  await Promise.allSettled([
+  const sent = await Promise.allSettled([
     sendInterviewConfirmed(participant.user.email, participant.firstName, title, scheduledAt, urls.participant, true, common),
     sendInterviewConfirmed(brand.user.email, brand.contactFirstName ?? "", title, scheduledAt, urls.brand, false, common),
     scheduleInterviewReminders({ to: participant.user.email, firstName: participant.firstName, scheduledAt, joinUrl: urls.participant }),
     scheduleInterviewReminders({ to: brand.user.email, firstName: brand.contactFirstName || "bonjour", scheduledAt, joinUrl: urls.brand }),
   ]);
+  // On garde les identifiants des rappels : un report les annule.
+  const reminderIds = sent.slice(2).flatMap((r) => (r.status === "fulfilled" ? reminderIdsOf(r.value) : []));
+  if (reminderIds.length) await prisma.interview.update({ where: { id: interview.id }, data: { reminderIds } }).catch(() => null);
 
   return { ok: true, interviewId: interview.id };
+}
+
+/** Les identifiants Resend des rappels programmés (résultat de scheduleInterviewReminders). */
+function reminderIdsOf(results: unknown): string[] {
+  if (!Array.isArray(results)) return [];
+  return results.flatMap((r) => {
+    const id = (r as { status?: string; value?: { data?: { id?: string } | null } }).value?.data?.id;
+    return (r as { status?: string }).status === "fulfilled" && id ? [id] : [];
+  });
 }

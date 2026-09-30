@@ -6,7 +6,7 @@ import { LANG_COOKIE, isLang, langFromAcceptLanguage } from "@/lib/i18n/detect";
 // l'application de connexion. Sans cette ligne, elles redirigent vers /login.
 const PUBLIC_ROUTES = [
   "/", "/en", "/login", "/signup/brand", "/signup/participant", "/pricing",
-  "/mentions-legales", "/confidentialite", "/conditions",
+  "/mentions-legales", "/confidentialite", "/conditions", "/accord-confidentialite",
   "/signup/confirmation",
 ];
 

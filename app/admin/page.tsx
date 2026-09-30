@@ -6,6 +6,7 @@ import { BADGES, CERTIFICATIONS } from "@/lib/participants/badges";
 import { TIERS } from "@/lib/pricing/config";
 import RequestAnswer from "./RequestAnswer";
 import a from "./admin.module.css";
+import { sweepNoShowsSoon } from "@/lib/interviews/reliability";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ const fmtEur = (cents: number) => `${Math.round(cents / 100).toLocaleString("fr-
 const requestTime = () => Date.now();
 
 export default async function AdminCockpit() {
+  sweepNoShowsSoon();
   const now = requestTime();
   const d30 = new Date(now - 30 * DAY);
   const d7 = new Date(now - 7 * DAY);

@@ -3,10 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/guards";
 import InterviewRoom from "@/components/interview/InterviewRoom";
 import AsyncResponse from "@/components/interview/AsyncResponse";
+import { sweepNoShowsSoon } from "@/lib/interviews/reliability";
 
 export const dynamic = "force-dynamic";
 
 export default async function BrandInterviewPage({ params }: { params: Promise<{ id: string }> }) {
+  sweepNoShowsSoon();
   const { id } = await params;
   const me = await getSessionUser();
   if (!me?.brandProfileId) redirect("/login");
@@ -62,6 +64,7 @@ export default async function BrandInterviewPage({ params }: { params: Promise<{
         facts: [pp.profession, pp.city].filter(Boolean).join(" · "),
         summary: pp.brandSummary,
         why: interview.application.adminMatchNote,
+        nda: interview.application.ndaAcceptedAt?.toISOString() ?? null,
       }}
     />
   );

@@ -26,6 +26,7 @@ export default function AsyncInterview(p: {
   const finished = ["submitted", "completed"].includes(p.status);
   const [phase, setPhase] = useState<Phase>(finished ? "done" : "intro");
   const [consent, setConsent] = useState(false);
+  const [nda, setNda] = useState(false);
   const [roomUrl, setRoomUrl] = useState<string | null>(null);
   const [joined, setJoined] = useState(p.joined);
   const [index, setIndex] = useState(p.index);
@@ -47,7 +48,7 @@ export default function AsyncInterview(p: {
     setBusy(true);
     setError(null);
     try {
-      const r = await call({ action: "start", consent: true });
+      const r = await call({ action: "start", consent: true, nda: true });
       setRoomUrl(r.roomUrl ?? null);
       setJoined(!!r.joined);
       setIndex(r.index ?? 0);
@@ -117,8 +118,12 @@ export default function AsyncInterview(p: {
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             <span>J&apos;accepte que mes réponses soient enregistrées en vidéo et transcrites, pour la marque qui mène l&apos;étude. La vidéo n&apos;est plus accessible après 90 jours.</span>
           </label>
+          <label className={css.consent}>
+            <input type="checkbox" checked={nda} onChange={(e) => setNda(e.target.checked)} />
+            <span>J&apos;accepte l&apos;<a href="/accord-confidentialite" target="_blank" rel="noopener">accord de confidentialité</a> : je garde pour moi les questions et tout ce que la marque me montre.</span>
+          </label>
           {error && <p className={css.error}>{error}</p>}
-          <button type="button" className={css.primary} disabled={!consent || busy} onClick={start}>
+          <button type="button" className={css.primary} disabled={!consent || !nda || busy} onClick={start}>
             {busy ? "Ouverture de la salle…" : p.joined ? "Reprendre" : "Commencer"}
           </button>
         </div>
