@@ -37,8 +37,8 @@ const OUT = path.join(os.homedir(), "Desktop", "Rarelyst-visuels");
 // Même liste que components/studio/registry.ts
 const SIZES = { story: [540, 960], post: [540, 675], square: [540, 540], banner: [792, 198], avatar: [200, 200] };
 const src = fs.readFileSync("components/studio/registry.ts", "utf8");
-const ALL = [...src.matchAll(/\{ id: "([^"]+)", title: "[^"]*", format: "(\w+)", duration: ([\d.]+), langs: \[([^\]]*)\] \}/g)]
-  .map((m) => [m[1], m[2], Number(m[3]), m[4].match(/"(\w+)"/g).map((x) => x.replace(/"/g, ""))]);
+const ALL = [...src.matchAll(/\{ id: "([^"]+)", title: "[^"]*", format: "(\w+)", duration: ([\d.]+),(?: still: ([\d.]+),)? langs: \[([^\]]*)\] \}/g)]
+  .map((m) => [m[1], m[2], Number(m[3]), m[5].match(/"(\w+)"/g).map((x) => x.replace(/"/g, "")), m[4] ? Number(m[4]) : null]);
 const only = process.argv[2] ? process.argv[2].split(",") : null;
 const FPS = Number(process.argv[3] ?? 30);
 
@@ -74,7 +74,7 @@ fs.mkdirSync(path.join(OUT, "images"), { recursive: true });
 const decks = new Map();
 const cookies = await adminCookies();
 const b = await chromium.launch({ channel: "chrome", headless: true });
-for (const [id, format, duration, langs] of ALL) {
+for (const [id, format, duration, langs, still] of ALL) {
   if (only && !only.includes(id)) continue;
   const [w, h] = SIZES[format];
   for (const lang of langs) {
@@ -108,7 +108,9 @@ for (const [id, format, duration, langs] of ALL) {
       }
       const mp4 = path.join(OUT, "videos", `${name}.mp4`);
       execFileSync(FFMPEG, ["-y", "-loglevel", "error", "-framerate", String(FPS), "-i", path.join(dir, "%05d.png"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", "-preset", "slow", "-movflags", "+faststart", mp4]);
-      fs.copyFileSync(path.join(dir, `${String(Math.floor(n * 0.45)).padStart(5, "0")}.png`), path.join(OUT, "images", `${name}-couverture.png`));
+      // Couverture : l'instant « still » s'il est donné, sinon le milieu de la vidéo.
+      const cover = still === null ? Math.floor(n * 0.45) : Math.min(n - 1, Math.round(still * FPS));
+      fs.copyFileSync(path.join(dir, `${String(cover).padStart(5, "0")}.png`), path.join(OUT, "images", `${name}-couverture.png`));
       fs.rmSync(dir, { recursive: true, force: true });
       console.log("vidéo :", name, `${(fs.statSync(mp4).size / 1e6).toFixed(1)} Mo`);
     }

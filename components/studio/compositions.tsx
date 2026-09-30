@@ -810,6 +810,265 @@ function PostQuestion({ lang }: { lang: Lang }) {
   );
 }
 
+// ── Bannières LinkedIn premium ────────────────────────────────────────
+// LinkedIn pose la photo (ou le logo de la page) en bas à gauche : rien
+// d'important sous x < 200 dans la moitié basse. Le texte commence à x = 232.
+const BN = {
+  fr: {
+    q1: "Qui voulez-vous", q2: "entendre\u00a0?", pill: "Vos premiers profils qualifiés", lanes: ["Acheteuse luxe", "Collectionneur d'archives", "Styliste indépendante"],
+    brief: "Brief d'une marque", briefText: "Des acheteuses de luxe discrètes, qui savent parler matière.", match: "2 profils correspondent", close: "Très proche",
+    rows: [["A", "#c98e68", "Amina D.", "Acheteuse luxe · Paris"], ["S", "#8a6bd8", "Sofia L.", "Directrice artistique · Milan"]],
+    sub: "Des profils précis et vérifiés, pour vos études qualitatives.",
+    p1: "Les profils que", p2: "les panels ne trouvent pas.", pSub: "Recrutement pour études qualitatives · mode, luxe, beauté",
+    cards: [["C", "#c98e68", "Camille R.", "Acheteuse luxe", "◆ Initiée"], ["I", "#8a6bd8", "Inès B.", "Vendeuse en boutique de luxe", "◆ Rare"], ["J", "#5d8f7a", "Jules M.", "Collectionneur d'archives", "✦ Introuvable"]],
+    m1: "Chaque profil arrive", m2: "avec ses preuves.", mSub: "Identité, LinkedIn, emploi, CV, book : vérifiés un par un.",
+    tagline: "Les bonnes personnes pour vos études qualitatives.", sectors: "Mode · Luxe · Beauté",
+  },
+  en: {
+    q1: "Who do you want", q2: "to hear from?", pill: "Your first qualified profiles", lanes: ["Luxury buyer", "Archive collector", "Freelance stylist"],
+    brief: "A brand's brief", briefText: "Discreet luxury buyers who can talk about materials.", match: "2 matching profiles", close: "Very close",
+    rows: [["A", "#c98e68", "Amina D.", "Luxury buyer · Paris"], ["S", "#8a6bd8", "Sofia L.", "Art director · Milan"]],
+    sub: "Precise, verified profiles for your qualitative research.",
+    p1: "The profiles", p2: "panels can't find.", pSub: "Recruitment for qualitative research · fashion, luxury, beauty",
+    cards: [["C", "#c98e68", "Camille R.", "Luxury buyer", "◆ Insider"], ["I", "#8a6bd8", "Inès B.", "Luxury boutique associate", "◆ Rare"], ["J", "#5d8f7a", "Jules M.", "Archive collector", "✦ Unfindable"]],
+    m1: "Every profile arrives", m2: "with its proof.", mSub: "Identity, LinkedIn, job, CV, portfolio: checked one by one.",
+    tagline: "The right people for your qualitative research.", sectors: "Fashion · Luxury · Beauty",
+  },
+};
+
+const glow = (x: string, y: string, c: string, r = "60% 90%") => `radial-gradient(${r} at ${x} ${y}, ${c}, transparent 70%)`;
+
+function BanniereHero({ lang }: { lang: Lang }) {
+  const c = BN[lang];
+  return (
+    <div className={s.frame} style={{ width: 792, height: 198, background: `${glow("8%", "20%", "rgba(140,104,242,.28)")}, ${glow("95%", "100%", "rgba(255,190,225,.55)")}, ${glow("60%", "0%", "rgba(255,240,214,.8)", "40% 70%")}, #f8f5ff` }}>
+      <Brand x={24} y={20} />
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 30, fontSize: 44, lineHeight: 0.98 }}>{c.q1}<br /><span className={s.grad}>{c.q2}</span></h2>
+      <div style={{ position: "absolute", left: 232, top: 136, display: "flex", alignItems: "center", gap: 8, padding: "5px 12px 5px 5px", borderRadius: 999, background: "#fff", boxShadow: "0 0 0 1px var(--line), 0 10px 24px -16px rgba(40,20,90,.5)", fontSize: 13, fontWeight: 600 }}>
+        <b style={{ padding: "3px 8px", borderRadius: 999, color: "#fff", background: "linear-gradient(110deg, var(--g2), var(--g3))", fontSize: 12 }}>72 h</b>{c.pill}
+      </div>
+      <span className={`${s.chip} ${s.chipRare}`} style={{ position: "absolute", left: 540, top: 34, fontSize: 13, padding: "7px 12px", transform: "rotate(-3deg)" }}>{c.lanes[0]}</span>
+      <span className={`${s.chip} ${s.chipHolo}`} style={{ position: "absolute", left: 506, top: 84, fontSize: 13, padding: "7px 12px", transform: "rotate(2deg)" }}>{c.lanes[1]}</span>
+      <span className={s.chip} style={{ position: "absolute", left: 548, top: 134, fontSize: 13, padding: "7px 12px", transform: "rotate(-2deg)" }}>{c.lanes[2]}</span>
+      <div style={{ position: "absolute", right: 30, top: 34, transform: "rotate(-8deg)" }}><LoupeMascot size={124} mood="search" animated={false} /></div>
+    </div>
+  );
+}
+
+function BanniereConsole({ lang }: { lang: Lang }) {
+  const c = BN[lang];
+  const soft = "linear-gradient(100deg, #d9ccff, #f3b6d8)";
+  return (
+    <div className={`${s.frame} ${s.bgInk}`} style={{ width: 792, height: 198 }}>
+      <Brand x={24} y={20} light />
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 34, fontSize: 36, lineHeight: 1, color: "#fff" }}>{c.q1}<br /><span style={{ background: soft, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>{c.q2}</span></h2>
+      <p style={{ position: "absolute", left: 232, top: 124, width: 240, margin: 0, fontSize: 13, lineHeight: 1.45, color: "rgba(255,255,255,.7)" }}>{c.sub}</p>
+      <div style={{ position: "absolute", left: 500, right: 22, top: 20, bottom: 20, padding: "12px 14px", borderRadius: 16, background: "rgba(255,255,255,.06)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.12), 0 30px 60px -30px rgba(0,0,0,.6)", color: "#f1edf6" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,.55)" }}><span>{c.brief}</span><span><b style={{ color: "#fff" }}>2</b> {c.match.replace(/^2 /, "")}</span></div>
+        <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.2, marginTop: 6 }}>{c.briefText}<i className={s.caret} style={{ background: "#c9b8ff", width: 3 }} /></div>
+        <div style={{ display: "grid", gap: 6, marginTop: 9 }}>
+          {c.rows.map(([i, col, n, r]) => (
+            <div key={n} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", borderRadius: 10, background: "rgba(255,255,255,.07)" }}>
+              <span className={s.av} style={{ width: 24, height: 24, borderRadius: 7, fontSize: 11, background: col }}>{i}</span>
+              <span style={{ fontSize: 11.5, lineHeight: 1.15, flex: 1 }}><b>{n}</b> <span style={{ color: "rgba(255,255,255,.6)" }}>· {r}</span></span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 7px", borderRadius: 999, color: "#8fe0b4", background: "rgba(47,163,107,.18)" }}>{c.close}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BanniereProfils({ lang }: { lang: Lang }) {
+  const c = BN[lang];
+  const medals: BadgeId[][] = [["verifie", "linkedin"], ["verifie", "emploi"], ["verifie", "portfolio"]];
+  return (
+    <div className={s.frame} style={{ width: 792, height: 198, background: `${glow("100%", "0%", "rgba(214,200,255,.7)", "50% 100%")}, ${glow("70%", "100%", "rgba(255,214,236,.6)")}, #fcfbfe` }}>
+      <Brand x={24} y={20} />
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 40, fontSize: 32, lineHeight: 1.02 }}>{c.p1}<br /><span className={s.grad}>{c.p2}</span></h2>
+      <p style={{ position: "absolute", left: 232, top: 118, width: 250, margin: 0, fontSize: 12.5, lineHeight: 1.45, color: "var(--ink-2)" }}>{c.pSub}</p>
+      {c.cards.map(([i, col, n, r, tag], k) => (
+        <div key={n} className={s.row} style={{ position: "absolute", left: 510 + k * 22, top: 18 + k * 54, width: 240, gridTemplateColumns: "34px 1fr auto", gap: 8, padding: "7px 10px", borderRadius: 13, transform: `rotate(${[-3, 1.5, -1][k]}deg)`, zIndex: 3 - k }}>
+          <span className={s.av} style={{ width: 34, height: 34, borderRadius: 10, fontSize: 15, background: col }}>{i}</span>
+          <span style={{ lineHeight: 1.15 }}><b style={{ fontSize: 12.5 }}>{n}</b><br /><span style={{ fontSize: 10.5, color: "var(--ink-2)" }}>{r}</span>
+            <span style={{ display: "flex", gap: 2, marginTop: 3 }}>{medals[k].map((m) => <Medallion key={m} id={m} size={16} />)}</span>
+          </span>
+          <span className={`${s.tag} ${k === 2 ? s.chipHolo : ""}`} style={{ fontSize: 10, padding: "3px 7px", background: k === 2 ? undefined : "var(--accent-soft)", color: "var(--g2)" }}>{tag}</span>
+        </div>
+      ))}
+      <div style={{ position: "absolute", left: 470, top: 4, zIndex: 5, transform: "rotate(-14deg)" }}><LoupeMascot size={62} mood="happy" animated={false} /></div>
+    </div>
+  );
+}
+
+function BanniereMedailles({ lang }: { lang: Lang }) {
+  const c = BN[lang];
+  const medals: BadgeId[] = ["verifie", "linkedin", "emploi", "cv", "portfolio"];
+  return (
+    <div className={`${s.frame} ${s.bgInk}`} style={{ width: 792, height: 198 }}>
+      <Brand x={24} y={20} light />
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 40, fontSize: 32, lineHeight: 1.02, color: "#fff" }}>{c.m1}<br /><span className={s.gradGold}>{c.m2}</span></h2>
+      <p style={{ position: "absolute", left: 232, top: 118, width: 250, margin: 0, fontSize: 12.5, lineHeight: 1.45, color: "rgba(255,255,255,.7)" }}>{c.mSub}</p>
+      <div style={{ position: "absolute", left: 500, right: 16, top: 30, height: 140, background: "radial-gradient(50% 50% at 50% 50%, rgba(242,196,109,.28), transparent 70%)" }} />
+      <div style={{ position: "absolute", left: 508, top: 62, display: "flex", gap: 2 }}>
+        {medals.map((m, k) => <span key={m} style={{ transform: `translateY(${[8, -4, -10, -4, 8][k]}px)` }}><Medallion id={m} size={54} /></span>)}
+      </div>
+    </div>
+  );
+}
+
+function BanniereMinimal({ lang }: { lang: Lang }) {
+  const c = BN[lang];
+  return (
+    <div className={s.frame} style={{ width: 792, height: 198, background: `${glow("50%", "120%", "rgba(140,104,242,.18)", "70% 80%")}, linear-gradient(180deg, #ffffff, #f7f3ff)` }}>
+      <div style={{ position: "absolute", left: 232, top: 42, display: "flex", alignItems: "center", gap: 14 }}>
+        <Image src="/brand/logo.png" alt="" width={58} height={58} />
+        <span style={{ fontSize: 60, fontWeight: 700, letterSpacing: "-0.055em", lineHeight: 1 }}>Rarelyst</span>
+      </div>
+      <div style={{ position: "absolute", left: 234, top: 118, width: 300, height: 1, background: "linear-gradient(90deg, var(--accent-dim), transparent)" }} />
+      <p style={{ position: "absolute", left: 234, top: 128, margin: 0, fontSize: 14, color: "var(--ink-2)" }}>{c.tagline}</p>
+      <p style={{ position: "absolute", left: 234, top: 152, margin: 0, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--accent)" }}>{c.sectors}</p>
+      <div style={{ position: "absolute", right: 38, top: 40, transform: "rotate(-10deg)" }}><LoupeMascot size={118} animated={false} /></div>
+    </div>
+  );
+}
+
+// ── Série de 4 stories : l'outil, en quatre temps ─────────────────────
+const SS = {
+  fr: {
+    k: ["01 · Le brief", "02 · Les profils", "03 · L'entretien", "04 · La synthèse"],
+    s1: ["Qui voulez-vous", "entendre\u00a0?"], label: "Votre brief", brief: "Des acheteuses de luxe discrètes, 25–40 ans, qui savent parler matière.", chips: ["Acheteuse luxe", "Matières", "Paris"],
+    f1: "Quelques phrases suffisent. Nous en faisons une fiche précise en 10 secondes.",
+    s2: ["Nous la trouvons.", "Et nous la prouvons."], role: "Acheteuse luxe · 11 ans · Paris", close: "Très proche", near: "Proche", cert: "Certifiée à 92 %",
+    why: "Pourquoi elle", whyText: "Ancienne acheteuse d'un grand magasin parisien, elle suit les matières depuis 11 ans.",
+    others: [["I", "#8a6bd8", "Inès B.", "Vendeuse en boutique de luxe"], ["J", "#5d8f7a", "Jules M.", "Collectionneur d'archives"]], f2: "Vous ne gardez que les profils qui vous servent.",
+    s3: ["Vous menez l'entretien.", "Le reste se fait seul."], chips3: ["Enregistré", "Transcrit en direct", "Votre guide à l'écran"], f3: "La visio se passe dans Rarelyst. Rien à installer.",
+    s4: ["Une synthèse", "qui tranche."], decisionL: "Votre décision", decision: "Trois ou cinq coloris pour le lancement\u00a0?", answerL: "La réponse", answer: "Trois. Le noir porte les ventes ; le reste finirait soldé.",
+    conf: "Confiance élevée · 6 personnes sur 8", quote: "« Le noir, je le rachète. Le vert, je l'admire en vitrine. »", verified: "Citation vérifiée dans la transcription", cta: "Réserver une démo · rarelyst.co",
+  },
+  en: {
+    k: ["01 · The brief", "02 · The profiles", "03 · The interview", "04 · The synthesis"],
+    s1: ["Who do you want", "to hear from?"], label: "Your brief", brief: "Discreet luxury buyers, 25–40, who can talk about materials.", chips: ["Luxury buyer", "Materials", "Paris"],
+    f1: "A few sentences will do. We turn them into a precise brief in 10 seconds.",
+    s2: ["We find her.", "And we prove it."], role: "Luxury buyer · 11 yrs · Paris", close: "Very close", near: "Close", cert: "92% certified",
+    why: "Why her", whyText: "A former buyer at a Paris department store, she has followed materials for 11 years.",
+    others: [["I", "#8a6bd8", "Inès B.", "Luxury boutique associate"], ["J", "#5d8f7a", "Jules M.", "Archive collector"]], f2: "You only keep the profiles that serve you.",
+    s3: ["You run the interview.", "The rest happens on its own."], chips3: ["Recorded", "Transcribed live", "Your guide on screen"], f3: "The video call happens inside Rarelyst. Nothing to install.",
+    s4: ["A synthesis", "that decides."], decisionL: "Your decision", decision: "Three or five colourways for the launch?", answerL: "The answer", answer: "Three. Black drives sales; the rest would end up on sale.",
+    conf: "High confidence · 6 people out of 8", quote: "“Black, I buy again. Green, I admire in the window.”", verified: "Quote checked against the transcript", cta: "Book a demo · rarelyst.co",
+  },
+};
+
+function SerieFrame({ i, t, light = false, bg, children }: { i: number; t: number; light?: boolean; bg: string; children: React.ReactNode }) {
+  return (
+    <div className={`${s.frame} ${bg}`} style={{ width: 540, height: 960 }}>
+      {/* Le grand numéro en filigrane, et la progression de la série. */}
+      <div style={{ position: "absolute", right: -18, top: 96, fontSize: 300, fontWeight: 700, letterSpacing: "-0.08em", lineHeight: 1, color: light ? "rgba(255,255,255,.05)" : "rgba(106,67,219,.07)", ...rise(t, 0, 0.8, 40) }}>0{i}</div>
+      <div style={{ position: "absolute", left: 36, right: 36, top: 758, display: "flex", gap: 6 }}>
+        {[1, 2, 3, 4].map((k) => <i key={k} style={{ flex: 1, height: 3, borderRadius: 3, background: k === i ? (light ? "#fff" : "var(--accent)") : light ? "rgba(255,255,255,.2)" : "rgba(106,67,219,.18)" }} />)}
+      </div>
+      <Brand story light={light} />
+      {children}
+    </div>
+  );
+}
+
+function Serie(i: number, t: number, lang: Lang) {
+  const c = SS[lang];
+  const kicker = (light = false) => <p className={s.kicker} style={{ position: "absolute", left: 36, top: 150, color: light ? "#c9b8ff" : undefined, ...rise(t, 0.1) }}>{c.k[i - 1]}</p>;
+  if (i === 1) {
+    const shown = typed(c.brief, t, 1.0, 34);
+    return (
+      <SerieFrame i={1} t={t} bg={s.bgLilac}>
+        {kicker()}
+        <h1 className={s.h1} style={{ position: "absolute", left: 36, right: 36, top: 180, fontSize: 60, ...rise(t, 0.25) }}>{c.s1[0]}<br /><span className={s.grad}>{c.s1[1]}</span></h1>
+        <div className={s.cardInk} style={{ position: "absolute", left: 30, right: 30, top: 350, padding: 24, ...rise(t, 0.6, 0.6, 40) }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,.55)" }}>{c.label}</div>
+          <div style={{ fontSize: 27, fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1.18, marginTop: 10, minHeight: 96, color: "#fff" }}>{shown}<i className={s.caret} style={{ background: "#c9b8ff", opacity: Math.floor(t * 2) % 2 || t < 3.4 ? 1 : 0 }} /></div>
+          <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+            {c.chips.map((x, k) => <span key={x} className={s.chip} style={{ fontSize: 14, padding: "7px 12px", background: "rgba(255,255,255,.1)", color: "#fff", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.18)", ...pop(t, 3.3 + k * 0.15) }}>{x}</span>)}
+          </div>
+        </div>
+        <p className={s.lead} style={{ position: "absolute", left: 36, right: 150, top: 620, fontSize: 18, ...rise(t, 4.0) }}>{c.f1}</p>
+        <div style={{ position: "absolute", right: 28, top: 600, ...pop(t, 0.8), transform: `${pop(t, 0.8).transform} rotate(${Math.sin(t * 2) * 6}deg)` }}><LoupeMascot size={110} mood="search" /></div>
+      </SerieFrame>
+    );
+  }
+  if (i === 2) {
+    const medals: BadgeId[] = ["verifie", "linkedin", "emploi", "cv"];
+    const scanX = 250 + 150 * Math.sin(seg(t, 0.9, 3.2) * Math.PI);
+    return (
+      <SerieFrame i={2} t={t} bg={s.bgLight}>
+        {kicker()}
+        <h2 className={s.h2} style={{ position: "absolute", left: 36, right: 36, top: 180, fontSize: 44, ...rise(t, 0.25) }}>{c.s2[0]}<br /><span className={s.grad}>{c.s2[1]}</span></h2>
+        <div className={s.cardInk} style={{ position: "absolute", left: 30, right: 30, top: 300, padding: 22, ...rise(t, 0.6, 0.6, 40) }}>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <span className={s.av} style={{ width: 60, height: 60, fontSize: 25, background: "#c98e68" }}>C</span>
+            <span style={{ flex: 1 }}><div style={{ fontSize: 24, fontWeight: 700, color: "#fff", letterSpacing: "-0.03em" }}>Camille R.</div><div style={{ fontSize: 14.5, color: "#b9aecb" }}>{c.role}</div></span>
+            <span className={s.tag} style={{ color: "#8fe0b4", background: "rgba(47,163,107,.2)", ...pop(t, 1.4) }}>● {c.close}</span>
+          </div>
+          <div style={{ display: "flex", gap: 6, marginTop: 16 }}>{medals.map((m, k) => <span key={m} style={pop(t, 1.6 + k * 0.15)}><Medallion id={m} size={52} /></span>)}</div>
+          <div style={{ marginTop: 12, fontSize: 14.5, color: "#e8e4ff", ...rise(t, 2.3) }}>{c.cert}</div>
+          <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 14, background: "rgba(255,255,255,.08)", color: "#fff", ...rise(t, 2.6) }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#c9b8ff" }}>{c.why}</div>
+            <div style={{ fontSize: 16, lineHeight: 1.4, marginTop: 4 }}>{c.whyText}</div>
+          </div>
+          <div style={{ position: "absolute", left: scanX, top: -40, opacity: seg(t, 0.8, 1.1) * (1 - seg(t, 3.2, 3.6)) }}><LoupeMascot size={80} mood="search" /></div>
+        </div>
+        <div style={{ position: "absolute", left: 30, right: 30, top: 618, display: "grid", gap: 8 }}>
+          {c.others.map(([a, col, n, r], k) => (
+            <div key={n} className={s.row} style={{ gridTemplateColumns: "40px 1fr auto", padding: "9px 12px", ...rise(t, 3.0 + k * 0.2) }}>
+              <span className={s.av} style={{ width: 40, height: 40, fontSize: 17, background: col }}>{a}</span>
+              <span><span className={s.rowName} style={{ fontSize: 15 }}>{n}</span><br /><span className={s.rowRole} style={{ fontSize: 12.5 }}>{r}</span></span>
+              <span className={s.tag} style={{ background: "var(--accent-soft)", color: "var(--g2)" }}>{k ? c.near : c.close}</span>
+            </div>
+          ))}
+        </div>
+        <p style={{ position: "absolute", left: 36, right: 36, top: 730, margin: 0, fontSize: 14, fontWeight: 600, color: "var(--ink-2)", ...rise(t, 3.6) }}>{c.f2}</p>
+      </SerieFrame>
+    );
+  }
+  if (i === 3) {
+    return (
+      <SerieFrame i={3} t={t} bg={s.bgInk} light>
+        {kicker(true)}
+        <h2 className={s.h2} style={{ position: "absolute", left: 36, right: 36, top: 180, fontSize: 42, color: "#fff", ...rise(t, 0.25) }}>{c.s3[0]}<br /><span className={s.gradGold}>{c.s3[1]}</span></h2>
+        <div style={{ position: "absolute", left: 26, right: 26, top: 300, height: 312, borderRadius: 18, overflow: "hidden", boxShadow: "0 40px 80px -40px rgba(0,0,0,.8)", ...rise(t, 0.6, 0.6, 40) }}>
+          <div style={{ width: 880, transform: "scale(0.557)", transformOrigin: "left top" }}>
+            <FilmWindow lang={lang} sceneIndex={3} t={1.2 + t * 1.3} reduced />
+          </div>
+        </div>
+        <div style={{ position: "absolute", left: 30, right: 30, top: 636, display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {c.chips3.map((x, k) => <span key={x} className={s.chip} style={{ fontSize: 14.5, ...pop(t, 1.6 + k * 0.2) }}><span className={s.check} style={{ width: 22, height: 22, fontSize: 12 }}>✓</span>{x}</span>)}
+        </div>
+        <p style={{ position: "absolute", left: 36, right: 36, top: 714, margin: 0, fontSize: 14.5, color: "rgba(255,255,255,.72)", ...rise(t, 2.4) }}>{c.f3}</p>
+      </SerieFrame>
+    );
+  }
+  return (
+    <SerieFrame i={4} t={t} bg={s.bgLilac}>
+      {kicker()}
+      <h1 className={s.h1} style={{ position: "absolute", left: 36, right: 36, top: 180, fontSize: 60, ...rise(t, 0.25) }}>{c.s4[0]}<br /><span className={s.grad}>{c.s4[1]}</span></h1>
+      <div className={s.card} style={{ position: "absolute", left: 30, right: 30, top: 340, padding: 22, ...rise(t, 0.6, 0.6, 40) }}>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{c.decisionL}</div>
+        <div style={{ fontSize: 20, fontWeight: 700, marginTop: 4, letterSpacing: "-0.025em" }}>{c.decision}</div>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.07em", marginTop: 16, ...rise(t, 1.1) }}>{c.answerL}</div>
+        <div style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.25, letterSpacing: "-0.025em", marginTop: 4, ...rise(t, 1.2) }}>{c.answer}</div>
+        <div style={{ marginTop: 14, ...rise(t, 1.7) }}>
+          <div style={{ display: "flex", gap: 4 }}>{Array.from({ length: 8 }, (_, k) => <i key={k} style={{ flex: 1, height: 8, borderRadius: 4, background: k < 6 ? "linear-gradient(90deg, var(--g3), var(--g2))" : "var(--line)", opacity: seg(t, 1.8 + k * 0.08, 2.0 + k * 0.08) * 0.8 + 0.2 }} />)}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ok)", marginTop: 8 }}>● {c.conf}</div>
+        </div>
+        <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 12, background: "var(--soft)", fontSize: 16, fontWeight: 600, lineHeight: 1.35, ...rise(t, 2.5) }}>{c.quote}
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ok)", marginTop: 6 }}>✓ {c.verified}</div>
+        </div>
+      </div>
+      <div className={`${s.btn} ${s.btnAccent}`} style={{ position: "absolute", left: 36, top: 690, ...pop(t, 3.2) }}>{c.cta}</div>
+      <div style={{ position: "absolute", right: 26, top: 660, ...pop(t, 3.5) }}><LoupeMascot size={90} mood="wow" /></div>
+    </SerieFrame>
+  );
+}
+
 const RENDERS: Record<string, Render> = {
   marques: Marques,
   participants: Participants,
@@ -828,6 +1087,12 @@ const RENDERS: Record<string, Render> = {
   avatar: () => <Avatar />,
   "carre-logo": () => <CarreLogo />,
   "post-garanties": (_t, lang) => <PostGaranties lang={lang} />,
+  "banniere-hero": (_t, lang) => <BanniereHero lang={lang} />,
+  "banniere-console": (_t, lang) => <BanniereConsole lang={lang} />,
+  "banniere-profils": (_t, lang) => <BanniereProfils lang={lang} />,
+  "banniere-medailles": (_t, lang) => <BanniereMedailles lang={lang} />,
+  "banniere-minimal": (_t, lang) => <BanniereMinimal lang={lang} />,
+  ...Object.fromEntries([1, 2, 3, 4].map((i) => [`serie-${i}`, (t: number, lang: Lang) => Serie(i, t, lang)])),
   "post-question": (_t, lang) => <PostQuestion lang={lang} />,
   ...Object.fromEntries(Array.from({ length: 7 }, (_, i) => [`carrousel-marques-${i + 1}`, (_t: number, lang: Lang) => <CarrouselMarques i={i + 1} lang={lang} />])),
   ...Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`carrousel-participants-${i + 1}`, (_t: number, lang: Lang) => <CarrouselParticipants i={i + 1} lang={lang} />])),
