@@ -459,7 +459,7 @@ function StoryCitation() {
       <p className={s.kicker} style={{ marginTop: 200 }}>Ce que vos clientes pensent vraiment</p>
       <div style={{ fontSize: 120, lineHeight: 0.6, color: "var(--accent-dim)", marginTop: 30, fontWeight: 700 }}>«</div>
       <h1 className={s.h1} style={{ fontSize: 50, marginTop: 10 }}>Si c&apos;est écrit recyclé, je pense <span className={s.grad}>seconde main.</span></h1>
-      <p className={s.lead} style={{ marginTop: 24 }}>Vendeuse en boutique de luxe, 8 ans de métier</p>
+      <p className={s.lead} style={{ marginTop: 24 }}>Vendeuse en boutique de luxe, 8 ans de métier<br /><span style={{ fontSize: 14, color: "var(--ink-3)" }}>Extrait d&apos;exemple</span></p>
       <div className={s.card} style={{ position: "absolute", left: 40, right: 40, bottom: 200, padding: 20, display: "flex", gap: 14, alignItems: "center" }}>
         <LoupeMascot size={64} animated={false} />
         <span style={{ fontSize: 16, lineHeight: 1.4 }}>Des entretiens avec les bonnes personnes, et une synthèse qui répond à vos questions. <b>rarelyst.co</b></span>
@@ -520,6 +520,296 @@ function CarreLogo() {
   );
 }
 
+// ── Carrousels LinkedIn (une image par diapositive, assemblées en PDF) ──
+function Slide({ n, total, light = false, bg = s.bgLight, last = false, children }: { n: number; total: number; light?: boolean; bg?: string; last?: boolean; children: React.ReactNode }) {
+  const dim = light ? "rgba(255,255,255,.6)" : "var(--ink-3)";
+  return (
+    <div className={`${s.frame} ${bg}`} style={{ width: 540, height: 675, padding: "92px 36px 0", color: light ? "#fff" : undefined }}>
+      <Brand light={light} />
+      <div style={{ position: "absolute", right: 30, top: 34, fontSize: 14, fontWeight: 700, color: dim }}>{n} / {total}</div>
+      {children}
+      <div className={s.url} style={{ position: "absolute", left: 36, bottom: 28, fontSize: 17, color: dim }}>rarelyst.co</div>
+      {!last && <div style={{ position: "absolute", right: 30, bottom: 22, width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 20, fontWeight: 700, color: "#fff", background: "linear-gradient(140deg, var(--g3), var(--g2))" }}>→</div>}
+    </div>
+  );
+}
+
+function Step({ n, children, light = false }: { n: string; children: React.ReactNode; light?: boolean }) {
+  return (
+    <>
+      <div style={{ fontSize: 15, fontWeight: 700, color: light ? "#c9b8ff" : "var(--accent)" }}>{n}</div>
+      <h2 className={s.h2} style={{ marginTop: 8, fontSize: 36, color: light ? "#fff" : undefined }}>{children}</h2>
+    </>
+  );
+}
+
+const Note = ({ children, light = false }: { children: React.ReactNode; light?: boolean }) => (
+  <p className={s.lead} style={{ position: "absolute", left: 36, right: 90, bottom: 68, fontSize: 16, color: light ? "rgba(255,255,255,.72)" : undefined }}>{children}</p>
+);
+
+const CM = {
+  fr: {
+    kicker: "Études qualitatives", c1: "Interrogez-vous", c2: "les bonnes personnes ?", cSub: "5 règles pour recruter des profils qui font vraiment avancer une décision.", swipe: "Glissez",
+    r1: "Décrivez une personne, pas une cible.", usual: "Ce qu'on écrit d'habitude", boxes: ["Femme", "25–35 ans", "CSP+"], better: "Ce qu'il faut écrire",
+    brief: "Une vendeuse en boutique de luxe qui conseille chaque semaine des clientes venues d'Asie.",
+    r2: "Allez chercher ceux qui ne répondent jamais aux panels.",
+    lanes: [["Vendeuse en boutique de luxe", "rare"], ["Acheteuse de grand magasin", "rare"], ["Collectionneur d'archives", "holo"], ["Styliste indépendante", ""], ["Retoucheuse d'atelier", "rare"], ["Cliente très importante", "holo"], ["Revendeur de seconde main", ""]],
+    r2Note: "Ces personnes ne remplissent pas de questionnaires en ligne. On les trouve une par une.",
+    r3: "Vérifiez avant l'entretien, pas pendant.", role: "Acheteuse luxe · 11 ans · Paris",
+    proofs: ["Identité vérifiée", "LinkedIn relié", "Emploi confirmé", "CV relu"], r3Note: "Chaque preuve devient une médaille, visible sur le profil avant de le garder.",
+    r4: "Posez les questions qui tranchent.",
+    qs: ["Entre ces deux sacs, lequel achèteriez-vous demain ? Pourquoi ?", "Racontez la dernière fois que vous avez hésité en boutique.", "Qu'est-ce qui vous ferait passer chez un concurrent ?"],
+    r4Note: "Des choix, des scènes vécues, des concurrents. Pas « que pensez-vous de… ».",
+    r5: "Exigez une synthèse qui répond à vos décisions.", decisionL: "Votre décision", decision: "Lancer la ligne en cuir recyclé à 690 € ?",
+    answerL: "La réponse", answer: "Oui, mais sans le mot « recyclé » en vitrine : 5 personnes sur 8 y entendent « seconde main ».",
+    conf: "Confiance élevée · 8 entretiens", quote: "« Si c'est écrit recyclé, je pense seconde main. »", verified: "Citation vérifiée dans la transcription",
+    e1: "Rarelyst fait", e2: "tout ça pour vous.", points: ["Des profils vérifiés, proposés en quelques jours", "Vous ne payez que ceux que vous gardez", "Vidéo, transcription et synthèse livrées"], eCta: "Réserver une démo · rarelyst.co",
+  },
+  en: {
+    kicker: "Qualitative research", c1: "Are you talking", c2: "to the right people?", cSub: "5 rules for recruiting profiles that actually move a decision forward.", swipe: "Swipe",
+    r1: "Describe a person, not a target.", usual: "What people usually write", boxes: ["Woman", "25–35", "Upper-middle class"], better: "What to write instead",
+    brief: "A luxury boutique associate who advises Asian clients every week.",
+    r2: "Find the people who never answer panels.",
+    lanes: [["Luxury boutique associate", "rare"], ["Department store buyer", "rare"], ["Archive collector", "holo"], ["Freelance stylist", ""], ["Atelier seamstress", "rare"], ["Top-tier client", "holo"], ["Resale dealer", ""]],
+    r2Note: "These people don't fill in online surveys. We find them one by one.",
+    r3: "Verify before the interview, not during it.", role: "Luxury buyer · 11 yrs · Paris",
+    proofs: ["Identity verified", "LinkedIn linked", "Job confirmed", "CV reviewed"], r3Note: "Every proof becomes a medal, visible on the profile before you keep it.",
+    r4: "Ask the questions that settle things.",
+    qs: ["Between these two bags, which would you buy tomorrow? Why?", "Tell me about the last time you hesitated in store.", "What would make you switch to a competitor?"],
+    r4Note: "Choices, real moments, competitors. Not \"what do you think of…\".",
+    r5: "Demand a synthesis that answers your decisions.", decisionL: "Your decision", decision: "Launch the recycled leather line at €690?",
+    answerL: "The answer", answer: "Yes, but without the word \"recycled\" in the window: 5 people out of 8 hear \"second-hand\".",
+    conf: "High confidence · 8 interviews", quote: "\"If it says recycled, I think second-hand.\"", verified: "Quote checked against the transcript",
+    e1: "Rarelyst does", e2: "all of this for you.", points: ["Verified profiles, suggested within days", "You only pay for the ones you keep", "Video, transcript and synthesis delivered"], eCta: "Book a demo · rarelyst.co",
+  },
+};
+
+function CarrouselMarques({ i, lang }: { i: number; lang: Lang }) {
+  const c = CM[lang];
+  const N = 7;
+  const medals: BadgeId[] = ["verifie", "linkedin", "emploi", "cv"];
+  if (i === 1) return (
+    <Slide n={1} total={N} bg={s.bgLilac}>
+      <p className={s.kicker}>{c.kicker}</p>
+      <h1 className={s.h1} style={{ marginTop: 14, fontSize: 60 }}>{c.c1}<br /><span className={s.grad}>{c.c2}</span></h1>
+      <p className={s.lead} style={{ marginTop: 22, maxWidth: 340 }}>{c.cSub}</p>
+      <div style={{ position: "absolute", right: 30, bottom: 90 }}><LoupeMascot size={150} mood="search" animated={false} /></div>
+      <div style={{ position: "absolute", left: 36, bottom: 80, fontSize: 17, fontWeight: 700, color: "var(--accent)" }}>{c.swipe} →</div>
+    </Slide>
+  );
+  if (i === 2) return (
+    <Slide n={2} total={N}>
+      <Step n="1">{c.r1}</Step>
+      <p className={s.kicker} style={{ marginTop: 30, color: "var(--ink-3)" }}>{c.usual}</p>
+      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+        {c.boxes.map((b) => <span key={b} className={`${s.chip} ${s.chipDash}`} style={{ position: "relative", fontSize: 15 }}>{b}<i className={s.strike} /></span>)}
+      </div>
+      <p className={s.kicker} style={{ marginTop: 26 }}>{c.better}</p>
+      <div className={s.bubble} style={{ marginTop: 12, fontSize: 22 }}>{c.brief}</div>
+    </Slide>
+  );
+  if (i === 3) return (
+    <Slide n={3} total={N} bg={s.bgLilac}>
+      <Step n="2">{c.r2}</Step>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 9, marginTop: 26 }}>
+        {c.lanes.map(([l, k]) => <span key={l} className={`${s.chip} ${k === "holo" ? s.chipHolo : k === "rare" ? s.chipRare : ""}`} style={{ fontSize: 15 }}>{l}</span>)}
+      </div>
+      <Note>{c.r2Note}</Note>
+    </Slide>
+  );
+  if (i === 4) return (
+    <Slide n={4} total={N}>
+      <Step n="3">{c.r3}</Step>
+      <div className={s.card} style={{ marginTop: 26, padding: 20 }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <span className={s.av} style={{ background: "#c98e68" }}>C</span>
+          <span><span className={s.rowName}>Camille R.</span><br /><span className={s.rowRole}>{c.role}</span></span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 12px", marginTop: 16 }}>
+          {medals.map((m, k) => <span key={m} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, fontWeight: 600 }}><Medallion id={m} size={34} />{c.proofs[k]}</span>)}
+        </div>
+      </div>
+      <Note>{c.r3Note}</Note>
+    </Slide>
+  );
+  if (i === 5) return (
+    <Slide n={5} total={N} bg={s.bgLilac}>
+      <Step n="4">{c.r4}</Step>
+      <div style={{ display: "grid", gap: 10, marginTop: 24 }}>
+        {c.qs.map((q, k) => <div key={q} className={s.card} style={{ padding: "14px 16px", display: "flex", gap: 12, alignItems: "baseline", fontSize: 17, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.3 }}><span style={{ color: "var(--accent)" }}>{k + 1}.</span>{q}</div>)}
+      </div>
+      <Note>{c.r4Note}</Note>
+    </Slide>
+  );
+  if (i === 6) return (
+    <Slide n={6} total={N}>
+      <Step n="5">{c.r5}</Step>
+      <div className={s.card} style={{ marginTop: 22, padding: 20 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{c.decisionL}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4, letterSpacing: "-0.02em" }}>{c.decision}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 14 }}>{c.answerL}</div>
+        <div style={{ fontSize: 16, lineHeight: 1.4, marginTop: 4 }}>{c.answer}</div>
+        <span className={s.tag} style={{ display: "inline-block", marginTop: 12, background: "var(--ok-soft)", color: "var(--ok)" }}>● {c.conf}</span>
+        <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 12, background: "var(--soft)", fontSize: 15, fontWeight: 600 }}>{c.quote}
+          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ok)", marginTop: 6 }}>✓ {c.verified}</div>
+        </div>
+      </div>
+    </Slide>
+  );
+  return (
+    <Slide n={7} total={N} bg={s.bgInk} light last>
+      <h1 className={s.h1} style={{ color: "#fff", fontSize: 54 }}>{c.e1}<br /><span className={s.gradGold}>{c.e2}</span></h1>
+      <div style={{ display: "grid", gap: 14, marginTop: 34 }}>
+        {c.points.map((p) => <span key={p} style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 19, fontWeight: 600 }}><span className={s.check}>✓</span>{p}</span>)}
+      </div>
+      <div className={`${s.btn} ${s.btnAccent}`} style={{ position: "absolute", left: 36, bottom: 80 }}>{c.eCta}</div>
+      <div style={{ position: "absolute", right: 26, bottom: 70 }}><LoupeMascot size={110} mood="wow" animated={false} /></div>
+    </Slide>
+  );
+}
+
+const CP = {
+  fr: {
+    kicker: "Mode, luxe, beauté", c1: "Votre métier", c2: "intéresse les marques.", cSub: "Comment être payé de 90 à 350 € pour un entretien de 45 minutes.", swipe: "Glissez",
+    r1: "Créez votre profil en 5 minutes.", fields: [["Métier", "Vendeuse en boutique de luxe"], ["Expérience", "8 ans"], ["Univers", "Maroquinerie, joaillerie"], ["Langues", "Français, anglais"]],
+    r1Note: "Pas besoin d'un CV parfait : c'est votre regard qui compte.",
+    r2: "Prouvez-le, gagnez des médailles.", proofs: ["Identité", "LinkedIn", "Emploi", "CV", "Book"], r2Note: "Plus votre profil est prouvé, plus vous êtes invité, et mieux vous êtes payé.",
+    r3: "Une marque vous invite. Vous choisissez.", inv: "Invitation", invBrand: "Maison de mode parisienne", invWhat: "Entretien en visio · 45 min", accept: "Accepter", later: "Pas cette fois",
+    r3Note: "Vous choisissez votre créneau. L'entretien se fait depuis chez vous.",
+    r4: "Retirez dès 50 €.", solde: "Solde disponible", sent: "✓ Virement envoyé", arrive: "Arrivée sous 1 à 3 jours ouvrés", r4Note: "Et jusqu'à 320 € par ami parrainé.",
+    e1: "Rejoignez", e2: "le panel.", eSub: "Inscription gratuite. Vous n'êtes jamais obligé d'accepter une invitation.", eCta: "S'inscrire · rarelyst.co",
+  },
+  en: {
+    kicker: "Fashion, luxury, beauty", c1: "Brands want", c2: "your expertise.", cSub: "How to get paid €90 to €350 for a 45-minute interview.", swipe: "Swipe",
+    r1: "Create your profile in 5 minutes.", fields: [["Job", "Luxury boutique associate"], ["Experience", "8 years"], ["Field", "Leather goods, jewellery"], ["Languages", "French, English"]],
+    r1Note: "No need for a perfect CV: your perspective is what matters.",
+    r2: "Prove it, earn medals.", proofs: ["Identity", "LinkedIn", "Job", "CV", "Portfolio"], r2Note: "The more proven your profile, the more you're invited, and the better you're paid.",
+    r3: "A brand invites you. You decide.", inv: "Invitation", invBrand: "Parisian fashion house", invWhat: "Video interview · 45 min", accept: "Accept", later: "Not this time",
+    r3Note: "You pick the time slot. The interview happens from home.",
+    r4: "Withdraw from €50.", solde: "Available balance", sent: "✓ Transfer sent", arrive: "Arrives in 1 to 3 business days", r4Note: "Plus up to €320 for every friend you refer.",
+    e1: "Join", e2: "the panel.", eSub: "Free to join. You never have to accept an invitation.", eCta: "Sign up · rarelyst.co",
+  },
+};
+
+function CarrouselParticipants({ i, lang }: { i: number; lang: Lang }) {
+  const c = CP[lang];
+  const N = 6;
+  const eur = (n: number) => (lang === "en" ? `€${n}` : `${n} €`);
+  const medals: BadgeId[] = ["verifie", "linkedin", "emploi", "cv", "portfolio"];
+  if (i === 1) return (
+    <Slide n={1} total={N} bg={s.bgInk} light>
+      <p className={s.kicker} style={{ color: "#c9b8ff" }}>{c.kicker}</p>
+      <h1 className={s.h1} style={{ marginTop: 14, fontSize: 60, color: "#fff" }}>{c.c1}<br /><span className={s.gradGold}>{c.c2}</span></h1>
+      <p style={{ margin: "22px 0 0", fontSize: 18, lineHeight: 1.45, color: "rgba(255,255,255,.75)", maxWidth: 360 }}>{c.cSub}</p>
+      <div style={{ position: "absolute", right: 30, bottom: 90 }}><LoupeMascot size={140} mood="happy" animated={false} /></div>
+      <div style={{ position: "absolute", left: 36, bottom: 80, fontSize: 17, fontWeight: 700, color: "#c9b8ff" }}>{c.swipe} →</div>
+    </Slide>
+  );
+  if (i === 2) return (
+    <Slide n={2} total={N}>
+      <Step n="1">{c.r1}</Step>
+      <div className={s.card} style={{ marginTop: 26, padding: "6px 18px" }}>
+        {c.fields.map(([k, v], j) => (
+          <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "13px 0", borderTop: j ? "1px solid var(--line)" : undefined, fontSize: 16 }}>
+            <span style={{ color: "var(--ink-3)", fontWeight: 600 }}>{k}</span><b style={{ textAlign: "right" }}>{v}</b>
+          </div>
+        ))}
+      </div>
+      <Note>{c.r1Note}</Note>
+    </Slide>
+  );
+  if (i === 3) return (
+    <Slide n={3} total={N} bg={s.bgLilac}>
+      <Step n="2">{c.r2}</Step>
+      <div style={{ display: "flex", gap: 6, marginTop: 30 }}>
+        {medals.map((m, k) => <span key={m} style={{ display: "grid", justifyItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "var(--ink-2)" }}><Medallion id={m} size={80} />{c.proofs[k]}</span>)}
+      </div>
+      <Note>{c.r2Note}</Note>
+    </Slide>
+  );
+  if (i === 4) return (
+    <Slide n={4} total={N}>
+      <Step n="3">{c.r3}</Step>
+      <div className={s.card} style={{ marginTop: 24, padding: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span className={s.tag} style={{ background: "var(--accent-soft)", color: "var(--g2)" }}>{c.inv}</span>
+          <b style={{ fontSize: 26, letterSpacing: "-0.03em" }}>{eur(180)}</b>
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 700, marginTop: 12, letterSpacing: "-0.02em" }}>{c.invBrand}</div>
+        <div style={{ fontSize: 15, color: "var(--ink-2)", marginTop: 4 }}>{c.invWhat}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 10, marginTop: 18 }}>
+          <span className={`${s.btn} ${s.btnAccent}`} style={{ fontSize: 16, padding: "13px 16px" }}>{c.accept}</span>
+          <span className={s.btn} style={{ fontSize: 16, padding: "13px 16px", background: "var(--soft)", color: "var(--ink-2)" }}>{c.later}</span>
+        </div>
+      </div>
+      <Note>{c.r3Note}</Note>
+    </Slide>
+  );
+  if (i === 5) return (
+    <Slide n={5} total={N} bg={s.bgLilac}>
+      <Step n="4">{c.r4}</Step>
+      <div className={s.card} style={{ marginTop: 24, padding: 22 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--ink-3)" }}>{c.solde}</div>
+        <div style={{ fontSize: 56, fontWeight: 700, letterSpacing: "-0.04em", marginTop: 4 }}>{eur(180)}</div>
+        <div className={s.btn} style={{ width: "100%", marginTop: 14, background: "#1f7a4d" }}>{c.sent}</div>
+        <p style={{ margin: "12px 0 0", fontSize: 15, color: "var(--ok)", fontWeight: 600 }}>{c.arrive}</p>
+      </div>
+      <Note>{c.r4Note}</Note>
+    </Slide>
+  );
+  return (
+    <Slide n={6} total={N} bg={s.bgInk} light last>
+      <h1 className={s.h1} style={{ color: "#fff", fontSize: 64 }}>{c.e1}<br /><span className={s.gradGold}>{c.e2}</span></h1>
+      <p style={{ margin: "22px 0 0", fontSize: 18, lineHeight: 1.45, color: "rgba(255,255,255,.75)", maxWidth: 330 }}>{c.eSub}</p>
+      <div style={{ display: "flex", gap: 6, marginTop: 30 }}>{medals.map((m) => <Medallion key={m} id={m} size={52} />)}</div>
+      <div className={`${s.btn} ${s.btnAccent}`} style={{ position: "absolute", left: 36, bottom: 80 }}>{c.eCta}</div>
+      <div style={{ position: "absolute", right: 26, bottom: 70 }}><LoupeMascot size={110} mood="wow" animated={false} /></div>
+    </Slide>
+  );
+}
+
+// ── Posts supplémentaires ─────────────────────────────────────────────
+const PG = {
+  fr: { t1: "Vous ne payez que", t2: "les profils que vous gardez.", rows: ["Rien n'est débité avant d'avoir gardé un profil", "Participant absent : vos crédits sont rendus", "Profil qui ne convient pas : refusé sans frais"], foot: "Recrutement pour études qualitatives · mode, luxe, beauté" },
+  en: { t1: "You only pay", t2: "for the profiles you keep.", rows: ["Nothing is charged until you keep a profile", "Participant no-show: your credits come back", "Profile not a fit: declined at no cost"], foot: "Recruitment for qualitative research · fashion, luxury, beauty" },
+};
+
+function PostGaranties({ lang }: { lang: Lang }) {
+  const c = PG[lang];
+  return (
+    <div className={`${s.frame} ${s.bgLight}`} style={{ width: 540, height: 675, padding: 36 }}>
+      <Brand />
+      <h2 className={s.h2} style={{ marginTop: 74 }}>{c.t1}<br /><span className={s.grad}>{c.t2}</span></h2>
+      <div style={{ display: "grid", gap: 12, marginTop: 34 }}>
+        {c.rows.map((r) => <div key={r} className={s.card} style={{ padding: "16px 18px", display: "flex", gap: 12, alignItems: "center", fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}><span className={s.check}>✓</span>{r}</div>)}
+      </div>
+      <p className={s.lead} style={{ position: "absolute", left: 36, right: 150, bottom: 30, fontSize: 15 }}>{c.foot} · <b style={{ color: "var(--ink)" }}>rarelyst.co</b></p>
+      <div style={{ position: "absolute", right: 24, bottom: 16 }}><LoupeMascot size={96} mood="happy" animated={false} /></div>
+    </div>
+  );
+}
+
+const PQ = {
+  fr: { k: "Une question", t: "Si vous pouviez interroger n'importe qui pour votre prochaine collection, ce serait qui ?", a: ["Une retoucheuse de maison de couture", "Un revendeur de sneakers rares", "Une cliente qui a arrêté d'acheter chez nous"], foot: "Dites-le en commentaire. On vous dit si on sait la trouver." },
+  en: { k: "A question", t: "If you could interview anyone for your next collection, who would it be?", a: ["A couture house seamstress", "A rare sneaker reseller", "A client who stopped buying from us"], foot: "Tell us in the comments. We'll tell you if we can find them." },
+};
+
+function PostQuestion({ lang }: { lang: Lang }) {
+  const c = PQ[lang];
+  return (
+    <div className={`${s.frame} ${s.bgLilac}`} style={{ width: 540, height: 675, padding: 36 }}>
+      <Brand />
+      <p className={s.kicker} style={{ marginTop: 74 }}>{c.k}</p>
+      <h2 className={s.h2} style={{ marginTop: 10, fontSize: 36 }}>{c.t}</h2>
+      <div style={{ display: "grid", gap: 10, marginTop: 28, justifyItems: "start" }}>
+        {c.a.map((a, i) => <div key={a} className={s.bubble} style={{ fontSize: 18, marginLeft: i === 1 ? 40 : 0 }}>{a}</div>)}
+      </div>
+      <p className={s.lead} style={{ position: "absolute", left: 36, right: 150, bottom: 30, fontSize: 15 }}>{c.foot}</p>
+      <div style={{ position: "absolute", right: 24, bottom: 16 }}><LoupeMascot size={100} mood="puzzled" animated={false} /></div>
+    </div>
+  );
+}
+
 const RENDERS: Record<string, Render> = {
   marques: Marques,
   participants: Participants,
@@ -537,6 +827,10 @@ const RENDERS: Record<string, Render> = {
   "banniere-linkedin": () => <BanniereLinkedIn />,
   avatar: () => <Avatar />,
   "carre-logo": () => <CarreLogo />,
+  "post-garanties": (_t, lang) => <PostGaranties lang={lang} />,
+  "post-question": (_t, lang) => <PostQuestion lang={lang} />,
+  ...Object.fromEntries(Array.from({ length: 7 }, (_, i) => [`carrousel-marques-${i + 1}`, (_t: number, lang: Lang) => <CarrouselMarques i={i + 1} lang={lang} />])),
+  ...Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`carrousel-participants-${i + 1}`, (_t: number, lang: Lang) => <CarrouselParticipants i={i + 1} lang={lang} />])),
 };
 
 /** Le rendu d'un format à l'instant t. */

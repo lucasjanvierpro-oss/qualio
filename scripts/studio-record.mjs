@@ -1,5 +1,7 @@
 // Enregistreur du studio (/studio) : filme chaque format image par image et en
 // fait des MP4 (vidéos) et des PNG (visuels fixes), dans ~/Desktop/Rarelyst-visuels.
+// Les carrousels (carrousel-xxx-1, -2…) sont rangés à part et assemblés en PDF,
+// le format que LinkedIn attend pour un « document ».
 //
 // Prérequis (une fois, hors du projet pour ne pas alourdir le site) :
 //   npm i --no-save playwright-core @ffmpeg-installer/ffmpeg
@@ -69,6 +71,7 @@ const setTime = (page, t) => page.evaluate(async (t) => {
 
 fs.mkdirSync(path.join(OUT, "videos"), { recursive: true });
 fs.mkdirSync(path.join(OUT, "images"), { recursive: true });
+const decks = new Map();
 const cookies = await adminCookies();
 const b = await chromium.launch({ channel: "chrome", headless: true });
 for (const [id, format, duration, langs] of ALL) {
@@ -83,7 +86,16 @@ for (const [id, format, duration, langs] of ALL) {
     await page.waitForTimeout(600);
     const clip = { x: 0, y: 0, width: w, height: h };
     const name = `${id}${langs.length > 1 ? `-${lang}` : ""}`;
-    if (!duration) {
+    const deck = id.match(/^(carrousel-.+)-(\d+)$/);
+    if (deck) {
+      const dir = path.join(OUT, "carrousels", `${deck[1]}-${lang}`);
+      fs.mkdirSync(dir, { recursive: true });
+      const file = path.join(dir, `${deck[2].padStart(2, "0")}.png`);
+      await setTime(page, 99);
+      await page.screenshot({ path: file, clip });
+      decks.set(dir, [...(decks.get(dir) ?? []), { file, w, h }]);
+      console.log("diapo :", `${deck[1]}-${lang}`, deck[2]);
+    } else if (!duration) {
       await setTime(page, 99);
       await page.screenshot({ path: path.join(OUT, "images", `${name}.png`), clip });
       console.log("image :", name);
@@ -102,6 +114,18 @@ for (const [id, format, duration, langs] of ALL) {
     }
     await ctx.close();
   }
+}
+
+// Un PDF par carrousel, une diapositive par page.
+for (const [dir, slides] of decks) {
+  const page = await b.newPage();
+  const { w, h } = slides[0];
+  const imgs = slides.sort((a, z) => a.file.localeCompare(z.file))
+    .map((x) => `<img src="data:image/png;base64,${fs.readFileSync(x.file).toString("base64")}">`).join("");
+  await page.setContent(`<style>@page{size:${w}px ${h}px;margin:0}body{margin:0}img{display:block;width:${w}px;height:${h}px;break-after:page}</style>${imgs}`);
+  await page.pdf({ path: `${dir}.pdf`, width: `${w}px`, height: `${h}px`, printBackground: true });
+  await page.close();
+  console.log("pdf :", path.basename(dir));
 }
 await b.close();
 console.log("Dossier :", OUT);

@@ -32,6 +32,21 @@ export const REGISTRY: CompositionMeta[] = [
   { id: "banniere-linkedin", title: "Bannière de la page LinkedIn", format: "banner", duration: 0, langs: ["fr"] },
   { id: "avatar", title: "Photo de profil (loupe)", format: "avatar", duration: 0, langs: ["fr"] },
   { id: "carre-logo", title: "Carré logo", format: "square", duration: 0, langs: ["fr"] },
+  { id: "post-garanties", title: "Post : vous ne payez que les profils gardés", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "post-question", title: "Post : qui rêvez-vous d'interroger ?", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-marques-1", title: "Carrousel marques 1/7 : couverture", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-marques-2", title: "Carrousel marques 2/7 : décrire une personne", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-marques-3", title: "Carrousel marques 3/7 : chercher hors des panels", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-marques-4", title: "Carrousel marques 4/7 : vérifier avant", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-marques-5", title: "Carrousel marques 5/7 : les questions qui tranchent", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-marques-6", title: "Carrousel marques 6/7 : une synthèse qui décide", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-marques-7", title: "Carrousel marques 7/7 : appel à l'action", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-participants-1", title: "Carrousel participants 1/6 : couverture", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-participants-2", title: "Carrousel participants 2/6 : le profil", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-participants-3", title: "Carrousel participants 3/6 : les médailles", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-participants-4", title: "Carrousel participants 4/6 : l'invitation", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-participants-5", title: "Carrousel participants 5/6 : le retrait", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-participants-6", title: "Carrousel participants 6/6 : appel à l'action", format: "post", duration: 0, langs: ["fr", "en"] },
 ];
 
 export const findMeta = (id: string) => REGISTRY.find((c) => c.id === id) ?? null;
