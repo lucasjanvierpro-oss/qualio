@@ -936,7 +936,7 @@ function BanniereMinimal({ lang }: { lang: Lang }) {
 const SS = {
   fr: {
     k: ["01 · Le brief", "02 · Les profils", "03 · L'entretien", "04 · La synthèse"],
-    s1: ["Qui voulez-vous", "entendre\u00a0?"], label: "Votre brief", brief: "Des acheteuses de luxe discrètes, 25–40 ans, qui savent parler matière.", chips: ["Acheteuse luxe", "Matières", "Paris"],
+    s1: ["Qui voulez-vous", "entendre\u00a0?"], label: "Votre brief", brief: "Des acheteuses de luxe discrètes, qui savent parler matière et savoir-faire.", chips: ["Acheteuse luxe", "Matières", "Paris"],
     f1: "Quelques phrases suffisent. Nous en faisons une fiche précise en 10 secondes.",
     s2: ["Nous la trouvons.", "Et nous la prouvons."], role: "Acheteuse luxe · 11 ans · Paris", close: "Très proche", near: "Proche", cert: "Certifiée à 92 %",
     why: "Pourquoi elle", whyText: "Ancienne acheteuse d'un grand magasin parisien, elle suit les matières depuis 11 ans.",
@@ -947,7 +947,7 @@ const SS = {
   },
   en: {
     k: ["01 · The brief", "02 · The profiles", "03 · The interview", "04 · The synthesis"],
-    s1: ["Who do you want", "to hear from?"], label: "Your brief", brief: "Discreet luxury buyers, 25–40, who can talk about materials.", chips: ["Luxury buyer", "Materials", "Paris"],
+    s1: ["Who do you want", "to hear from?"], label: "Your brief", brief: "Discreet luxury buyers who can talk about materials and craft.", chips: ["Luxury buyer", "Materials", "Paris"],
     f1: "A few sentences will do. We turn them into a precise brief in 10 seconds.",
     s2: ["We find her.", "And we prove it."], role: "Luxury buyer · 11 yrs · Paris", close: "Very close", near: "Close", cert: "92% certified",
     why: "Why her", whyText: "A former buyer at a Paris department store, she has followed materials for 11 years.",
@@ -1006,24 +1006,26 @@ function Serie(i: number, t: number, lang: Lang) {
             <span style={{ flex: 1 }}><div style={{ fontSize: 24, fontWeight: 700, color: "#fff", letterSpacing: "-0.03em" }}>Camille R.</div><div style={{ fontSize: 14.5, color: "#b9aecb" }}>{c.role}</div></span>
             <span className={s.tag} style={{ color: "#8fe0b4", background: "rgba(47,163,107,.2)", ...pop(t, 1.4) }}>● {c.close}</span>
           </div>
-          <div style={{ display: "flex", gap: 6, marginTop: 16 }}>{medals.map((m, k) => <span key={m} style={pop(t, 1.6 + k * 0.15)}><Medallion id={m} size={52} /></span>)}</div>
-          <div style={{ marginTop: 12, fontSize: 14.5, color: "#e8e4ff", ...rise(t, 2.3) }}>{c.cert}</div>
+          <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 16 }}>
+            {medals.map((m, k) => <span key={m} style={pop(t, 1.6 + k * 0.15)}><Medallion id={m} size={50} /></span>)}
+            <span style={{ marginLeft: "auto", fontSize: 14, fontWeight: 600, color: "#e8e4ff", ...rise(t, 2.3) }}>{c.cert}</span>
+          </div>
           <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 14, background: "rgba(255,255,255,.08)", color: "#fff", ...rise(t, 2.6) }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#c9b8ff" }}>{c.why}</div>
             <div style={{ fontSize: 16, lineHeight: 1.4, marginTop: 4 }}>{c.whyText}</div>
           </div>
           <div style={{ position: "absolute", left: scanX, top: -40, opacity: seg(t, 0.8, 1.1) * (1 - seg(t, 3.2, 3.6)) }}><LoupeMascot size={80} mood="search" /></div>
         </div>
-        <div style={{ position: "absolute", left: 30, right: 30, top: 618, display: "grid", gap: 8 }}>
+        <div style={{ position: "absolute", left: 30, right: 30, top: 574, display: "grid", gap: 8 }}>
           {c.others.map(([a, col, n, r], k) => (
-            <div key={n} className={s.row} style={{ gridTemplateColumns: "40px 1fr auto", padding: "9px 12px", ...rise(t, 3.0 + k * 0.2) }}>
-              <span className={s.av} style={{ width: 40, height: 40, fontSize: 17, background: col }}>{a}</span>
+            <div key={n} className={s.row} style={{ gridTemplateColumns: "38px 1fr auto", padding: "8px 12px", ...rise(t, 3.0 + k * 0.2) }}>
+              <span className={s.av} style={{ width: 38, height: 38, borderRadius: 11, fontSize: 16, background: col }}>{a}</span>
               <span><span className={s.rowName} style={{ fontSize: 15 }}>{n}</span><br /><span className={s.rowRole} style={{ fontSize: 12.5 }}>{r}</span></span>
               <span className={s.tag} style={{ background: "var(--accent-soft)", color: "var(--g2)" }}>{k ? c.near : c.close}</span>
             </div>
           ))}
         </div>
-        <p style={{ position: "absolute", left: 36, right: 36, top: 730, margin: 0, fontSize: 14, fontWeight: 600, color: "var(--ink-2)", ...rise(t, 3.6) }}>{c.f2}</p>
+        <p style={{ position: "absolute", left: 36, right: 36, top: 718, margin: 0, fontSize: 14, fontWeight: 600, color: "var(--ink-2)", ...rise(t, 3.6) }}>{c.f2}</p>
       </SerieFrame>
     );
   }
@@ -1037,10 +1039,10 @@ function Serie(i: number, t: number, lang: Lang) {
             <FilmWindow lang={lang} sceneIndex={3} t={1.2 + t * 1.3} reduced />
           </div>
         </div>
-        <div style={{ position: "absolute", left: 30, right: 30, top: 636, display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {c.chips3.map((x, k) => <span key={x} className={s.chip} style={{ fontSize: 14.5, ...pop(t, 1.6 + k * 0.2) }}><span className={s.check} style={{ width: 22, height: 22, fontSize: 12 }}>✓</span>{x}</span>)}
+        <div style={{ position: "absolute", left: 26, right: 26, top: 634, display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {c.chips3.map((x, k) => <span key={x} className={s.chip} style={{ fontSize: 13.5, padding: "7px 11px 7px 7px", color: "var(--ink)", ...pop(t, 1.6 + k * 0.2) }}><span className={s.check} style={{ width: 20, height: 20, fontSize: 11 }}>✓</span>{x}</span>)}
         </div>
-        <p style={{ position: "absolute", left: 36, right: 36, top: 714, margin: 0, fontSize: 14.5, color: "rgba(255,255,255,.72)", ...rise(t, 2.4) }}>{c.f3}</p>
+        <p style={{ position: "absolute", left: 36, right: 36, top: 722, margin: 0, fontSize: 14.5, color: "rgba(255,255,255,.72)", ...rise(t, 2.4) }}>{c.f3}</p>
       </SerieFrame>
     );
   }
