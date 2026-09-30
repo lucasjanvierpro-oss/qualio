@@ -811,125 +811,142 @@ function PostQuestion({ lang }: { lang: Lang }) {
   );
 }
 
-// ── Bannières LinkedIn premium ────────────────────────────────────────
-// LinkedIn pose la photo (ou le logo de la page) en bas à gauche : rien
-// d'important sous x < 200 dans la moitié basse. Le texte commence à x = 232.
-const BN = {
+// ── Bannières LinkedIn, version noire ─────────────────────────────────
+// Inspirées des plateformes d'études les plus soignées (fond noir, trame de
+// points, un seul accent de couleur) et centrées sur des profils très précis.
+// LinkedIn pose la photo (ou le logo de la page) en bas à gauche : le texte
+// commence à x = 232, rien d'important sous x < 200 dans la moitié basse.
+const BNN = {
   fr: {
-    q1: "Qui voulez-vous", q2: "entendre\u00a0?", pill: "Vos premiers profils qualifiés", lanes: ["Acheteuse luxe", "Collectionneur", "Styliste"],
-    brief: "Brief d'une marque", briefText: "Des acheteuses de luxe discrètes, qui savent parler matière.", match: "2 profils correspondent", close: "Très proche",
-    rows: [["A", "#c98e68", "Amina D.", "Acheteuse luxe · Paris"], ["S", "#8a6bd8", "Sofia L.", "Directrice artistique · Milan"]],
-    sub: "Des profils précis et vérifiés, pour vos études qualitatives.",
-    p1: "Les profils que", p2: "les panels ne trouvent pas.", pSub: "Recrutement pour études qualitatives · mode, luxe, beauté",
-    cards: [["C", "#c98e68", "Camille R.", "Acheteuse luxe", "◆ Initiée"], ["I", "#8a6bd8", "Inès B.", "Vendeuse en boutique de luxe", "◆ Rare"], ["J", "#5d8f7a", "Jules M.", "Collectionneur d'archives", "✦ Introuvable"]],
-    m1: "Chaque profil arrive", m2: "avec ses preuves.", mSub: "Identité, LinkedIn, emploi, CV, book : vérifiés un par un.",
-    tagline: "Les bonnes personnes pour vos études qualitatives.", sectors: "Mode · Luxe · Beauté",
+    c1: "Le casting de vos", c2: "études qualitatives.", cSub: "Des profils très précis, vérifiés un par un. Premiers profils sous 72 h.",
+    cast: [["L", "#c98e68", "Styliste de stars", "Paris"], ["M", "#d7609e", "Micro-influenceuse", "Beauté · 40 k"], ["E", "#5b8def", "Early adopter", "Mode et tech"], ["Z", "#2fa36b", "Gen Z · 19 ans", "Revendeuse Vinted"], ["B", "#8a6bd8", "Maquilleuse", "Backstage défilés"], ["V", "#e0a43a", "Cliente VIC", "Maison de luxe"]],
+    tk: "Qui voulez-vous entendre ?", t1: "Parlez aux gens", t2: "qu'aucun panel", t3: "ne touche.",
+    ticker: ["Personal shopper", "Early adopter mode", "Styliste de stars", "Micro-influenceuse beauté", "Gen Z · 19 ans"],
+    q1: "Qui voulez-vous", q2: "entendre ?", qSub: "Décrivez la personne. Nous la trouvons, la vérifions et organisons l'entretien.",
+    brief: "Brief d'une marque", briefText: "Des stylistes qui habillent des célébrités pour les tapis rouges.", match: "profils correspondent", close: "Très proche",
+    rows: [["L", "#c98e68", "Léa M.", "Styliste de célébrités · Paris"], ["H", "#8a6bd8", "Hugo T.", "Styliste clips et plateaux TV"]],
+    p1: "Des profils", p2: "très précis.", pSub: "Vérifiés un par un, pour vos études qualitatives · mode, luxe, beauté",
+    chips: [["Styliste de stars", "holo"], ["Micro-influenceuse · 40 k", ""], ["Early adopter", ""], ["Gen Z · 19 ans", ""], ["Cliente VIC", "holo"], ["Maquilleuse backstage", ""], ["Personal shopper", ""], ["Collectionneur de sneakers", ""], ["Revendeuse Vinted", ""]],
+    tagline: "Les profils que les panels ne trouvent pas.", sectors: "Mode · Luxe · Beauté",
   },
   en: {
-    q1: "Who do you want", q2: "to hear from?", pill: "Your first qualified profiles", lanes: ["Luxury buyer", "Collector", "Stylist"],
-    brief: "A brand's brief", briefText: "Discreet luxury buyers who can talk about materials.", match: "2 matching profiles", close: "Very close",
-    rows: [["A", "#c98e68", "Amina D.", "Luxury buyer · Paris"], ["S", "#8a6bd8", "Sofia L.", "Art director · Milan"]],
-    sub: "Precise, verified profiles for your qualitative research.",
-    p1: "The profiles", p2: "panels can't find.", pSub: "Recruitment for qualitative research · fashion, luxury, beauty",
-    cards: [["C", "#c98e68", "Camille R.", "Luxury buyer", "◆ Insider"], ["I", "#8a6bd8", "Inès B.", "Luxury boutique associate", "◆ Rare"], ["J", "#5d8f7a", "Jules M.", "Archive collector", "✦ Unfindable"]],
-    m1: "Every profile arrives", m2: "with its proof.", mSub: "Identity, LinkedIn, job, CV, portfolio: checked one by one.",
-    tagline: "The right people for your qualitative research.", sectors: "Fashion · Luxury · Beauty",
+    c1: "Casting for your", c2: "qualitative research.", cSub: "Very specific profiles, verified one by one. First profiles within 72 h.",
+    cast: [["L", "#c98e68", "Celebrity stylist", "Paris"], ["M", "#d7609e", "Micro-influencer", "Beauty · 40k"], ["E", "#5b8def", "Early adopter", "Fashion and tech"], ["Z", "#2fa36b", "Gen Z · 19", "Vinted reseller"], ["B", "#8a6bd8", "Makeup artist", "Runway backstage"], ["V", "#e0a43a", "VIC client", "Luxury house"]],
+    tk: "Who do you want to hear from?", t1: "Talk to the people", t2: "no panel", t3: "can reach.",
+    ticker: ["Personal shopper", "Fashion early adopter", "Celebrity stylist", "Beauty micro-influencer", "Gen Z · 19"],
+    q1: "Who do you want", q2: "to hear from?", qSub: "Describe the person. We find them, verify them and set up the interview.",
+    brief: "A brand's brief", briefText: "Stylists who dress celebrities for the red carpet.", match: "matching profiles", close: "Very close",
+    rows: [["L", "#c98e68", "Léa M.", "Celebrity stylist · Paris"], ["H", "#8a6bd8", "Hugo T.", "Music video and TV stylist"]],
+    p1: "Very specific", p2: "profiles.", pSub: "Verified one by one, for your qualitative research · fashion, luxury, beauty",
+    chips: [["Celebrity stylist", "holo"], ["Micro-influencer · 40k", ""], ["Early adopter", ""], ["Gen Z · 19", ""], ["VIC client", "holo"], ["Backstage makeup artist", ""], ["Personal shopper", ""], ["Sneaker collector", ""], ["Vinted reseller", ""]],
+    tagline: "The profiles panels can't find.", sectors: "Fashion · Luxury · Beauty",
   },
 };
 
-const glow = (x: string, y: string, c: string, r = "60% 90%") => `radial-gradient(${r} at ${x} ${y}, ${c}, transparent 70%)`;
+const NIGHT_TEXT: React.CSSProperties = { background: "linear-gradient(100deg, #b9a2ff 0%, #d9a6f5 45%, #f5a3cb 100%)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" };
+const glass: React.CSSProperties = { background: "rgba(255,255,255,.045)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.1)" };
 
-function BanniereHero({ lang }: { lang: Lang }) {
-  const c = BN[lang];
+/** Fond noir : lueur violette discrète et trame de points qui s'efface vers la gauche. */
+function Night({ children, glowAt = "88% 0%" }: { children: React.ReactNode; glowAt?: string }) {
   return (
-    <div className={s.frame} style={{ width: 792, height: 198, background: `${glow("8%", "20%", "rgba(140,104,242,.28)")}, ${glow("95%", "100%", "rgba(255,190,225,.55)")}, ${glow("60%", "0%", "rgba(255,240,214,.8)", "40% 70%")}, #f8f5ff` }}>
-      <Brand x={24} y={20} />
-      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 30, fontSize: 44, lineHeight: 0.98 }}>{c.q1}<br /><span className={s.grad}>{c.q2}</span></h2>
-      <div style={{ position: "absolute", left: 232, top: 136, display: "flex", alignItems: "center", gap: 8, padding: "5px 12px 5px 5px", borderRadius: 999, background: "#fff", boxShadow: "0 0 0 1px var(--line), 0 10px 24px -16px rgba(40,20,90,.5)", fontSize: 13, fontWeight: 600 }}>
-        <b style={{ padding: "3px 8px", borderRadius: 999, color: "#fff", background: "linear-gradient(110deg, var(--g2), var(--g3))", fontSize: 12 }}>72 h</b>{c.pill}
-      </div>
-      <span className={`${s.chip} ${s.chipRare}`} style={{ position: "absolute", left: 548, top: 30, fontSize: 13, padding: "7px 12px", transform: "rotate(-3deg)" }}>{c.lanes[0]}</span>
-      <span className={`${s.chip} ${s.chipHolo}`} style={{ position: "absolute", left: 528, top: 82, fontSize: 13, padding: "7px 12px", transform: "rotate(2deg)" }}>{c.lanes[1]}</span>
-      <span className={s.chip} style={{ position: "absolute", left: 556, top: 134, fontSize: 13, padding: "7px 12px", transform: "rotate(-2deg)" }}>{c.lanes[2]}</span>
-      <div style={{ position: "absolute", right: 24, top: 38, transform: "rotate(-8deg)" }}><LoupeMascot size={116} mood="search" animated={false} /></div>
+    <div className={s.frame} style={{ width: 792, height: 198, color: "#f4f1f8", background: `radial-gradient(55% 130% at ${glowAt}, rgba(106,67,219,.34), transparent 70%), radial-gradient(35% 90% at 100% 100%, rgba(215,96,158,.16), transparent 70%), #0a090d` }}>
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(255,255,255,.13) 0.8px, transparent 1.1px)", backgroundSize: "12px 12px", WebkitMaskImage: "linear-gradient(90deg, transparent 20%, #000 75%)", maskImage: "linear-gradient(90deg, transparent 20%, #000 75%)" }} />
+      <Brand x={24} y={20} light />
+      {children}
     </div>
   );
 }
 
-function BanniereConsole({ lang }: { lang: Lang }) {
-  const c = BN[lang];
-  const soft = "linear-gradient(100deg, #d9ccff, #f3b6d8)";
+function BanniereNoirCasting({ lang }: { lang: Lang }) {
+  const c = BNN[lang];
   return (
-    <div className={`${s.frame} ${s.bgInk}`} style={{ width: 792, height: 198 }}>
-      <Brand x={24} y={20} light />
-      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 34, fontSize: 36, lineHeight: 1, color: "#fff" }}>{c.q1}<br /><span style={{ background: soft, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>{c.q2}</span></h2>
-      <p style={{ position: "absolute", left: 232, top: 124, width: 240, margin: 0, fontSize: 13, lineHeight: 1.45, color: "rgba(255,255,255,.7)" }}>{c.sub}</p>
-      <div style={{ position: "absolute", left: 500, right: 22, top: 20, bottom: 20, padding: "12px 14px", borderRadius: 16, background: "rgba(255,255,255,.06)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.12), 0 30px 60px -30px rgba(0,0,0,.6)", color: "#f1edf6" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,.55)" }}><span>{c.brief}</span><span><b style={{ color: "#fff" }}>2</b> {c.match.replace(/^2 /, "")}</span></div>
-        <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.2, marginTop: 6 }}>{c.briefText}<i className={s.caret} style={{ background: "#c9b8ff", width: 3 }} /></div>
+    <Night>
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 36, fontSize: 34, lineHeight: 1.02, color: "#fff" }}>{c.c1}<br /><span style={NIGHT_TEXT}>{c.c2}</span></h2>
+      <p style={{ position: "absolute", left: 232, top: 124, width: 245, margin: 0, fontSize: 12.5, lineHeight: 1.45, color: "rgba(244,241,248,.62)" }}>{c.cSub}</p>
+      <div style={{ position: "absolute", left: 500, top: 20, display: "grid", gridTemplateColumns: "136px 136px", gap: 7 }}>
+        {c.cast.map(([i, col, role, detail], k) => (
+          <div key={role} style={{ ...glass, display: "flex", alignItems: "center", gap: 8, height: 46, padding: "0 10px", borderRadius: 12, boxShadow: k === 0 ? "inset 0 0 0 1px rgba(185,162,255,.6), 0 0 24px -6px rgba(140,104,242,.6)" : glass.boxShadow }}>
+            <span className={s.av} style={{ width: 28, height: 28, borderRadius: "50%", fontSize: 12, background: `linear-gradient(140deg, ${col}, #1b1128)` }}>{i}</span>
+            <span style={{ lineHeight: 1.2, minWidth: 0 }}>
+              <b style={{ display: "block", fontSize: 11.5, whiteSpace: "nowrap" }}>{role}</b>
+              <span style={{ fontSize: 10, color: "rgba(244,241,248,.55)", whiteSpace: "nowrap" }}>✓ {detail}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </Night>
+  );
+}
+
+function BanniereNoirTicker({ lang }: { lang: Lang }) {
+  const c = BNN[lang];
+  return (
+    <Night glowAt="75% 50%">
+      <p style={{ position: "absolute", left: 232, top: 30, margin: 0, fontSize: 12, fontWeight: 700, color: "#b9a2ff" }}>{c.tk}</p>
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 50, fontSize: 31, lineHeight: 1.02, color: "#fff" }}>{c.t1}<br />{c.t2} <span style={NIGHT_TEXT}>{c.t3}</span></h2>
+      <div style={{ position: "absolute", left: 520, right: 0, top: 0, bottom: 0, WebkitMaskImage: "linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent)", maskImage: "linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent)" }}>
+        {c.ticker.map((r, k) => (
+          <div key={r} style={{ position: "absolute", left: k === 2 ? 0 : 22, top: 14 + k * 36, fontSize: k === 2 ? 25 : 19, fontWeight: 600, letterSpacing: "-0.035em", whiteSpace: "nowrap", color: k === 2 ? undefined : "rgba(244,241,248,.28)", ...(k === 2 ? NIGHT_TEXT : {}) }}>{k === 2 ? `✦ ${r}` : r}</div>
+        ))}
+      </div>
+      <div style={{ position: "absolute", left: 452, top: 74, transform: "rotate(-12deg)" }}><LoupeMascot size={56} mood="search" animated={false} /></div>
+    </Night>
+  );
+}
+
+function BanniereNoirBrief({ lang }: { lang: Lang }) {
+  const c = BNN[lang];
+  return (
+    <Night>
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 34, fontSize: 36, lineHeight: 1, color: "#fff" }}>{c.q1}<br /><span style={NIGHT_TEXT}>{c.q2}</span></h2>
+      <p style={{ position: "absolute", left: 232, top: 124, width: 235, margin: 0, fontSize: 12.5, lineHeight: 1.45, color: "rgba(244,241,248,.62)" }}>{c.qSub}</p>
+      <div style={{ ...glass, position: "absolute", left: 494, right: 20, top: 18, bottom: 18, padding: "12px 14px", borderRadius: 16, background: "rgba(255,255,255,.05)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.12), 0 30px 60px -30px rgba(0,0,0,.8)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, fontWeight: 600, color: "rgba(244,241,248,.5)" }}><span>{c.brief}</span><span><b style={{ color: "#fff" }}>2</b> {c.match}</span></div>
+        <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.2, marginTop: 6, color: "#fff" }}>{c.briefText}<i className={s.caret} style={{ background: "#b9a2ff", width: 3 }} /></div>
         <div style={{ display: "grid", gap: 6, marginTop: 9 }}>
           {c.rows.map(([i, col, n, r]) => (
-            <div key={n} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", borderRadius: 10, background: "rgba(255,255,255,.07)" }}>
-              <span className={s.av} style={{ width: 24, height: 24, borderRadius: 7, fontSize: 11, background: col }}>{i}</span>
-              <span style={{ fontSize: 11.5, lineHeight: 1.2, flex: 1 }}><b>{n}</b><br /><span style={{ fontSize: 10.5, color: "rgba(255,255,255,.6)" }}>{r}</span></span>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 7px", borderRadius: 999, color: "#8fe0b4", background: "rgba(47,163,107,.18)" }}>{c.close}</span>
+            <div key={n} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", borderRadius: 10, background: "rgba(255,255,255,.06)" }}>
+              <span className={s.av} style={{ width: 26, height: 26, borderRadius: "50%", fontSize: 11, background: `linear-gradient(140deg, ${col}, #1b1128)` }}>{i}</span>
+              <span style={{ fontSize: 11.5, lineHeight: 1.2, flex: 1, color: "#fff" }}><b>{n}</b><br /><span style={{ fontSize: 10.5, color: "rgba(244,241,248,.55)" }}>{r}</span></span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 7px", borderRadius: 999, color: "#8fe0b4", background: "rgba(47,163,107,.16)" }}>{c.close}</span>
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </Night>
   );
 }
 
-function BanniereProfils({ lang }: { lang: Lang }) {
-  const c = BN[lang];
-  const medals: BadgeId[][] = [["verifie", "linkedin"], ["verifie", "emploi"], ["verifie", "portfolio"]];
+function BanniereNoirProfils({ lang }: { lang: Lang }) {
+  const c = BNN[lang];
   return (
-    <div className={s.frame} style={{ width: 792, height: 198, background: `${glow("100%", "0%", "rgba(214,200,255,.7)", "50% 100%")}, ${glow("70%", "100%", "rgba(255,214,236,.6)")}, #fcfbfe` }}>
-      <Brand x={24} y={20} />
-      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 22, width: 250, fontSize: 30, lineHeight: 1.02 }}>{c.p1} <span className={s.grad}>{c.p2}</span></h2>
-      <p style={{ position: "absolute", left: 232, top: 132, width: 200, margin: 0, fontSize: 12, lineHeight: 1.45, color: "var(--ink-2)" }}>{c.pSub}</p>
-      {c.cards.map(([i, col, n, r, tag], k) => (
-        <div key={n} className={s.row} style={{ position: "absolute", left: 506 + [0, 14, 4][k], top: 16 + k * 54, width: 266, gridTemplateColumns: "34px 1fr auto", gap: 8, padding: "6px 10px", borderRadius: 13, transform: `rotate(${[-2.5, 1.5, -1][k]}deg)`, zIndex: k + 1 }}>
-          <span className={s.av} style={{ width: 34, height: 34, borderRadius: 10, fontSize: 15, background: col }}>{i}</span>
-          <span style={{ lineHeight: 1.15 }}><span style={{ display: "flex", alignItems: "center", gap: 4 }}><b style={{ fontSize: 12.5 }}>{n}</b>{medals[k].map((m) => <Medallion key={m} id={m} size={15} />)}</span><span style={{ fontSize: 10.5, color: "var(--ink-2)" }}>{r}</span></span>
-          <span className={`${s.tag} ${k === 2 ? s.chipHolo : ""}`} style={{ fontSize: 10, padding: "3px 7px", background: k === 2 ? undefined : "var(--accent-soft)", color: "var(--g2)" }}>{tag}</span>
-        </div>
-      ))}
-      <div style={{ position: "absolute", left: 452, top: 112, zIndex: 5, transform: "rotate(-14deg)" }}><LoupeMascot size={58} mood="happy" animated={false} /></div>
-    </div>
-  );
-}
-
-function BanniereMedailles({ lang }: { lang: Lang }) {
-  const c = BN[lang];
-  const medals: BadgeId[] = ["verifie", "linkedin", "emploi", "cv", "portfolio"];
-  return (
-    <div className={`${s.frame} ${s.bgInk}`} style={{ width: 792, height: 198 }}>
-      <Brand x={24} y={20} light />
-      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 40, fontSize: 32, lineHeight: 1.02, color: "#fff" }}>{c.m1}<br /><span className={s.gradGold}>{c.m2}</span></h2>
-      <p style={{ position: "absolute", left: 232, top: 118, width: 250, margin: 0, fontSize: 12.5, lineHeight: 1.45, color: "rgba(255,255,255,.7)" }}>{c.mSub}</p>
-      <div style={{ position: "absolute", left: 500, right: 16, top: 30, height: 140, background: "radial-gradient(50% 50% at 50% 50%, rgba(242,196,109,.28), transparent 70%)" }} />
-      <div style={{ position: "absolute", left: 508, top: 62, display: "flex", gap: 2 }}>
-        {medals.map((m, k) => <span key={m} style={{ transform: `translateY(${[8, -4, -10, -4, 8][k]}px)` }}><Medallion id={m} size={54} /></span>)}
+    <Night glowAt="70% 20%">
+      <h2 className={s.h2} style={{ position: "absolute", left: 232, top: 34, fontSize: 36, lineHeight: 1, color: "#fff" }}>{c.p1}<br /><span style={NIGHT_TEXT}>{c.p2}</span></h2>
+      <p style={{ position: "absolute", left: 232, top: 124, width: 215, margin: 0, fontSize: 12, lineHeight: 1.45, color: "rgba(244,241,248,.62)" }}>{c.pSub}</p>
+      <div style={{ position: "absolute", left: 462, right: 18, top: 22, display: "flex", flexWrap: "wrap", gap: 7, justifyContent: "flex-end" }}>
+        {c.chips.map(([l, k]) => (
+          <span key={l} style={{ padding: "7px 12px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", ...(k === "holo"
+            ? { color: "#1b1128", background: "linear-gradient(110deg, #f1e2ff, #d9ccff 35%, #cdeeff 60%, #ffdcef)", boxShadow: "0 0 22px -6px rgba(185,162,255,.7)" }
+            : glass) }}>{k === "holo" ? `✦ ${l}` : l}</span>
+        ))}
       </div>
-    </div>
+    </Night>
   );
 }
 
-function BanniereMinimal({ lang }: { lang: Lang }) {
-  const c = BN[lang];
+function BanniereNoirLogo({ lang }: { lang: Lang }) {
+  const c = BNN[lang];
   return (
-    <div className={s.frame} style={{ width: 792, height: 198, background: `${glow("50%", "120%", "rgba(140,104,242,.18)", "70% 80%")}, linear-gradient(180deg, #ffffff, #f7f3ff)` }}>
-      <div style={{ position: "absolute", left: 232, top: 42, display: "flex", alignItems: "center", gap: 14 }}>
-        <Image src="/brand/logo.png" alt="" width={58} height={58} />
-        <span style={{ fontSize: 60, fontWeight: 700, letterSpacing: "-0.055em", lineHeight: 1 }}>Rarelyst</span>
+    <Night glowAt="85% 50%">
+      <div style={{ position: "absolute", left: 232, top: 40, display: "flex", alignItems: "center", gap: 14 }}>
+        <Image src="/brand/logo.png" alt="" width={56} height={56} style={{ filter: "brightness(0) invert(1)" }} />
+        <span style={{ fontSize: 60, fontWeight: 700, letterSpacing: "-0.055em", lineHeight: 1, color: "#fff" }}>Rarelyst</span>
       </div>
-      <div style={{ position: "absolute", left: 234, top: 118, width: 300, height: 1, background: "linear-gradient(90deg, var(--accent-dim), transparent)" }} />
-      <p style={{ position: "absolute", left: 234, top: 128, margin: 0, fontSize: 14, color: "var(--ink-2)" }}>{c.tagline}</p>
-      <p style={{ position: "absolute", left: 234, top: 152, margin: 0, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--accent)" }}>{c.sectors}</p>
-      <div style={{ position: "absolute", right: 38, top: 40, transform: "rotate(-10deg)" }}><LoupeMascot size={118} animated={false} /></div>
-    </div>
+      <div style={{ position: "absolute", left: 234, top: 116, width: 300, height: 1, background: "linear-gradient(90deg, rgba(185,162,255,.7), transparent)" }} />
+      <p style={{ position: "absolute", left: 234, top: 126, margin: 0, fontSize: 14, color: "rgba(244,241,248,.72)" }}>{c.tagline}</p>
+      <p style={{ position: "absolute", left: 234, top: 150, margin: 0, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "#b9a2ff" }}>{c.sectors}</p>
+      <div style={{ position: "absolute", right: 40, top: 40, transform: "rotate(-10deg)", filter: "drop-shadow(0 0 30px rgba(140,104,242,.55))" }}><LoupeMascot size={116} animated={false} /></div>
+    </Night>
   );
 }
 
@@ -1088,11 +1105,11 @@ const RENDERS: Record<string, Render> = {
   avatar: () => <Avatar />,
   "carre-logo": () => <CarreLogo />,
   "post-garanties": (_t, lang) => <PostGaranties lang={lang} />,
-  "banniere-hero": (_t, lang) => <BanniereHero lang={lang} />,
-  "banniere-console": (_t, lang) => <BanniereConsole lang={lang} />,
-  "banniere-profils": (_t, lang) => <BanniereProfils lang={lang} />,
-  "banniere-medailles": (_t, lang) => <BanniereMedailles lang={lang} />,
-  "banniere-minimal": (_t, lang) => <BanniereMinimal lang={lang} />,
+  "banniere-noir-casting": (_t, lang) => <BanniereNoirCasting lang={lang} />,
+  "banniere-noir-ticker": (_t, lang) => <BanniereNoirTicker lang={lang} />,
+  "banniere-noir-brief": (_t, lang) => <BanniereNoirBrief lang={lang} />,
+  "banniere-noir-profils": (_t, lang) => <BanniereNoirProfils lang={lang} />,
+  "banniere-noir-logo": (_t, lang) => <BanniereNoirLogo lang={lang} />,
   ...Object.fromEntries([1, 2, 3, 4].map((i) => [`serie-${i}`, (t: number, lang: Lang) => Serie(i, t, lang)])),
   "post-question": (_t, lang) => <PostQuestion lang={lang} />,
   ...Object.fromEntries(Array.from({ length: 7 }, (_, i) => [`carrousel-marques-${i + 1}`, (_t: number, lang: Lang) => <CarrouselMarques i={i + 1} lang={lang} />])),
