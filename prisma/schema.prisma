@@ -706,6 +706,23 @@ model DemoRequest {
 // Laboratoire : une marque inventée par Claude écrit un brief, notre lecteur
 // de brief le traite, puis la marque réagit. Sert à découvrir ce que Rarelyst
 // comprend mal ou ne sait pas encore faire.
+/// Démo préparée pour une marque (Admin → Lancer une démo) : son brief, la
+/// fiche lue, des profils d'exemple et une synthèse tirée d'entretiens simulés.
+/// Rien de tout cela ne touche aux vraies études ni au panel.
+model DemoSession {
+  id        String   @id @default(cuid())
+  brandName String
+  topic     String?
+  lang      String   @default("fr")
+  status    String   @default("brief") // brief | synthesis | done | failed
+  data      Json?
+  error     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("demo_sessions")
+}
+
 model LabRun {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())

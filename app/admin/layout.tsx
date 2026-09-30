@@ -6,6 +6,7 @@ export const maxDuration = 300;
 
 const NAV = [
   { href: "/admin",                label: "Pilotage" },
+  { href: "/admin/demo",           label: "Lancer une démo" },
   { href: "/admin/prix",           label: "Prix" },
   { href: "/admin/labo",           label: "Labo" },
   { href: "/admin/demos",          label: "Démos" },

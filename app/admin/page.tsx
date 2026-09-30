@@ -133,7 +133,10 @@ export default async function AdminCockpit() {
   return (
     <div className={a.page}>
       <p className={a.eyebrow}>Pilotage</p>
-      <h1 className={a.h1}>Bonjour Lucas</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        <h1 className={a.h1}>Bonjour Lucas</h1>
+        <Link className={a.btn} href="/admin/demo" style={{ textDecoration: "none" }}>Lancer une démo pour une marque →</Link>
+      </div>
       <p className={a.sub} style={{ textTransform: "capitalize" }}>{dateStr}</p>
 
       <section className={a.section}>
