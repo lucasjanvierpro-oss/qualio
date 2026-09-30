@@ -104,6 +104,13 @@ export default function AdminPaymentsPage() {
 
       <PayoutsPanel />
 
+      {/* Déclaration annuelle des gains des participants (DAC7) */}
+      <p style={{ fontSize: "13px", color: "#9E9B95", margin: "0 0 24px" }}>
+        Export fiscal des gains participants (DAC7, à déclarer avant le 31 janvier) :{" "}
+        <a href={`/api/admin/tax-export?year=${new Date().getFullYear() - 1}`} style={{ color: "#a58bf5" }}>{new Date().getFullYear() - 1}</a>{" · "}
+        <a href={`/api/admin/tax-export?year=${new Date().getFullYear()}`} style={{ color: "#a58bf5" }}>{new Date().getFullYear()} (en cours)</a>
+      </p>
+
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "32px" }}>
         {[

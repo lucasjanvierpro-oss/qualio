@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -61,7 +62,9 @@ export default async function ParticipantWalletPage() {
     }),
   ]);
 
+  const year = new Date().getFullYear();
   return (
+    <>
     <ParticipantWalletClient
       rewards={rewards}
       bonuses={bonuses}
@@ -70,5 +73,15 @@ export default async function ParticipantWalletPage() {
       payouts={payouts.map((p) => ({ ...p, createdAt: p.createdAt.toISOString(), paidAt: p.paidAt?.toISOString() ?? null }))}
       stripeReady={stripeReady()}
     />
+    {/* Information fiscale due à chaque participant (art. 242 bis du CGI). */}
+    <section style={{ maxWidth: 860, margin: "0 auto", padding: "0 32px 48px" }}>
+      <div style={{ border: "1px solid var(--color-border)", borderRadius: 12, padding: "16px 18px", background: "var(--color-surface)", fontSize: 13.5, lineHeight: 1.55, color: "var(--color-text-secondary)" }}>
+        <strong style={{ color: "var(--color-text-primary)" }}>Vos gains et les impôts.</strong> Les sommes perçues sur Rarelyst peuvent être imposables et soumises à cotisations sociales selon votre situation (impots.gouv.fr, rubrique « économie collaborative » ; urssaf.fr). Rarelyst les déclare chaque année à l&apos;administration et vous envoie un relevé avant le 31 janvier.{" "}
+        <Link href={`/participant/wallet/releve?year=${year}`} style={{ color: "var(--color-accent)", fontWeight: 600 }}>Mon relevé {year}</Link>
+        {" · "}
+        <Link href="/participant/settings" style={{ color: "var(--color-accent)", fontWeight: 600 }}>Mes informations fiscales</Link>
+      </div>
+    </section>
+    </>
   );
 }

@@ -213,7 +213,7 @@ export async function scheduleInterviewReminders(opts: {
 export async function sendRewardAvailable(to: string, firstName: string, amount: number, type: "CASH" | "VOUCHER") {
   return send(to, "Votre récompense vous attend", layout({
     title: `Merci, ${esc(firstName)}.`,
-    body: `Votre avis a compté. Votre récompense de <strong style="color:${INK}">${(amount / 100).toLocaleString("fr-FR")} €</strong> ${type === "CASH" ? "est disponible." : "vous attend sous forme de bon d'achat."}`,
+    body: `Votre avis a compté. Votre récompense de <strong style="color:${INK}">${(amount / 100).toLocaleString("fr-FR")} €</strong> ${type === "CASH" ? "est disponible." : "vous attend sous forme de bon d'achat."}<br/><br/><span style="font-size:13px;color:#9C95A4">Ces sommes peuvent être imposables selon votre situation : impots.gouv.fr (économie collaborative). Votre relevé annuel est disponible dans votre portefeuille.</span>`,
     cta: { label: "Récupérer ma récompense", href: `${APP_URL}/participant/wallet` },
   }));
 }
@@ -221,7 +221,7 @@ export async function sendRewardAvailable(to: string, firstName: string, amount:
 export async function sendPayoutSent(to: string, firstName: string, amountCents: number) {
   return send(to, `${(amountCents / 100).toLocaleString("fr-FR")} € en route vers votre compte`, layout({
     title: `C'est parti, ${esc(firstName)}.`,
-    body: `Votre retrait de <strong style="color:${INK}">${(amountCents / 100).toLocaleString("fr-FR")} €</strong> a été envoyé. Il arrive sur votre compte bancaire sous 1 à 3 jours ouvrés.`,
+    body: `Votre retrait de <strong style="color:${INK}">${(amountCents / 100).toLocaleString("fr-FR")} €</strong> a été envoyé. Il arrive sur votre compte bancaire sous 1 à 3 jours ouvrés.<br/><br/><span style="font-size:13px;color:#9C95A4">Ces sommes peuvent être imposables selon votre situation : impots.gouv.fr (économie collaborative). Votre relevé annuel est disponible dans votre portefeuille.</span>`,
     cta: { label: "Voir mes gains", href: `${APP_URL}/participant/wallet` },
   }));
 }
