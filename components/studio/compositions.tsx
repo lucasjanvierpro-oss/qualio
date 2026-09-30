@@ -1110,7 +1110,7 @@ const CAST = {
     fast1: "Sous 72 h.", fast2: "Pas en plusieurs semaines de relances.",
     pay: { stars: "Payée seulement si vous la gardez.", influence: "Payées seulement si vous les gardez.", genz: "Payées seulement si vous les gardez." },
     price: "Dès 390 € HT le profil, rémunération comprise.",
-    end1: "Des profils très précis.", end2: "Plus vite. Sans rien payer d'avance.",
+    end1: "Des profils très précis.", end2: "Plus vite.", end3: "Sans rien payer d'avance.",
   },
   en: {
     kicker: "Who do you want to hear from?",
@@ -1119,7 +1119,7 @@ const CAST = {
     fast1: "Within 72 h.", fast2: "Not after weeks of chasing.",
     pay: { stars: "Paid only if you keep her.", influence: "Paid only if you keep them.", genz: "Paid only if you keep them." },
     price: "From €390 per profile, incentive included.",
-    end1: "Very specific profiles.", end2: "Faster. Nothing paid upfront.",
+    end1: "Very specific profiles.", end2: "Faster.", end3: "Nothing paid upfront.",
   },
 };
 type CastVariant = keyof typeof CAST.fr.hooks;
@@ -1132,8 +1132,8 @@ function Casting(t: number, lang: Lang, v: CastVariant, post: boolean) {
   const W = 540, H = post ? 675 : 960;
   // Mise en page : vertical (stories, reels) ou 4:5 (fil LinkedIn et Instagram).
   const L = post
-    ? { kicker: 74, hook: 98, hookSize: 38, center: 338, gap: 46, size: 25, found: 440, block: 150, end: 170 }
-    : { kicker: 150, hook: 178, hookSize: 46, center: 480, gap: 56, size: 29, found: 610, block: 300, end: 280 };
+    ? { kicker: 74, hook: 98, hookSize: 38, center: 330, gap: 44, size: 25, found: 470, block: 150, end: 160 }
+    : { kicker: 150, hook: 178, hookSize: 46, center: 470, gap: 54, size: 29, found: 660, block: 300, end: 270 };
   // La liste : dérive lente, puis tour rapide qui ralentit jusqu'au profil voulu.
   const target = CAST_TARGET[v] + N * 2;
   const spin = easeOut(seg(t, 2.3, 4.9));
@@ -1185,7 +1185,7 @@ function Casting(t: number, lang: Lang, v: CastVariant, post: boolean) {
       {/* Fin */}
       <div style={{ position: "absolute", left: 30, right: 30, top: L.end, display: "grid", justifyItems: "center", gap: 18, textAlign: "center", opacity: seg(t, 9.6, 9.9) }}>
         <div style={{ ...pop(t, 9.6), filter: "drop-shadow(0 0 30px rgba(140,104,242,.55))" }}><LoupeMascot size={post ? 96 : 118} mood="wow" /></div>
-        <h2 className={s.h2} style={{ fontSize: post ? 36 : 42, color: "#fff", ...rise(t, 9.8) }}>{c.end1}<br /><span style={NIGHT_TEXT}>{c.end2}</span></h2>
+        <h2 className={s.h2} style={{ fontSize: post ? 32 : 38, color: "#fff", ...rise(t, 9.8) }}>{c.end1}<br /><span style={NIGHT_TEXT}>{c.end2}<br />{c.end3}</span></h2>
         <div className={`${s.btn} ${s.btnAccent}`} style={pop(t, 10.3)}>rarelyst.co →</div>
       </div>
     </div>
