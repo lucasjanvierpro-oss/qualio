@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import LoupeMascot from "@/components/brand/LoupeMascot";
 import Medallion from "@/components/badges/Medallion";
-import { FilmWindow } from "@/components/landing/Film";
 import type { BadgeId } from "@/lib/participants/badges";
 import type { DemoData, DemoTier } from "@/lib/demo/prepare";
 import s from "./demo.module.css";
@@ -36,7 +35,7 @@ const T = {
     tier: { averti: "Client·e averti·e", initie: "Initié·e", rare: "Rare" } as Record<DemoTier, string>, cr: "crédits",
     callKicker: "3 · L'entretien", callTitle: "Vous menez l'entretien. Le reste se fait seul.", callGuide: "Votre guide à l'écran",
     callPoints: ["Visio dans Rarelyst, rien à installer", "Enregistrée et transcrite automatiquement", "Aussi en autonomie : le participant répond seul aux questions (bêta)"],
-    excerpt: "Extrait de transcription (entretien simulé)",
+    excerpt: "Sous-titres tirés d'un entretien simulé pour cette démo.",
     synthKicker: "4 · La synthèse", synthTitle: "Une réponse à chaque décision.", synthNote: (v: number, n: number) => `${v} citations sur ${n} retrouvées mot pour mot dans les transcriptions. Entretiens simulés pour cette démo.`,
     recos: "Recommandations", pending: "La synthèse est en cours de préparation : revenez sur cette étape dans une minute.",
     nextKicker: "5 · Et ensuite", nextTitle: (b: string) => `Une étude pilote pour ${b}.`,
@@ -55,7 +54,7 @@ const T = {
     tier: { averti: "Savvy customer", initie: "Insider", rare: "Rare" } as Record<DemoTier, string>, cr: "credits",
     callKicker: "3 · The interview", callTitle: "You run the interview. The rest happens on its own.", callGuide: "Your guide on screen",
     callPoints: ["Video call inside Rarelyst, nothing to install", "Recorded and transcribed automatically", "Also self-guided: the participant answers on their own (beta)"],
-    excerpt: "Transcript excerpt (simulated interview)",
+    excerpt: "Captions taken from an interview simulated for this demo.",
     synthKicker: "4 · The synthesis", synthTitle: "An answer to every decision.", synthNote: (v: number, n: number) => `${v} of ${n} quotes found word for word in the transcripts. Interviews simulated for this demo.`,
     recos: "Recommendations", pending: "The synthesis is still being prepared: come back to this step in a minute.",
     nextKicker: "5 · Next", nextTitle: (b: string) => `A pilot study for ${b}.`,
@@ -65,17 +64,37 @@ const T = {
   },
 };
 
-function useLoopTime(active: boolean) {
+function useLoopTime(active: boolean, period: number) {
   const [t, setT] = useState(0);
   useEffect(() => {
     if (!active) return;
     let raf = 0;
     const start = performance.now();
-    const loop = (now: number) => { setT(((now - start) / 1000) % 9); raf = requestAnimationFrame(loop); };
+    const loop = (now: number) => { setT(((now - start) / 1000) % period); raf = requestAnimationFrame(loop); };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [active]);
+  }, [active, period]);
   return t;
+}
+
+/** La visio, avec le premier profil de la démo et ses mots en sous-titres (entretien simulé). */
+function Call({ profile, lines, t, lang }: { profile?: DemoData["profiles"][number]; lines: string[]; t: number; lang: "fr" | "en" }) {
+  const i = lines.length ? Math.floor(t / 4) % lines.length : 0;
+  const line = lines[i] ?? "";
+  const [who, ...rest] = line.split(/\s*:\s*/);
+  const speaker = /intervieweu|interviewer/i.test(who) ? (lang === "en" ? "You" : "Vous") : profile?.firstName ?? "";
+  const mm = String(12 + Math.floor(t / 60)).padStart(2, "0"), ss = String(Math.floor(t) % 60).padStart(2, "0");
+  return (
+    <div className={s.callWin} style={{ position: "relative", aspectRatio: "16 / 10", background: "radial-gradient(80% 90% at 50% 30%, #3a2b52, #140d1f)", color: "#fff" }}>
+      <span style={{ position: "absolute", left: 16, top: 14, fontSize: 12, fontWeight: 700, padding: "5px 10px", borderRadius: 999, background: "rgba(0,0,0,.45)" }}><i style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#ff4d5e", marginRight: 6, opacity: Math.floor(t * 2) % 2 ? 1 : 0.4 }} />REC 00:{mm}:{ss}</span>
+      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+        <span style={{ width: "22%", aspectRatio: "1", borderRadius: "50%", display: "grid", placeItems: "center", fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 700, background: `linear-gradient(140deg, ${COLORS[0]}, #4b2bb5)`, boxShadow: speaker !== "Vous" && speaker !== "You" ? "0 0 0 6px rgba(140,104,242,.35), 0 0 0 12px rgba(140,104,242,.15)" : "none" }}>{profile?.firstName[0]}</span>
+      </div>
+      <span style={{ position: "absolute", right: 14, top: 14, width: "22%", aspectRatio: "4 / 3", borderRadius: 12, display: "grid", placeItems: "center", background: "#241a33", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.12)", fontSize: 12, fontWeight: 700 }}>{lang === "en" ? "You" : "Vous"}</span>
+      <span style={{ position: "absolute", left: 16, bottom: 72, fontSize: 12.5, fontWeight: 600, padding: "5px 10px", borderRadius: 8, background: "rgba(0,0,0,.45)" }}>{profile?.firstName} {profile?.initial} · {profile?.role}</span>
+      {line && <p style={{ position: "absolute", left: 16, right: 16, bottom: 14, margin: 0, padding: "10px 14px", borderRadius: 12, background: "rgba(0,0,0,.55)", fontSize: 14, lineHeight: 1.4 }}><b style={{ color: "#c9b8ff" }}>{speaker}</b> {rest.join(" : ").slice(0, 170)}{rest.join(" : ").length > 170 ? "…" : ""}</p>}
+    </div>
+  );
 }
 
 export default function DemoDeck({ brandName, lang, data, tiers }: { brandName: string; lang: "fr" | "en"; data: DemoData; tiers: Tiers }) {
@@ -91,11 +110,11 @@ export default function DemoDeck({ brandName, lang, data, tiers }: { brandName: 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [go]);
-  const t = useLoopTime(step === 3);
+  const t = useLoopTime(step === 3, 60);
 
   const draft = data.draft;
   const report = data.report as { syntheseExecutive?: string; reponses?: Reponse[]; recommandations?: Reco[] } | undefined;
-  const firstTranscript = data.interviews?.[0]?.transcript.split("\n").filter(Boolean).slice(0, 10).join("\n");
+  const lines = (data.interviews?.[0]?.transcript ?? "").split("\n").map((l) => l.trim()).filter(Boolean).slice(0, 14);
 
   return (
     <div className={s.deck}>
@@ -165,13 +184,13 @@ export default function DemoDeck({ brandName, lang, data, tiers }: { brandName: 
             <>
               <div style={{ display: "grid", gap: 10 }}><p className={s.kicker}>{c.callKicker}</p><h2 className={s.h2}>{c.callTitle}</h2></div>
               <div className={s.call}>
-                <div className={s.callWin}><FilmWindow lang={lang} sceneIndex={3} t={t} reduced /></div>
+                <Call profile={data.profiles[0]} lines={lines} t={t} lang={lang} />
                 <div style={{ display: "grid", gap: 14 }}>
-                  {!!draft?.guide.length && <div className={s.card}><p className={s.label}>{c.callGuide}</p><ol className={s.list}>{draft.guide.slice(0, 5).map((q) => <li key={q}>{q}</li>)}</ol></div>}
+                  {!!draft?.guide.length && <div className={s.card}><p className={s.label}>{c.callGuide}</p><ol className={s.list}>{draft.guide.slice(0, 5).map((q, i) => <li key={q} style={{ opacity: i === Math.floor(t / 6) % Math.min(5, draft.guide.length) ? 1 : 0.55 }}>{q}</li>)}</ol></div>}
                   <ul className={s.checks}>{c.callPoints.map((x) => <li key={x}>{x}</li>)}</ul>
                 </div>
               </div>
-              {firstTranscript && <div className={s.cardInk}><p className={s.label}>{c.excerpt}</p><p className={s.transcript}>{firstTranscript}</p></div>}
+              <p className={s.note}>{c.excerpt}</p>
             </>
           )}
 
