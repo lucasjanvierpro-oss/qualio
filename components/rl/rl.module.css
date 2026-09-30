@@ -55,8 +55,10 @@
 .main { flex: 1; min-width: 0; }
 .mobileBar { display: none; }
 @media (max-width: 860px) {
-  .mobileBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; background: var(--bg); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; overflow-x: auto; }
-  .mobileBar nav { display: flex; gap: 4px; }
+  /* Logo sur une ligne, menu sur la suivante, qui défile au doigt : la page ne déborde plus. */
+  .mobileBar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 16px 0; background: var(--bg); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; }
+  .mobileBar nav { display: flex; gap: 4px; width: calc(100% + 32px); margin: 0 -16px; padding: 0 12px 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .mobileBar nav::-webkit-scrollbar { display: none; }
   .mobileBar .navLink { padding: 6px 10px; font-size: 14px; white-space: nowrap; }
 }
 

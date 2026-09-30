@@ -8,3 +8,13 @@
 .studyRow:hover {
   background: var(--color-surface-2);
 }
+
+/* Mise en page responsive : sur téléphone, les chiffres passent sur deux
+   colonnes et les lignes d'étude ne gardent que titre, avancement et statut. */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 36px; }
+.studyRow { display: grid; grid-template-columns: minmax(0, 1fr) 110px 60px 80px 40px; gap: 16px; padding: 15px 20px; align-items: center; text-decoration: none; }
+@media (max-width: 700px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 28px; }
+  .studyRow { grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; padding: 14px 16px; }
+  .studyRow > :nth-child(2), .studyRow > :nth-child(5) { display: none; }
+}

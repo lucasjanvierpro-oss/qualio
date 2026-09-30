@@ -72,7 +72,7 @@ export default async function BrandDashboard() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "36px" }}>
+      <div className={s.stats}>
         {[
           {
             label: "Études actives",
@@ -178,15 +178,7 @@ export default async function BrandDashboard() {
                   key={study.id}
                   href={`/brand/studies/${study.id}`}
                   className={s.studyRow}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 110px 60px 80px 40px",
-                    gap: "16px",
-                    padding: "15px 20px",
-                    alignItems: "center",
-                    textDecoration: "none",
-                    borderTop: i > 0 ? "1px solid var(--color-border-base)" : "none",
-                  }}
+                  style={{ borderTop: i > 0 ? "1px solid var(--color-border-base)" : "none" }}
                 >
                   {/* Title */}
                   <div>
