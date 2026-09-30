@@ -23,7 +23,8 @@ function Brand({ x = 28, y = 30, light = false, story = false }: { x?: number; y
   const pos: React.CSSProperties = story ? { left: 0, right: 0, top: 792, justifyContent: "center" } : { left: x, top: y };
   return (
     <div className={s.brand} style={{ ...pos, color: light ? "#fff" : "var(--ink)" }}>
-      <Image src="/brand/logo.png" alt="" width={26} height={26} />Rarelyst
+      {/* Sur fond sombre, le logo passe en blanc : l'aubergine y disparaîtrait. */}
+      <Image src="/brand/logo.png" alt="" width={26} height={26} style={light ? { filter: "brightness(0) invert(1)" } : undefined} />Rarelyst
     </div>
   );
 }
