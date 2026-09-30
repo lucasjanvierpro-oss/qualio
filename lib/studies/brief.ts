@@ -44,7 +44,7 @@ Règles :
 - duration : 30, 45, 60 ou 90. 45 par défaut, 90 pour un focus group.
 - ageMin, ageMax, cities, brandAffinities : seulement s'ils sont dits ou évidents ; sinon null ou [].
 - decisions : 2 à 4. Ce sont les choix que la marque devra faire après l'étude ; la synthèse sera construite pour y répondre.
-- guide : 6 à 9 questions, dans l'ordre d'un entretien : mise en confiance, habitudes, sujet central, réactions, conclusion. Questions ouvertes, non orientées, au vouvoiement, sans jargon marketing.
+- guide : 6 à 9 questions, dans l'ordre d'un entretien : mise en confiance, habitudes, sujet central, réactions, conclusion. Questions ouvertes, non orientées, au vouvoiement, sans jargon marketing. Si le brief cite des concurrents ou des maisons de référence, prévois une question comparative ouverte (« Comment situez-vous… par rapport à… ? »). Pour chaque décision à trancher, au moins une question qui fait réagir sur un scénario concret (un prix, un nom, un canal, une pièce).
 - deadline : AAAA-MM-JJ si une date ou un délai précis est donné, sinon null.
 - missing : 0 à 3 questions, seulement pour ce qui changerait le recrutement (âge, pays, clients ou non de la marque…).`;
 
