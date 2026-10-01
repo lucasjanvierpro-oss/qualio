@@ -108,9 +108,10 @@ export default function Landing({ tiers, lang = "fr" }: { tiers: LandingTier[]; 
         <section className={styles.hero}>
           <div className={styles.heroGrid}>
             {lang === "fr" ? (
-              <h1 className={styles.h1}>Qui <span className={styles.nowrap}>voulez<span className={styles.hyphen}>-</span>vous</span> <em>entendre</em>&nbsp;?</h1>
+              // Le nom de la marque dans le titre principal, lu par Google et les lecteurs d'écran, sans changer l'affichage.
+              <h1 className={styles.h1}><span className="rl-sr-only">Rarelyst : </span>Qui <span className={styles.nowrap}>voulez<span className={styles.hyphen}>-</span>vous</span> <em>entendre</em>&nbsp;?</h1>
             ) : (
-              <h1 className={styles.h1}>Who do you want to <em>hear from</em>?</h1>
+              <h1 className={styles.h1}><span className="rl-sr-only">Rarelyst: </span>Who do you want to <em>hear from</em>?</h1>
             )}
             <div className={styles.heroSide}>
               <p className={styles.speedPill}><b>{c.hero.pillValue}</b>{c.hero.pill}</p>

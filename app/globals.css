@@ -490,3 +490,6 @@
 @media (max-width: 1080px) {
   .hero-faces { display: none; }
 }
+
+/* Texte lu par les lecteurs d'écran et les moteurs, invisible à l'écran. */
+.rl-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
