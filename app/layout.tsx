@@ -18,7 +18,9 @@ const SITE_URL = "https://www.rarelyst.co";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Recrutement pour études qualitatives mode, luxe, beauté · Rarelyst",
+    // La marque en premier : le site est encore jeune, et Google corrige
+    // « rarelyst » en « rarelust » tant qu'il n'associe pas le nom au site.
+    default: "Rarelyst · Recrutement pour études qualitatives mode, luxe, beauté",
     template: "%s · Rarelyst",
   },
   description:

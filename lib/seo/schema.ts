@@ -15,6 +15,12 @@ export function organization(lang: Lang) {
     "@type": "Organization",
     "@id": ORG_ID,
     name: ORG.name,
+    alternateName: "rarelyst.co",
+    // Un autre « Rarelyst » vend des articles ménagers sur Amazon : on dit
+    // clairement qui nous sommes pour que Google et les IA ne confondent pas.
+    disambiguatingDescription: lang === "fr"
+      ? "Rarelyst (rarelyst.co) est une plateforme parisienne de recrutement de participants pour les études qualitatives des marques de mode, de luxe et de beauté."
+      : "Rarelyst (rarelyst.co) is a Paris-based platform recruiting participants for qualitative research by fashion, luxury and beauty brands.",
     url: SITE_URL,
     logo: ORG.logo,
     description: DESCRIPTION[lang],
@@ -36,6 +42,7 @@ export function website(lang: Lang) {
     "@id": SITE_ID,
     url: SITE_URL,
     name: ORG.name,
+    alternateName: ["rarelyst.co", "Rarelyst Paris"],
     description: SHORT[lang],
     inLanguage: ["fr-FR", "en-GB"],
     publisher: { "@id": ORG_ID },
