@@ -215,7 +215,7 @@ export async function generateAndStoreReportFromTranscripts(
   const interviews = await prisma.interview.findMany({
     // Les absents et les entretiens annulés ne produiront jamais de transcript :
     // les compter bloquerait le rapport automatique pour toute l'étude.
-    where: { studyId, status: { notIn: ["cancelled", "no_show"] } },
+    where: { studyId, status: { notIn: ["cancelled", "no_show", "rejected"] } },
     include: {
       application: {
         include: {

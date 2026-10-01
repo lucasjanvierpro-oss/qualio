@@ -396,6 +396,19 @@ export async function sendRescheduleNotice(to: string, firstName: string, studyT
   }));
 }
 
+/** Réponse en autonomie non validée : le participant sait pourquoi il n'est pas payé. */
+export async function sendAsyncRejected(to: string, firstName: string, studyTitle: string, reason: string, lang: Lang = "fr") {
+  return send(to, pick(lang, `Votre réponse n'a pas pu être validée · ${studyTitle}`, `Your answer could not be validated · ${studyTitle}`), layout({
+    lang,
+    title: pick(lang, `Votre réponse n'a pas pu être validée${firstName ? `, ${esc(firstName)}` : ""}.`, `Your answer could not be validated${firstName ? `, ${esc(firstName)}` : ""}.`),
+    body: pick(lang,
+      `Nous avons relu votre réponse vidéo pour l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong> : elle ne permet pas à la marque de s'en servir, elle n'est donc pas rémunérée. Si vous pensez qu'il s'agit d'une erreur, répondez à cet email.`,
+      `We reviewed your video answer for <strong style="color:${INK}">${esc(studyTitle)}</strong>: the brand can't use it, so it is not paid. If you think this is a mistake, reply to this email.`),
+    aside: reason ? pick(lang, `Raison : ${esc(reason)}`, `Reason: ${esc(reason)}`) : undefined,
+    cta: { label: pick(lang, "Mon espace", "My space"), href: `${APP_URL}/participant/studies` },
+  }));
+}
+
 /** Les vidéos d'une étude seront bientôt effacées : la marque peut les télécharger avant. */
 export async function sendVideoExpiryNotice(to: string, firstName: string, studyTitle: string, studyId: string, count: number, deleteOn: Date, lang: Lang = "fr") {
   const day = new Intl.DateTimeFormat(loc(lang), { timeZone: TZ, day: "numeric", month: "long" }).format(deleteOn);

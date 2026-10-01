@@ -64,6 +64,8 @@ export default function NewStudyPage() {
   const [moments, setMoments] = useState<string[]>(["matin", "apres-midi"]);
   // "async" (bêta) : le participant répond seul, face caméra, aux questions.
   const [mode, setMode] = useState<"live" | "async">("live");
+  // Le format choisi d'entrée ; il s'impose à ce que l'IA lit dans le brief.
+  const [format, setFormat] = useState<"one" | "group" | "async">("one");
   const [asyncAllowed, setAsyncAllowed] = useState(false);
   const [sending, setSending] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -93,6 +95,11 @@ export default function NewStudyPage() {
     setFile(f);
   }
 
+  function applyFormat(d: BriefDraft): BriefDraft {
+    setMode(format === "async" ? "async" : "live");
+    return { ...d, studyType: format === "group" ? "FOCUS_GROUP" : "ONE_ON_ONE" };
+  }
+
   async function read() {
     if (!canRead) return;
     setPhase("reading");
@@ -104,7 +111,7 @@ export default function NewStudyPage() {
       const res = await fetch("/api/studies/read-brief", { method: "POST", body: fd });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.draft) throw new Error(json.error ?? tt("La lecture a échoué. Réessayez, ou remplissez la fiche à la main.", "Reading failed. Try again, or fill in the sheet by hand."));
-      setDraft(json.draft);
+      setDraft(applyFormat(json.draft));
       setSource(json.source ?? text);
       setFileName(json.fileName ?? null);
       setPhase("review");
@@ -116,7 +123,7 @@ export default function NewStudyPage() {
   }
 
   function manual() {
-    setDraft({ ...EMPTY_DRAFT, objective: text.trim() });
+    setDraft(applyFormat({ ...EMPTY_DRAFT, objective: text.trim() }));
     setSource(text);
     setFileName(null);
     setPhase("review");
@@ -168,6 +175,24 @@ export default function NewStudyPage() {
       <p className={s.eyebrow}>{tt("Nouvelle étude", "New study")}</p>
       <h1 className={s.h1}>{tt("Qui voulez-vous entendre\u00a0?", "Who do you want to hear?")}</h1>
       <p className={s.lead}>{tt("Écrivez ce que vous cherchez comme à un collègue, ou déposez votre brief. Nous en tirons la fiche de l'étude ; vous la relisez avant de l'envoyer.", "Write what you're looking for as you would to a colleague, or upload your brief. We turn it into a study sheet; you review it before sending.")}</p>
+
+      <div className={b.formats} role="radiogroup" aria-label={tt("Format de l'étude", "Study format")}>
+        <button type="button" role="radio" aria-checked={format === "one"} data-on={format === "one"} onClick={() => setFormat("one")}>
+          <b>{tt("Entretiens individuels", "One-on-one interviews")}</b>
+          <span>{tt("Vous interrogez chaque personne en visio, 30 à 60 minutes. Le format le plus riche.", "You interview each person by video, 30 to 60 minutes. The richest format.")}</span>
+        </button>
+        <button type="button" role="radio" aria-checked={format === "group"} data-on={format === "group"} onClick={() => setFormat("group")}>
+          <b>Focus group</b>
+          <span>{tt("Plusieurs participants ensemble en visio, pour les voir réagir les uns aux autres.", "Several participants together by video, to see them react to each other.")}</span>
+        </button>
+        <button type="button" role="radio" aria-checked={format === "async"} data-on={format === "async"} disabled={!asyncAllowed}
+          onClick={() => asyncAllowed && setFormat("async")}>
+          <b>{tt("Réponses vidéo", "Video answers")}<em>{tt("bêta", "beta")}</em></b>
+          <span>{asyncAllowed
+            ? tt("Chacun répond seul, face caméra, à vos questions, quand il veut. Rapide, jusqu'à 100 personnes, environ 3 fois moins cher.", "Each person answers your questions alone, on camera, whenever they like. Fast, up to 100 people, about 3 times cheaper.")
+            : tt("Chacun répond seul, face caméra, à vos questions. Ouvert sur demande : écrivez-nous.", "Each person answers your questions alone, on camera. Available on request: write to us.")}</span>
+        </button>
+      </div>
 
       <div className={b.writeGrid}>
         <section className={b.composer} data-busy={phase === "reading"}>

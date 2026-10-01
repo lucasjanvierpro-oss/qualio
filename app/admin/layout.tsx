@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/studies",        label: "Études" },
   { href: "/admin/participants",   label: "Participants" },
   { href: "/admin/sourcing",       label: "Sourcing" },
+  { href: "/admin/reponses",       label: "Réponses à valider" },
   { href: "/admin/matching",       label: "Matching" },
   { href: "/admin/payments",       label: "Paiements" },
   { href: "/admin/invoices",       label: "Factures" },
