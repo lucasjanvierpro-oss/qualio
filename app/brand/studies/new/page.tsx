@@ -232,6 +232,10 @@ export default function NewStudyPage() {
             <li><b>{tt("Ils proposent leurs créneaux", "They suggest their slots")}</b><span>{tt("Vous choisissez ; salle de visio et rappels partent seuls.", "You choose; the video room and reminders are sent automatically.")}</span></li>
             <li><b>{tt("Vidéo, transcription, synthèse", "Video, transcript, report")}</b><span>{tt("Après chaque entretien, puis la synthèse de l'étude.", "After each interview, then the study report.")}</span></li>
           </ol>
+          <p className={`${s.small} ${s.muted}`} style={{ margin: "14px 0 0" }}>
+            {tt("Votre brief reste confidentiel : les participants signent un accord de confidentialité et ne voient pas le nom de votre maison.", "Your brief stays confidential: participants sign a confidentiality agreement and don't see your house's name.")}{" "}
+            <Link href="/garanties" target="_blank">{tt("Nos garanties", "Our guarantees")} →</Link>
+          </p>
         </aside>
       </div>
       <Tour id="brief" steps={[

@@ -29,5 +29,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/confidentialite`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/conditions`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/accord-confidentialite`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${SITE_URL}/garanties`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
   ];
 }

@@ -396,6 +396,20 @@ export async function sendRescheduleNotice(to: string, firstName: string, studyT
   }));
 }
 
+/** Les vidéos d'une étude seront bientôt effacées : la marque peut les télécharger avant. */
+export async function sendVideoExpiryNotice(to: string, firstName: string, studyTitle: string, studyId: string, count: number, deleteOn: Date, lang: Lang = "fr") {
+  const day = new Intl.DateTimeFormat(loc(lang), { timeZone: TZ, day: "numeric", month: "long" }).format(deleteOn);
+  return send(to, pick(lang, `Vos vidéos seront effacées le ${day} · ${studyTitle}`, `Your videos will be deleted on ${day} · ${studyTitle}`), layout({
+    lang,
+    title: pick(lang, `Téléchargez vos vidéos avant le ${day}${firstName ? `, ${esc(firstName)}` : ""}.`, `Download your videos before ${day}${firstName ? `, ${esc(firstName)}` : ""}.`),
+    body: pick(lang,
+      `${count > 1 ? `Les ${count} vidéos` : "La vidéo"} de l'étude <strong style="color:${INK}">${esc(studyTitle)}</strong> ${count > 1 ? "seront effacées" : "sera effacée"} le ${day} : nous ne gardons les enregistrements que 90 jours, par respect pour les participants. Les transcriptions et la synthèse restent disponibles.`,
+      `${count > 1 ? `The ${count} videos` : "The video"} from <strong style="color:${INK}">${esc(studyTitle)}</strong> will be deleted on ${day}: we only keep recordings for 90 days, out of respect for participants. Transcripts and the report stay available.`),
+    aside: pick(lang, "Ouvrez chaque vidéo depuis la synthèse, onglet « Entretiens », puis enregistrez-la sur votre ordinateur.", "Open each video from the report, “Interviews” tab, then save it to your computer."),
+    cta: { label: pick(lang, "Ouvrir la synthèse", "Open the report"), href: `${APP_URL}/brand/studies/${studyId}/report` },
+  }));
+}
+
 export async function sendIncidentAdmin(d: { kind: "reschedule" | "technical" | "no_show" | "brand_absent"; studyTitle: string; who: string; reason?: string; details?: string; studyId: string }) {
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) return null;

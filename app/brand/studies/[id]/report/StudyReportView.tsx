@@ -48,6 +48,8 @@ export type ReportInterview = {
   transcript: string | null;
   hasVideo: boolean;
   videoExpired: boolean;
+  /** Date d'effacement de la vidéo (90 jours après l'entretien). */
+  videoUntil?: string | null;
 };
 
 const TZ = "Europe/Paris";
@@ -333,7 +335,8 @@ export default function StudyReportView({
                       {open === iv.id ? tt("Masquer la transcription", "Hide the transcript") : tt("Lire la transcription", "Read the transcript")}
                     </button>
                   )}
-                  {iv.hasVideo && <a className={`${s.btn} ${s.btnSm}`} href={`/api/interviews/${iv.id}/recording`} target="_blank" rel="noopener noreferrer">{tt("Voir la vidéo", "Watch the video")}</a>}
+                  {iv.hasVideo && <a className={`${s.btn} ${s.btnSm}`} href={`/api/interviews/${iv.id}/recording`} target="_blank" rel="noopener noreferrer">{tt("Voir ou télécharger la vidéo", "Watch or download the video")}</a>}
+                  {iv.hasVideo && iv.videoUntil && <span className={`${s.small} ${s.faint}`}>{tt("Gardée jusqu'au", "Kept until")} {new Intl.DateTimeFormat(en ? "en-GB" : "fr-FR", { timeZone: TZ, day: "numeric", month: "long" }).format(new Date(iv.videoUntil))}</span>}
                   {iv.videoExpired && <span className={`${s.small} ${s.faint}`}>{tt("Vidéo retirée après 90 jours", "Video removed after 90 days")}</span>}
                 </div>
               </div>

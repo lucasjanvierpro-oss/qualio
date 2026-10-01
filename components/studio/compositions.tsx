@@ -769,6 +769,203 @@ function CarrouselParticipants({ i, lang }: { i: number; lang: Lang }) {
   );
 }
 
+// ── Carrousel participants n°2 : « arnaque ? », nos règles ─────────────
+const CC = {
+  fr: {
+    kicker: "Payé pour donner son avis", c1: "C'est une", c2: "arnaque ?", cSub: "Quatre signes qui ne trompent pas, et les règles de Rarelyst.", swipe: "Glissez",
+    r1: "On ne vous demande jamais d'argent.", r1Rows: ["Pas de frais d'inscription", "Pas de kit à acheter", "Pas d'abonnement"], r1Note: "Si on vous demande de payer pour être payé, fuyez.",
+    r2: "Vous connaissez le montant avant d'accepter.", inv: "Invitation", invBrand: "Maison de mode parisienne", invWhat: "Entretien en visio · 45 min", accept: "Accepter", later: "Pas cette fois",
+    r2Note: "Le montant est écrit sur l'invitation. Vous n'êtes jamais obligé d'accepter.",
+    r3: "Votre employeur reste en dehors.", r3Rows: [["Ce que la marque voit", "Camille R. · prénom et initiale"], ["Ce qu'elle ne voit jamais", "Pièce d'identité, coordonnées"], ["Ce qu'on ne vous demande jamais", "Un secret de votre employeur"]],
+    r3Note: "Chaque participant signe un accord de confidentialité, et peut refuser une question.",
+    r4: "L'argent arrive sur votre compte.", solde: "Solde disponible", sent: "✓ Virement envoyé", arrive: "Arrivée sous 1 à 3 jours ouvrés", r4Note: "Retrait dès 50 €, par virement bancaire.",
+    e1: "Un vrai humain", e2: "derrière.", eSub: "Je m'appelle Lucas, je construis Rarelyst. Toutes nos règles sont écrites, en clair.", eCta: "rarelyst.co/garanties",
+  },
+  en: {
+    kicker: "Paid for your opinion", c1: "Is it", c2: "a scam?", cSub: "Four signs that never lie, and Rarelyst's rules.", swipe: "Swipe",
+    r1: "We never ask you for money.", r1Rows: ["No sign-up fee", "No kit to buy", "No subscription"], r1Note: "If you're asked to pay to get paid, run.",
+    r2: "You know the amount before you accept.", inv: "Invitation", invBrand: "Parisian fashion house", invWhat: "Video interview · 45 min", accept: "Accept", later: "Not this time",
+    r2Note: "The amount is written on the invitation. You never have to accept.",
+    r3: "Your employer stays out of it.", r3Rows: [["What the brand sees", "Camille R. · first name and initial"], ["What it never sees", "ID document, contact details"], ["What we never ask", "Your employer's secrets"]],
+    r3Note: "Every participant signs a confidentiality agreement, and can decline any question.",
+    r4: "The money lands in your account.", solde: "Available balance", sent: "✓ Transfer sent", arrive: "Arrives in 1 to 3 business days", r4Note: "Withdraw from €50, by bank transfer.",
+    e1: "A real human", e2: "behind it.", eSub: "I'm Lucas, I'm building Rarelyst. All our rules are written down, in plain words.", eCta: "rarelyst.co/garanties",
+  },
+};
+
+function CarrouselConfiance({ i, lang }: { i: number; lang: Lang }) {
+  const c = CC[lang];
+  const N = 6;
+  const eur = (n: number) => (lang === "en" ? `€${n}` : `${n} €`);
+  if (i === 1) return (
+    <Slide n={1} total={N} bg={s.bgInk} light>
+      <p className={s.kicker} style={{ color: "#c9b8ff" }}>{c.kicker}</p>
+      <h1 className={s.h1} style={{ marginTop: 14, fontSize: 64, color: "#fff" }}>{c.c1}<br /><span className={s.gradGold}>{c.c2}</span></h1>
+      <p style={{ margin: "22px 0 0", fontSize: 18, lineHeight: 1.45, color: "rgba(255,255,255,.75)", maxWidth: 340 }}>{c.cSub}</p>
+      <div style={{ position: "absolute", right: 30, bottom: 90 }}><LoupeMascot size={140} mood="search" animated={false} /></div>
+      <div style={{ position: "absolute", left: 36, bottom: 80, fontSize: 17, fontWeight: 700, color: "#c9b8ff" }}>{c.swipe} →</div>
+    </Slide>
+  );
+  if (i === 2) return (
+    <Slide n={2} total={N}>
+      <Step n="1">{c.r1}</Step>
+      <div style={{ display: "grid", gap: 10, marginTop: 26 }}>
+        {c.r1Rows.map((r) => (
+          <div key={r} className={s.card} style={{ padding: "15px 18px", display: "flex", gap: 12, alignItems: "center", fontSize: 18, fontWeight: 600, letterSpacing: "-0.015em" }}>
+            <span style={{ display: "inline-grid", placeItems: "center", width: 28, height: 28, borderRadius: "50%", background: "#fde8e8", color: "#c0392b", fontWeight: 800 }}>×</span>{r}
+          </div>
+        ))}
+      </div>
+      <Note>{c.r1Note}</Note>
+    </Slide>
+  );
+  if (i === 3) return (
+    <Slide n={3} total={N} bg={s.bgLilac}>
+      <Step n="2">{c.r2}</Step>
+      <div className={s.card} style={{ marginTop: 24, padding: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span className={s.tag} style={{ background: "var(--accent-soft)", color: "var(--g2)" }}>{c.inv}</span>
+          <b style={{ fontSize: 30, letterSpacing: "-0.03em" }}>{eur(180)}</b>
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 700, marginTop: 12, letterSpacing: "-0.02em" }}>{c.invBrand}</div>
+        <div style={{ fontSize: 15, color: "var(--ink-2)", marginTop: 4 }}>{c.invWhat}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 10, marginTop: 18 }}>
+          <span className={`${s.btn} ${s.btnAccent}`} style={{ fontSize: 16, padding: "13px 16px" }}>{c.accept}</span>
+          <span className={s.btn} style={{ fontSize: 16, padding: "13px 16px", background: "var(--soft)", color: "var(--ink-2)" }}>{c.later}</span>
+        </div>
+      </div>
+      <Note>{c.r2Note}</Note>
+    </Slide>
+  );
+  if (i === 4) return (
+    <Slide n={4} total={N}>
+      <Step n="3">{c.r3}</Step>
+      <div className={s.card} style={{ marginTop: 24, padding: "4px 18px" }}>
+        {c.r3Rows.map(([k, v], j) => (
+          <div key={k} style={{ padding: "14px 0", borderTop: j ? "1px solid var(--line)" : undefined }}>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: j === 0 ? "var(--accent)" : "var(--ink-3)" }}>{k}</div>
+            <div style={{ fontSize: 18, fontWeight: 600, marginTop: 3, letterSpacing: "-0.015em" }}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <Note>{c.r3Note}</Note>
+    </Slide>
+  );
+  if (i === 5) return (
+    <Slide n={5} total={N} bg={s.bgLilac}>
+      <Step n="4">{c.r4}</Step>
+      <div className={s.card} style={{ marginTop: 24, padding: 22 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--ink-3)" }}>{c.solde}</div>
+        <div style={{ fontSize: 56, fontWeight: 700, letterSpacing: "-0.04em", marginTop: 4 }}>{eur(180)}</div>
+        <div className={s.btn} style={{ width: "100%", marginTop: 14, background: "#1f7a4d" }}>{c.sent}</div>
+        <p style={{ margin: "12px 0 0", fontSize: 15, color: "var(--ok)", fontWeight: 600 }}>{c.arrive}</p>
+      </div>
+      <Note>{c.r4Note}</Note>
+    </Slide>
+  );
+  return (
+    <Slide n={6} total={N} bg={s.bgInk} light last>
+      <h1 className={s.h1} style={{ color: "#fff", fontSize: 58 }}>{c.e1}<br /><span className={s.gradGold}>{c.e2}</span></h1>
+      <p style={{ margin: "22px 0 0", fontSize: 18, lineHeight: 1.45, color: "rgba(255,255,255,.75)", maxWidth: 340 }}>{c.eSub}</p>
+      <div className={`${s.btn} ${s.btnAccent}`} style={{ position: "absolute", left: 36, bottom: 80 }}>{c.eCta}</div>
+      <div style={{ position: "absolute", right: 26, bottom: 70 }}><LoupeMascot size={110} mood="happy" animated={false} /></div>
+    </Slide>
+  );
+}
+
+// ── Carrousel marques n°2 : l'étude qui arrive après le comité ──────────
+const CK = {
+  fr: {
+    kicker: "Études qualitatives", c1: "Votre étude arrive", c2: "après la décision ?", cSub: "Pourquoi ça arrive si souvent, et comment l'éviter.", swipe: "Glissez",
+    r1: "Le comité a une date. Le recrutement, non.", t1: "Brief envoyé", t2: "Recrutement des profils", t3: "Comité produit", late: "La synthèse arrive ici",
+    r1Note: "Trouver des profils rares par téléphone prend souvent des semaines. Le comité, lui, ne bouge pas.",
+    r2: "Décrivez une personne. Recevez des profils vérifiés.", brief: "Des vendeuses en boutique de luxe qui conseillent des clientes venues d'Asie.",
+    r2Note: "Des profils proposés en quelques jours, chacun avec ce qui a été vérifié et son prix.",
+    r3: "Commencez petit.", r3Rows: ["3 profils pour tester, pas un forfait de 8", "Vous ne payez que ceux que vous gardez", "Absent : vos crédits reviennent tout seuls"],
+    r4: "Une vidéo de 20 secondes pèse plus qu'un rapport de 60 pages.", quote: "« Toutes mes clientes touchent la bandoulière avant même d'ouvrir le sac. »", who: "Conseillère de vente, maroquinerie", verified: "Citation vérifiée dans la transcription",
+    r4Note: "Vidéo, transcription et citations prêtes pour vos slides.",
+    e1: "Vos profils", e2: "avant votre comité.", points: ["Des profils rares, vérifiés", "Vidéo, transcription, synthèse", "Vous ne payez que ceux que vous gardez"], eCta: "Réserver une démo · rarelyst.co",
+  },
+  en: {
+    kicker: "Qualitative research", c1: "Does your study land", c2: "after the decision?", cSub: "Why it happens so often, and how to avoid it.", swipe: "Swipe",
+    r1: "The committee has a date. Recruitment doesn't.", t1: "Brief sent", t2: "Recruiting the profiles", t3: "Product committee", late: "The report lands here",
+    r1Note: "Finding rare profiles by phone often takes weeks. The committee date doesn't move.",
+    r2: "Describe a person. Get verified profiles.", brief: "Luxury boutique associates who advise clients visiting from Asia.",
+    r2Note: "Profiles suggested within days, each with what was verified and its price.",
+    r3: "Start small.", r3Rows: ["3 profiles to test, not a package of 8", "You only pay for the ones you keep", "No-show: your credits come back automatically"],
+    r4: "A 20-second clip outweighs a 60-page report.", quote: "“Every client touches the strap before she even opens the bag.”", who: "Sales associate, leather goods", verified: "Quote checked against the transcript",
+    r4Note: "Video, transcript and quotes ready for your slides.",
+    e1: "Your profiles", e2: "before your committee.", points: ["Rare, verified profiles", "Video, transcript, report", "You only pay for the ones you keep"], eCta: "Book a demo · rarelyst.co",
+  },
+};
+
+function CarrouselComite({ i, lang }: { i: number; lang: Lang }) {
+  const c = CK[lang];
+  const N = 6;
+  if (i === 1) return (
+    <Slide n={1} total={N} bg={s.bgLilac}>
+      <p className={s.kicker}>{c.kicker}</p>
+      <h1 className={s.h1} style={{ marginTop: 14, fontSize: 54 }}>{c.c1}<br /><span className={s.grad}>{c.c2}</span></h1>
+      <p className={s.lead} style={{ marginTop: 22, maxWidth: 340 }}>{c.cSub}</p>
+      <div style={{ position: "absolute", right: 30, bottom: 90 }}><LoupeMascot size={150} mood="puzzled" animated={false} /></div>
+      <div style={{ position: "absolute", left: 36, bottom: 80, fontSize: 17, fontWeight: 700, color: "var(--accent)" }}>{c.swipe} →</div>
+    </Slide>
+  );
+  if (i === 2) return (
+    <Slide n={2} total={N}>
+      <Step n="1">{c.r1}</Step>
+      <div className={s.card} style={{ marginTop: 28, padding: "22px 20px" }}>
+        <div style={{ position: "relative", height: 10, borderRadius: 999, background: "var(--soft)" }}>
+          <i style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "78%", borderRadius: 999, background: "linear-gradient(90deg, var(--g3), var(--g2))" }} />
+          <i style={{ position: "absolute", left: "58%", top: -8, width: 3, height: 26, borderRadius: 2, background: "var(--ink)" }} />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 16, fontSize: 14, fontWeight: 600 }}>
+          <span>{c.t1}</span><span style={{ textAlign: "center" }}>{c.t3}</span><span style={{ textAlign: "right", color: "#c0392b" }}>{c.late}</span>
+        </div>
+        <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 8 }}>{c.t2}…</div>
+      </div>
+      <Note>{c.r1Note}</Note>
+    </Slide>
+  );
+  if (i === 3) return (
+    <Slide n={3} total={N} bg={s.bgLilac}>
+      <Step n="2">{c.r2}</Step>
+      <div className={s.bubble} style={{ marginTop: 26, fontSize: 22 }}>{c.brief}</div>
+      <Note>{c.r2Note}</Note>
+    </Slide>
+  );
+  if (i === 4) return (
+    <Slide n={4} total={N}>
+      <Step n="3">{c.r3}</Step>
+      <div style={{ display: "grid", gap: 12, marginTop: 28 }}>
+        {c.r3Rows.map((r) => <div key={r} className={s.card} style={{ padding: "16px 18px", display: "flex", gap: 12, alignItems: "center", fontSize: 18, fontWeight: 600, letterSpacing: "-0.015em" }}><span className={s.check}>✓</span>{r}</div>)}
+      </div>
+    </Slide>
+  );
+  if (i === 5) return (
+    <Slide n={5} total={N} bg={s.bgLilac}>
+      <Step n="4">{c.r4}</Step>
+      <div className={s.card} style={{ marginTop: 24, padding: 20 }}>
+        <div style={{ height: 150, borderRadius: 14, background: "linear-gradient(160deg, #2b1d40, #4a2f6e)", display: "grid", placeItems: "center", color: "#fff", fontSize: 40 }}>▶</div>
+        <div style={{ marginTop: 14, fontSize: 17, fontWeight: 600, lineHeight: 1.35, letterSpacing: "-0.015em" }}>{c.quote}</div>
+        <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 6 }}>{c.who}</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ok)", marginTop: 8 }}>✓ {c.verified}</div>
+      </div>
+      <Note>{c.r4Note}</Note>
+    </Slide>
+  );
+  return (
+    <Slide n={6} total={N} bg={s.bgInk} light last>
+      <h1 className={s.h1} style={{ color: "#fff", fontSize: 54 }}>{c.e1}<br /><span className={s.gradGold}>{c.e2}</span></h1>
+      <div style={{ display: "grid", gap: 14, marginTop: 34 }}>
+        {c.points.map((p) => <span key={p} style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 19, fontWeight: 600 }}><span className={s.check}>✓</span>{p}</span>)}
+      </div>
+      <div className={`${s.btn} ${s.btnAccent}`} style={{ position: "absolute", left: 36, bottom: 80 }}>{c.eCta}</div>
+      <div style={{ position: "absolute", right: 26, bottom: 70 }}><LoupeMascot size={110} mood="wow" animated={false} /></div>
+    </Slide>
+  );
+}
+
 // ── Posts supplémentaires ─────────────────────────────────────────────
 const PG = {
   fr: { t1: "Vous ne payez que", t2: "les profils que vous gardez.", rows: ["Rien n'est débité avant d'avoir gardé un profil", "Participant absent : vos crédits sont rendus", "Profil qui ne convient pas : refusé sans frais"], foot: "Recrutement pour études qualitatives · mode, luxe, beauté" },
@@ -1357,6 +1554,8 @@ const RENDERS: Record<string, Render> = {
   "post-question": (_t, lang) => <PostQuestion lang={lang} />,
   ...Object.fromEntries(Array.from({ length: 7 }, (_, i) => [`carrousel-marques-${i + 1}`, (_t: number, lang: Lang) => <CarrouselMarques i={i + 1} lang={lang} />])),
   ...Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`carrousel-participants-${i + 1}`, (_t: number, lang: Lang) => <CarrouselParticipants i={i + 1} lang={lang} />])),
+  ...Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`carrousel-confiance-${i + 1}`, (_t: number, lang: Lang) => <CarrouselConfiance i={i + 1} lang={lang} />])),
+  ...Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`carrousel-comite-${i + 1}`, (_t: number, lang: Lang) => <CarrouselComite i={i + 1} lang={lang} />])),
 };
 
 /** Le rendu d'un format à l'instant t. */

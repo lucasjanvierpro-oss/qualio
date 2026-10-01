@@ -45,6 +45,8 @@ type Application = {
   adminScore: number | null;
   adminMatchNote: string | null;
   brandAccepted: boolean | null;
+  /** Indice que le participant travaille pour la marque (à vérifier avant de proposer). */
+  conflict?: string | null;
   interview: Interview | null;
   participantProfile: ParticipantProfile;
 };
@@ -190,7 +192,7 @@ function AdminChatPanel({ studyId, brandName, contactEmail }: { studyId: string;
 }
 
 /** Les profils présélectionnés par l'IA à l'arrivée du brief : un clic pour les proposer, un clic pour les écarter. */
-function SuggestionsSection({ studyId, apps }: { studyId: string; apps: { id: string; adminScore: number | null; adminMatchNote: string | null; participantProfile: { id: string; firstName: string; lastName: string; city: string | null; profession: string | null } }[] }) {
+function SuggestionsSection({ studyId, apps }: { studyId: string; apps: { id: string; adminScore: number | null; adminMatchNote: string | null; conflict?: string | null; participantProfile: { id: string; firstName: string; lastName: string; city: string | null; profession: string | null } }[] }) {
   const [done, setDone] = useState<Record<string, "proposed" | "dismissed">>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [rerun, setRerun] = useState<string | null>(null);
@@ -215,6 +217,7 @@ function SuggestionsSection({ studyId, apps }: { studyId: string; apps: { id: st
               <strong style={{ fontSize: "14px" }}>{a.participantProfile.firstName} {a.participantProfile.lastName}</strong>
               <span style={{ fontSize: "12px", color: "var(--color-text-secondary)" }}>{[a.participantProfile.profession, a.participantProfile.city].filter(Boolean).join(" · ")}</span>
               {a.adminScore != null && <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", background: "var(--color-accent-light)", color: "var(--color-accent)" }}>{a.adminScore}/10</span>}
+              {a.conflict && <span title="Vérifier qu'il ne travaille pas pour la marque avant de proposer" style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", background: "var(--color-warning-light)", color: "var(--color-warning)" }}>⚠ {a.conflict}</span>}
               <Link href={`/admin/participants/${a.participantProfile.id}`} style={{ fontSize: "12px", color: "var(--color-accent)", textDecoration: "none", marginLeft: "auto" }}>Profil →</Link>
             </div>
             {a.adminMatchNote && <p style={{ margin: 0, fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: 1.5 }}>« {a.adminMatchNote} »</p>}
@@ -342,6 +345,7 @@ function ShortlistedSection({
                     {p.age ? <span style={{ fontWeight: 400, color: "var(--color-text-secondary)", marginLeft: "6px" }}>{p.age} ans</span> : null}
                   </div>
                   <div style={{ fontSize: "12px", color: "var(--color-text-secondary)" }}>{p.city} · {p.profession}</div>
+                  {app.conflict && <div style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--color-warning)", marginTop: 2 }}>⚠ {app.conflict} : vérifier avant de proposer</div>}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
                   {app.brandAccepted === true && <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "999px", background: "var(--color-success-light)", color: "var(--color-success)", border: "1px solid var(--color-success)", fontWeight: 600 }}>Marque ✓</span>}

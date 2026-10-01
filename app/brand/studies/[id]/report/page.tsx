@@ -46,6 +46,7 @@ export default async function BrandStudyReportPage({ params }: { params: Promise
         transcript: iv.transcriptStatus === "done" ? iv.transcript : null,
         hasVideo: !!iv.recordingId && ageDays <= RECORDING_RETENTION_DAYS,
         videoExpired: !!iv.recordingId && ageDays > RECORDING_RETENTION_DAYS,
+        videoUntil: iv.recordingId ? new Date(iv.scheduledAt.getTime() + RECORDING_RETENTION_DAYS * 86_400_000).toISOString() : null,
       };
     })
     .sort((x, y) => x.scheduledAt.localeCompare(y.scheduledAt));

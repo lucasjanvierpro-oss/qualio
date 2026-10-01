@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AdminStudyDetailClient from "./AdminStudyDetailClient";
+import { conflictHint } from "@/lib/sourcing/sourcing";
 
 function calcAge(dob: Date | null): number | null {
   if (!dob) return null;
@@ -25,7 +26,7 @@ export default async function AdminStudyDetailPage({ params }: { params: Promise
               id: true, firstName: true, lastName: true, city: true,
               profession: true, interests: true, brandAffinities: true,
               bio: true, screenerAnswers: true, dateOfBirth: true,
-              idVerificationStatus: true,
+              idVerificationStatus: true, workEmail: true,
             },
           },
           interview: { select: { id: true, scheduledAt: true, status: true, videoLink: true, mode: true, transcriptStatus: true } },
@@ -87,6 +88,7 @@ export default async function AdminStudyDetailPage({ params }: { params: Promise
       adminScore: a.adminScore,
       adminMatchNote: a.adminMatchNote,
       brandAccepted: a.brandAccepted,
+      conflict: conflictHint(a.participantProfile, { companyName: study.brandProfile.companyName, email: study.brandProfile.user.email }),
       interview: a.interview ? {
         id: a.interview.id,
         scheduledAt: a.interview.scheduledAt.toISOString(),

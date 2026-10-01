@@ -74,6 +74,18 @@ export const REGISTRY: CompositionMeta[] = [
   { id: "carrousel-participants-4", title: "Carrousel participants 4/6 : l'invitation", format: "post", duration: 0, langs: ["fr", "en"] },
   { id: "carrousel-participants-5", title: "Carrousel participants 5/6 : le retrait", format: "post", duration: 0, langs: ["fr", "en"] },
   { id: "carrousel-participants-6", title: "Carrousel participants 6/6 : appel à l'action", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-confiance-1", title: "Carrousel confiance (candidats) 1/6 : couverture", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-confiance-2", title: "Carrousel confiance (candidats) 2/6 : pas d'argent demandé", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-confiance-3", title: "Carrousel confiance (candidats) 3/6 : le montant avant", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-confiance-4", title: "Carrousel confiance (candidats) 4/6 : votre employeur en dehors", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-confiance-5", title: "Carrousel confiance (candidats) 5/6 : le retrait", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-confiance-6", title: "Carrousel confiance (candidats) 6/6 : un vrai humain", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-comite-1", title: "Carrousel comité (marques) 1/6 : couverture", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-comite-2", title: "Carrousel comité (marques) 2/6 : le comité n'attend pas", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-comite-3", title: "Carrousel comité (marques) 3/6 : décrire une personne", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-comite-4", title: "Carrousel comité (marques) 4/6 : commencer petit", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-comite-5", title: "Carrousel comité (marques) 5/6 : une vidéo qui convainc", format: "post", duration: 0, langs: ["fr", "en"] },
+  { id: "carrousel-comite-6", title: "Carrousel comité (marques) 6/6 : appel à l'action", format: "post", duration: 0, langs: ["fr", "en"] },
 ];
 
 export const findMeta = (id: string) => REGISTRY.find((c) => c.id === id) ?? null;

@@ -547,6 +547,8 @@ model Interview {
   brandAbsentNotifiedAt DateTime?
   /// Vidéo effacée chez Whereby (90 jours après l'entretien).
   recordingDeletedAt    DateTime?
+  /// Rappel envoyé à la marque quelques jours avant l'effacement de la vidéo.
+  videoReminderAt       DateTime?
   /// Rappels programmés chez Resend, annulés si l'entretien est reporté.
   reminderIds           String[]  @default([])
 
@@ -834,4 +836,24 @@ model PricingConfig {
   updatedAt DateTime @default(now()) @updatedAt
 
   @@map("pricing_config")
+}
+
+/// Admin → Sourcing : personnes repérées à la main (LinkedIn, Instagram…) avant
+/// qu'elles s'inscrivent. Rien n'est importé automatiquement.
+model SourcingContact {
+  id            String    @id @default(cuid())
+  name          String
+  url           String?
+  platform      String    @default("linkedin") // linkedin | instagram | tiktok | autre
+  profileType   String    @default("initie") // initie | rare | influence | defricheur | client
+  role          String?
+  why           String?
+  status        String    @default("a_contacter") // a_contacter | contacte | accepte | repondu | inscrit | refus
+  lastContactAt DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@map("sourcing_contacts")
 }
