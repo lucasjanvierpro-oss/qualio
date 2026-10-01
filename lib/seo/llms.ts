@@ -78,6 +78,7 @@ export async function llmsTxt(full: boolean) {
     `- [Accueil (FR)](${SITE_URL}/) : présentation complète, tarifs, FAQ`,
     `- [Home (EN)](${SITE_URL}/en)`,
     `- [À propos de Rarelyst](${SITE_URL}/a-propos) · [About (EN)](${SITE_URL}/en/about)`,
+    `- [Rarelyst pour les équipes consumer insights](${SITE_URL}/consumer-insights) · [EN](${SITE_URL}/en/consumer-insights)`,
     `- [Nos garanties](${SITE_URL}/garanties) : ce que Rarelyst garantit aux marques et aux participants`,
     `- [Tarifs](${SITE_URL}/pricing)`,
     `- [Créer un compte marque](${SITE_URL}/signup/brand)`,

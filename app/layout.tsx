@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: {
     // La marque en premier : le site est encore jeune, et Google corrige
     // « rarelyst » en « rarelust » tant qu'il n'associe pas le nom au site.
-    default: "Rarelyst · Recrutement pour études qualitatives mode, luxe, beauté",
+    default: "Rarelyst · Consumer insights et études qualitatives mode, luxe, beauté",
     template: "%s · Rarelyst",
   },
   description:

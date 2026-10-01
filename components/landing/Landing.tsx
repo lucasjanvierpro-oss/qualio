@@ -376,6 +376,7 @@ export default function Landing({ tiers, lang = "fr" }: { tiers: LandingTier[]; 
               <Link href="/login">{c.footer.links.login}</Link>
               <a href="mailto:contact@rarelyst.co">{c.footer.links.contact}</a>
               <Link href={lang === "en" ? "/en/about" : "/a-propos"}>{c.footer.links.about}</Link>
+              <Link href={lang === "en" ? "/en/consumer-insights" : "/consumer-insights"}>Consumer insights</Link>
               <Link href="/garanties">{c.footer.links.guarantees}</Link>
               <Link href="/confidentialite">{c.footer.links.privacy}</Link>
               <Link href="/conditions">{c.footer.links.terms}</Link>

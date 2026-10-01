@@ -11,7 +11,7 @@ import { SITE_URL } from "@/lib/seo/site";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: { absolute: "Rarelyst · Participant recruitment for qualitative research" },
+  title: { absolute: "Rarelyst · Consumer insights and qualitative research recruitment" },
   description: "Verified participants for your qualitative interviews: stylists, buyers, collectors, micro-influencers. First profiles within 72 hours, paid only if you keep them.",
   alternates: { canonical: "/en", languages: { fr: "/", en: "/en", "x-default": "/" } },
   openGraph: {

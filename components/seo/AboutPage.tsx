@@ -13,7 +13,7 @@ import { CONTACT_EMAIL, LINKEDIN_URL, ORG, SITE_URL } from "@/lib/seo/site";
 const T = {
   fr: {
     path: "/a-propos", home: "Accueil", crumb: "À propos", kicker: "À propos",
-    lead: "Rarelyst (rarelyst.co) est une plateforme française qui trouve, vérifie et fait interroger des profils rares pour les études qualitatives des marques de mode, de luxe et de beauté.",
+    lead: "Rarelyst (rarelyst.co) est une plateforme française qui trouve, vérifie et fait interroger des profils rares pour les études qualitatives et les équipes consumer insights des marques de mode, de luxe et de beauté.",
     nameH: "Le nom",
     name: "Rarelyst s'écrit avec un « y » : rare + list, la liste des profils rares. Rarelyst n'a aucun lien avec d'autres sites ou marques au nom proche.",
     whatH: "Ce que fait Rarelyst",
@@ -29,7 +29,7 @@ const T = {
   },
   en: {
     path: "/en/about", home: "Home", crumb: "About", kicker: "About",
-    lead: "Rarelyst (rarelyst.co) is a French platform that finds, verifies and lines up rare profiles for qualitative research by fashion, luxury and beauty brands.",
+    lead: "Rarelyst (rarelyst.co) is a French platform that finds, verifies and lines up rare profiles for qualitative research and consumer insights teams at fashion, luxury and beauty brands.",
     nameH: "The name",
     name: "Rarelyst is spelled with a “y”: rare + list, the list of rare profiles. Rarelyst has no connection with other websites or brands with a similar name.",
     whatH: "What Rarelyst does",
