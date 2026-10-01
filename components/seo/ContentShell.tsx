@@ -6,8 +6,8 @@ import s from "./content.module.css";
 
 // Cadre des guides : en-tête, pied de page, langue de la page.
 const T = {
-  fr: { guides: "Guides", pricing: "Tarifs", demo: "Démo", home: "/", cta: "Demander une étude", join: "Rejoindre le panel", legal: "Mentions légales", privacy: "Confidentialité", tagline: "Recrutement de participants pour études qualitatives · mode, luxe, beauté" },
-  en: { guides: "Guides", pricing: "Pricing", demo: "Demo", home: "/en", cta: "Start a study", join: "Join the panel", legal: "Legal notice", privacy: "Privacy", tagline: "Participant recruitment for qualitative research · fashion, luxury, beauty" },
+  fr: { about: "À propos", guides: "Guides", pricing: "Tarifs", demo: "Démo", home: "/", cta: "Demander une étude", join: "Rejoindre le panel", legal: "Mentions légales", privacy: "Confidentialité", tagline: "Recrutement de participants pour études qualitatives · mode, luxe, beauté" },
+  en: { about: "About", guides: "Guides", pricing: "Pricing", demo: "Demo", home: "/en", cta: "Start a study", join: "Join the panel", legal: "Legal notice", privacy: "Privacy", tagline: "Participant recruitment for qualitative research · fashion, luxury, beauty" },
 };
 
 export default function ContentShell({ lang, audience = "marques", children }: { lang: "fr" | "en"; audience?: "marques" | "participants"; children: ReactNode }) {
@@ -31,6 +31,7 @@ export default function ContentShell({ lang, audience = "marques", children }: {
         <div className={s.footInner}>
           <span>© {new Date().getFullYear()} Rarelyst</span>
           <Link href={home}>rarelyst.co</Link>
+          <Link href={lang === "en" ? "/en/about" : "/a-propos"}>{t.about}</Link>
           <Link href={lang === "en" ? "/en/guides" : "/guides"}>{t.guides}</Link>
           <Link href="/mentions-legales">{t.legal}</Link>
           <Link href="/confidentialite">{t.privacy}</Link>

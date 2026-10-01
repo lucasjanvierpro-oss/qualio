@@ -29,7 +29,7 @@ export type LandingCopy = {
   people: { kicker: string; h2: string; lead: string; pay: (a: number, b: number) => string; payLabel: string; paid: string; paidLabel: string; ref: string; refLabel: string; cta: string };
   faqTitle: { kicker: string; h2: string };
   faq: (tiers: LandingTier[]) => Faq[];
-  footer: { h2: string; lead: string; links: { pricing: string; login: string; contact: string; privacy: string; terms: string; legal: string; guarantees: string } };
+  footer: { h2: string; lead: string; links: { pricing: string; login: string; contact: string; privacy: string; terms: string; legal: string; guarantees: string; about: string } };
   announce: { text: string; link: string; close: string };
   demoNav: string;
   /** Ce que dit la loupe en arrivant sur chaque section (clé : id de la section). */
@@ -129,7 +129,7 @@ const FR: LandingCopy = {
   footer: {
     h2: "Dites-nous qui vous voulez entendre.",
     lead: "Quelques phrases suffisent. Vous créez votre compte, votre brief vous attend, et vos premiers profils arrivent sous 72 heures.",
-    links: { pricing: "Tarifs", login: "Connexion", contact: "Contact", privacy: "Confidentialité", terms: "Conditions", legal: "Mentions légales", guarantees: "Nos garanties" },
+    links: { pricing: "Tarifs", login: "Connexion", contact: "Contact", privacy: "Confidentialité", terms: "Conditions", legal: "Mentions légales", guarantees: "Nos garanties", about: "À propos" },
   },
   announce: { text: "Nouveau · Les entretiens en anglais sont ouverts, d'autres langues arrivent.", link: "Voir les langues", close: "Fermer" },
   demoNav: "Réserver une démo",
@@ -270,7 +270,7 @@ const EN: LandingCopy = {
   footer: {
     h2: "Tell us who you want to hear from.",
     lead: "A few sentences will do. Create your account, your brief will be waiting, and your first profiles arrive within 72 hours.",
-    links: { pricing: "Pricing", login: "Log in", contact: "Contact", privacy: "Privacy", terms: "Terms", legal: "Legal notice", guarantees: "Our guarantees" },
+    links: { pricing: "Pricing", login: "Log in", contact: "Contact", privacy: "Privacy", terms: "Terms", legal: "Legal notice", guarantees: "Our guarantees", about: "About" },
   },
   announce: { text: "New · Interviews in English are open, more languages are coming.", link: "See languages", close: "Close" },
   demoNav: "Book a demo",
