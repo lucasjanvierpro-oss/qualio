@@ -5,6 +5,9 @@ import { appUrl } from "@/lib/appUrl";
 // L'expéditeur doit appartenir à un domaine vérifié dans Resend, sinon aucun
 // email ne part. Par défaut : rarelyst.co (à vérifier dans le tableau de bord).
 const FROM = process.env.EMAIL_FROM ?? "Rarelyst <noreply@rarelyst.co>";
+// noreply@ n'a pas de boîte : une réponse à un email automatique arrive dans
+// la boîte contact@ (Google Workspace).
+const REPLY_TO = "Rarelyst <contact@rarelyst.co>";
 const APP_URL = appUrl();
 // Les serveurs Vercel tournent en UTC : sans fuseau explicite, un entretien à
 // 10 h à Paris serait annoncé à 8 h.
@@ -108,7 +111,7 @@ function layout(opts: { title: string; body: string; cta?: { label: string; href
 }
 
 async function send(to: string, subject: string, html: string, extra: { scheduledAt?: string; attachments?: { filename: string; content: string; contentType?: string }[] } = {}) {
-  return getResend().emails.send({ from: FROM, to, subject, html, ...extra });
+  return getResend().emails.send({ from: FROM, replyTo: REPLY_TO, to, subject, html, ...extra });
 }
 
 // ── Invitation d'agenda (.ics) ────────────────────────────────────────
