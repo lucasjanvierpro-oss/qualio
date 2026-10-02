@@ -121,7 +121,7 @@ export default function BrandAccountClient({
             </button>
           </div>
           <p style={{ fontSize: "12px", color: "var(--color-warning)", margin: "12px 0 0" }}>
-            {tt("Pas encore de code ?", "No code yet?")} <a href="mailto:lucas@rarelyst.co" style={{ color: "var(--color-warning)", fontWeight: 600 }}>{tt("Contactez-nous", "Contact us")} →</a>
+            {tt("Pas encore de code ?", "No code yet?")} <a href="mailto:contact@rarelyst.co" style={{ color: "var(--color-warning)", fontWeight: 600 }}>{tt("Contactez-nous", "Contact us")} →</a>
           </p>
         </div>
       )}
