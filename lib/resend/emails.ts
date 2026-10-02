@@ -40,26 +40,71 @@ function fmtTime(d: Date, lang: Lang = "fr"): string {
 // ── Mise en page commune ──────────────────────────────────────────────
 const INK = "#1C1624";
 const INK_2 = "#5F5868";
+const INK_3 = "#8A8194";
 const ACCENT = "#6A43DB";
-const SOFT = "#F6F4F8";
+const LINE = "#EAE6EE";
+const LILAC = "#F5EFFF";
+// Les images partent toujours du site en ligne : une adresse locale ne
+// s'afficherait pas dans la boîte du destinataire.
+const ASSETS = "https://www.rarelyst.co/brand";
+const FONT = "'Familjen Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
 
+// Le texte d'aperçu affiché sous l'objet dans la boîte de réception : la
+// première phrase du message, sans balises.
+function preview(html: string): string {
+  const text = html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  return text.length > 120 ? `${text.slice(0, 117).trimEnd()}…` : text;
+}
+
+// Même direction que le site : voile lavande en haut, carte blanche, filet
+// violet vers rose, bouton encre, et la loupe en signature. Des tableaux
+// plutôt que des blocs, pour qu'Outlook garde la mise en page.
 function layout(opts: { title: string; body: string; cta?: { label: string; href: string }; aside?: string; lang?: Lang }): string {
   const lang = opts.lang ?? "fr";
   const cta = opts.cta
-    ? `<a href="${opts.cta.href}" style="display:inline-block;margin-top:26px;padding:13px 22px;background:${INK};color:#fff;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">${esc(opts.cta.label)} →</a>`
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:28px;"><tr><td style="background:${INK};border-radius:12px;">
+        <a href="${opts.cta.href}" style="display:inline-block;padding:15px 24px;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;font-family:${FONT};letter-spacing:-0.01em;">${esc(opts.cta.label)}&nbsp;&nbsp;→</a>
+      </td></tr></table>`
     : "";
   const aside = opts.aside
-    ? `<div style="margin-top:22px;padding:16px 18px;background:${SOFT};border-radius:12px;font-size:15px;line-height:1.55;color:${INK};">${opts.aside}</div>`
+    ? `<div style="margin-top:24px;padding:18px 20px;background:#F7F4FE;border:1px solid #E7E0FA;border-radius:14px;font-size:15px;line-height:1.6;color:${INK};">${opts.aside}</div>`
     : "";
-  return `<!doctype html><html lang="${lang}"><body style="margin:0;background:#fff;">
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;max-width:540px;margin:0 auto;padding:40px 24px;color:${INK};">
-    <div style="font-weight:700;font-size:18px;letter-spacing:-0.02em;margin-bottom:28px;"><span style="color:${ACCENT};">●</span> Rarelyst</div>
-    <h1 style="font-size:24px;line-height:1.2;letter-spacing:-0.03em;margin:0 0 14px;">${opts.title}</h1>
-    <div style="font-size:16px;line-height:1.6;color:${INK_2};">${opts.body}</div>
-    ${aside}
-    ${cta}
-    <p style="margin-top:40px;font-size:13px;color:#9C95A4;">${lang === "en" ? "Rarelyst · Recruitment for fashion and luxury qualitative research" : "Rarelyst · Recrutement pour études qualitatives mode et luxe"}</p>
-  </div></body></html>`;
+  const tagline = pick(lang, "Recrutement pour études qualitatives mode, luxe et beauté", "Recruitment for fashion, luxury and beauty qualitative research");
+  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400..700&display=swap" rel="stylesheet"></head>
+<body style="margin:0;padding:0;background:${LILAC};">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${LILAC};">${esc(preview(opts.body))}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${LILAC};background-image:linear-gradient(180deg,${LILAC} 0%,#FBF8FF 360px,#FFFFFF 720px);">
+<tr><td align="center" style="padding:36px 14px 48px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;font-family:${FONT};color:${INK};">
+    <tr><td style="padding:0 6px 22px;">
+      <a href="https://www.rarelyst.co" style="text-decoration:none;color:${INK};">
+        <img src="${ASSETS}/email-logo.png" width="30" height="28" alt="" style="vertical-align:middle;border:0;">
+        <span style="vertical-align:middle;font-weight:700;font-size:19px;letter-spacing:-0.03em;color:${INK};">&nbsp;Rarelyst</span>
+      </a>
+    </td></tr>
+    <tr><td style="background:#FFFFFF;border:1px solid ${LINE};border-radius:20px;overflow:hidden;">
+      <div style="height:4px;border-radius:20px 20px 0 0;background:${ACCENT};background-image:linear-gradient(100deg,#5B35D0 0%,#8F4FE0 50%,#D7609E 100%);font-size:0;line-height:0;">&nbsp;</div>
+      <div style="padding:34px 32px 36px;">
+        <h1 style="font-size:28px;line-height:1.15;letter-spacing:-0.035em;font-weight:700;margin:0 0 14px;color:${INK};">${opts.title}</h1>
+        <div style="font-size:16px;line-height:1.65;color:${INK_2};">${opts.body}</div>
+        ${aside}
+        ${cta}
+      </div>
+    </td></tr>
+    <tr><td style="padding:26px 6px 0;">
+      <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+        <td style="vertical-align:middle;padding-right:12px;"><img src="${ASSETS}/email-loupe.png" width="40" height="40" alt="" style="display:block;border:0;"></td>
+        <td style="vertical-align:middle;font-size:13px;line-height:1.55;color:${INK_3};">
+          <strong style="color:${INK};font-weight:600;">Rarelyst</strong> · ${tagline}<br>
+          <a href="https://www.rarelyst.co" style="color:${ACCENT};text-decoration:none;">rarelyst.co</a> · Paris
+        </td>
+      </tr></table>
+    </td></tr>
+  </table>
+</td></tr></table>
+</body></html>`;
 }
 
 async function send(to: string, subject: string, html: string, extra: { scheduledAt?: string; attachments?: { filename: string; content: string; contentType?: string }[] } = {}) {
@@ -303,15 +348,17 @@ export async function sendDemoRequestAdmin(d: { firstName: string; lastName?: st
 
 /** Accusé de réception envoyé à la personne qui demande une démo. */
 export async function sendDemoConfirmation(to: string, firstName: string, lang: "fr" | "en") {
-  return lang === "en"
-    ? send(to, "Your Rarelyst demo", layout({
-      title: `Thank you, ${esc(firstName)}.`,
-      body: "We've received your request. We'll write to you shortly to set a time for a twenty-minute video call, on your own topic.",
-    }))
-    : send(to, "Votre démo Rarelyst", layout({
-      title: `Merci, ${esc(firstName)}.`,
-      body: "Votre demande est bien arrivée. Nous vous écrivons très vite pour caler vingt minutes en visio, sur votre propre sujet.",
-    }));
+  return send(to, pick(lang, "Votre démo Rarelyst", "Your Rarelyst demo"), layout({
+    lang,
+    title: pick(lang, `Merci, ${esc(firstName)}.`, `Thank you, ${esc(firstName)}.`),
+    body: pick(lang,
+      "Votre demande est bien arrivée. Nous vous écrivons très vite pour caler vingt minutes en visio, sur votre propre sujet.",
+      "We've received your request. We'll write to you shortly to set a time for a twenty-minute video call, on your own topic."),
+    aside: pick(lang,
+      `<strong>Pendant ces vingt minutes</strong><br>Nous partons de votre question. Vous voyez quels profils nous irions chercher pour y répondre, à quoi ressemble la synthèse livrée, et vous repartez avec une estimation de prix.`,
+      `<strong>In those twenty minutes</strong><br>We start from your question. You see which profiles we would recruit to answer it, what the report looks like, and you leave with a price estimate.`),
+    cta: { label: pick(lang, "Découvrir Rarelyst", "Discover Rarelyst"), href: pick(lang, "https://www.rarelyst.co/consumer-insights", "https://www.rarelyst.co/en/consumer-insights") },
+  }));
 }
 
 /** Entretien en autonomie : le participant répond quand il veut, face caméra. */
